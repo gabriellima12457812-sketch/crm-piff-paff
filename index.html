@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>PIFF PAFF PRO CRM | Gestão Comercial & Inteligência Artificial</title>
+  <meta name="description" content="CRM Comercial de Alto Padrão com Motor Piff-Paff de Decisão, Funil Kanban, Central de Follow-up e Leitura Inteligente de WhatsApp." />
+
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cyan: '#00D2D3',
+              cyanHover: '#00b4b5',
+              cyanGlow: 'rgba(0, 210, 211, 0.25)',
+              gold: '#FECA57',
+              hot: '#FF4757',
+              warm: '#FFA502',
+              cold: '#1E90FF',
+              dark: '#0A1118',
+              surface: '#101C27',
+              card: '#14212E',
+              cardHover: '#1B2C3D',
+              border: 'rgba(255, 255, 255, 0.08)',
+              borderHover: 'rgba(0, 210, 211, 0.35)',
+              gabriel: '#00D2D3',
+              jhennifer: '#FF4757'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            heading: ['"Outfit"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0A1118;
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, .font-heading {
+      font-family: 'Outfit', sans-serif;
+    }
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0A1118;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E2D3D;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00D2D3;
+    }
+    /* Drag and Drop visual feedback */
+    .kanban-col.drag-over {
+      background-color: rgba(0, 210, 211, 0.06);
+      border-color: #00D2D3 !important;
+    }
+    .lead-card.dragging {
+      opacity: 0.4;
+      transform: scale(0.98);
+    }
+    .stage-tab.active {
+      background-color: rgba(0, 210, 211, 0.18);
+      color: #00D2D3;
+      border-color: rgba(0, 210, 211, 0.45);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#0A1118] text-slate-100 antialiased selection:bg-[#00D2D3] selection:text-black">
+
+  <!-- TOP STATUS BAR & HEADER -->
+  <header class="sticky top-0 z-40 h-16 border-b border-white/10 bg-[#0A1118]/90 backdrop-blur-md px-4 lg:px-6 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <!-- Mobile Hamburger Button -->
+      <button id="btn-toggle-mobile-menu" class="lg:hidden p-2 text-slate-300 hover:text-white rounded-lg hover:bg-white/5 transition" title="Menu">
+        <i class="ph-bold ph-list text-2xl"></i>
+      </button>
+
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00D2D3] to-blue-600 flex items-center justify-center shadow-lg shadow-[#00D2D3]/20 font-heading font-extrabold text-black text-xl tracking-wider">
+          P
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-heading font-bold text-lg tracking-wide text-white">PIFF PAFF <span class="text-[#00D2D3]">PRO</span></span>
+            <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-[#00D2D3]/10 text-[#00D2D3] border border-[#00D2D3]/30">CRM 2.0</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Inteligência Comercial de Alto Padrão</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions & Supabase Status -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Leitor de WhatsApp Instantâneo -->
+      <button id="btn-open-reader-top" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#00D2D3] to-emerald-400 text-black font-semibold text-xs sm:text-sm hover:brightness-110 shadow-lg shadow-[#00D2D3]/25 transition active:scale-95">
+        <i class="ph-bold ph-clipboard-text text-lg"></i>
+        <span class="hidden sm:inline">Colar WhatsApp (Leitura IA)</span>
+        <span class="sm:hidden">Ler WhatsApp</span>
+      </button>
+
+      <!-- Novo Lead Manual -->
+      <button id="btn-open-new-lead" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-xs sm:text-sm transition active:scale-95 border border-white/10">
+        <i class="ph-bold ph-plus text-base"></i>
+        <span class="hidden md:inline">Novo Lead</span>
+      </button>
+
+      <!-- Supabase Connection Pill -->
+      <div id="status-supabase-pill" class="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium cursor-pointer" title="Clique para configurar Supabase">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="status-supabase-text">Supabase Ativo</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- SIDEBAR (DESKTOP) -->
+    <aside id="sidebar" class="hidden lg:flex flex-col w-64 border-r border-white/10 bg-[#0E1722] p-4 justify-between">
+      <!-- Nav Links -->
+      <div class="space-y-6">
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Visualizações</div>
+          <nav class="space-y-1">
+            <button data-view="kanban" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-white bg-[#00D2D3]/15 text-[#00D2D3] border border-[#00D2D3]/30">
+              <span class="flex items-center gap-2.5">
+                <i class="ph-bold ph-kanban text-lg"></i>
+                <span>Funil Kanban</span>
+              </span>
+              <span id="badge-kanban-total" class="text-xs px-2 py-0.5 rounded-full bg-black/40 text-slate-300 font-bold">6</span>
+            </button>
+
+            <button data-view="followup" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <i class="ph-bold ph-clock text-lg"></i>
+                <span>Central Follow-up</span>
+              </span>
+              <span id="badge-followup-urgent" class="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-bold">1</span>
+            </button>
+
+            <button data-view="clients" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <i class="ph-bold ph-users text-lg"></i>
+                <span>Base de Clientes</span>
+              </span>
+              <span id="badge-clients-total" class="text-xs px-2 py-0.5 rounded-full bg-black/40 text-slate-300 font-bold">6</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Metric Summary -->
+        <div class="p-3.5 rounded-2xl bg-[#14212E] border border-white/5 space-y-2">
+          <div class="text-xs text-slate-400 flex items-center justify-between">
+            <span>Pipeline Total</span>
+            <i class="ph-bold ph-chart-line-up text-emerald-400"></i>
+          </div>
+          <div id="sidebar-total-pipeline" class="text-xl font-heading font-extrabold text-[#FECA57]">
+            R$ 908.960
+          </div>
+          <div class="text-[11px] text-slate-400">
+            <span id="sidebar-hot-count" class="text-emerald-400 font-semibold">4 clientes</span> com temperatura Quente
+          </div>
+        </div>
+
+        <!-- Regras de Ouro Piff-Paff Shortcut -->
+        <div class="p-3 rounded-xl bg-cyan-950/20 border border-cyan-500/20 text-xs text-cyan-200">
+          <div class="font-bold flex items-center gap-1.5 mb-1 text-[#00D2D3]">
+            <i class="ph-bold ph-lightning"></i> Regra de Ouro #12
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed">"Sempre busque o próximo microavanço. Não queime etapas no primeiro contato."</p>
+        </div>
+      </div>
+
+      <!-- Footer / Settings -->
+      <div class="pt-4 border-t border-white/10 space-y-2">
+        <button id="btn-open-settings" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition">
+          <i class="ph-bold ph-gear text-lg"></i>
+          <span>Configurações & API</span>
+        </button>
+        <div class="text-[10px] text-slate-500 text-center">
+          PIFF PAFF PRO v2.4 • Offline Ready
+        </div>
+      </div>
+    </aside>
+
+    <!-- MOBILE DRAWER MENU -->
+    <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm lg:hidden hidden">
+      <div class="w-72 h-full bg-[#0E1722] border-r border-white/10 p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-[#00D2D3] flex items-center justify-center text-black font-extrabold text-sm">P</div>
+              <span class="font-heading font-bold text-white">PIFF PAFF PRO</span>
+            </div>
+            <button id="btn-close-mobile-menu" class="p-2 text-slate-400 hover:text-white">
+              <i class="ph-bold ph-x text-xl"></i>
+            </button>
+          </div>
+
+          <nav class="space-y-2">
+            <button data-view="kanban" class="nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-[#00D2D3]/15 text-[#00D2D3] border border-[#00D2D3]/30">
+              <i class="ph-bold ph-kanban text-xl"></i>
+              <span>Funil de Vendas (Kanban)</span>
+            </button>
+            <button data-view="followup" class="nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
+              <i class="ph-bold ph-clock text-xl"></i>
+              <span>Central de Follow-up</span>
+            </button>
+            <button data-view="clients" class="nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
+              <i class="ph-bold ph-users text-xl"></i>
+              <span>Base de Clientes</span>
+            </button>
+            <button id="btn-open-settings-mobile" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
+              <i class="ph-bold ph-gear text-xl"></i>
+              <span>Configurações & Supabase</span>
+            </button>
+          </nav>
+        </div>
+
+        <div class="text-xs text-slate-500 text-center">
+          PIFF PAFF PRO CRM
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN VIEWPORT -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#0A1118]">
+
+      <!-- ======================================================== -->
+      <!-- VIEW 1: KANBAN (FUNIL DE VENDAS) -->
+      <!-- ======================================================== -->
+      <section id="view-kanban" class="view-content flex-1 p-4 lg:p-6 flex flex-col">
+        <!-- Sub-header do Kanban -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div>
+            <h1 class="text-2xl font-heading font-extrabold text-white flex items-center gap-2.5">
+              <span>Funil de Vendas</span>
+              <span class="text-xs font-normal px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/10">6 Estágios Piff-Paff</span>
+            </h1>
+            <p class="text-xs text-slate-400 mt-0.5">Arraste os cards para mover de estágio ou clique para abrir a análise comercial detalhada.</p>
+          </div>
+
+          <!-- Filtro rápido de temperatura -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 hidden md:inline">Temperatura:</span>
+            <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/10 text-white border border-white/10 hover:bg-white/20 transition ring-2 ring-[#00D2D3]" data-temp="all">Todos</button>
+            <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 transition" data-temp="quente">🔥 Quente</button>
+            <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition" data-temp="morno">🟡 Morno</button>
+            <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition" data-temp="frio">❄️ Frio</button>
+          </div>
+        </div>
+
+        <!-- KANBAN BOARD (6 COLUNAS) -->
+        <div class="flex-1 overflow-x-auto pb-4">
+          <div class="grid grid-flow-col auto-cols-[300px] sm:auto-cols-[320px] gap-4 min-h-[580px]">
+
+            <!-- Col 1: Novos -->
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-blue-500/30 p-3" data-stage="novos">
+              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-blue-400"></div>
+                  <h3 class="font-heading font-bold text-sm text-blue-200">📥 Novos</h3>
+                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-blue-300 font-bold">0</span>
+                </div>
+                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+              </div>
+              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="novos"></div>
+            </div>
+
+            <!-- Col 2: Investigação -->
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-amber-500/30 p-3" data-stage="investigacao">
+              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                  <h3 class="font-heading font-bold text-sm text-amber-200">🔍 Investigação</h3>
+                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-amber-300 font-bold">0</span>
+                </div>
+                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+              </div>
+              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="investigacao"></div>
+            </div>
+
+            <!-- Col 3: Projetos -->
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-purple-500/30 p-3" data-stage="projetos">
+              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-purple-400"></div>
+                  <h3 class="font-heading font-bold text-sm text-purple-200">📐 Projetos</h3>
+                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-purple-300 font-bold">0</span>
+                </div>
+                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+              </div>
+              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="projetos"></div>
+            </div>
+
+            <!-- Col 4: Proposta -->
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-cyan-500/30 p-3" data-stage="proposta">
+              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-[#00D2D3]"></div>
+                  <h3 class="font-heading font-bold text-sm text-[#00D2D3]">💬 Proposta</h3>
+                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-[#00D2D3] font-bold">0</span>
+                </div>
+                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+              </div>
+              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="proposta"></div>
+            </div>
+
+            <!-- Col 5: Fechamento -->
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-rose-500/30 p-3" data-stage="fechamento">
+              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                  <h3 class="font-heading font-bold text-sm text-rose-300">🤝 Fechamento</h3>
+                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-rose-400 font-bold">0</span>
+                </div>
+                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+              </div>
+              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="fechamento"></div>
+            </div>
+
+            <!-- Col 6: Concluídas -->
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-emerald-500/30 p-3" data-stage="concluidas">
+              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                  <h3 class="font-heading font-bold text-sm text-emerald-300">🎉 Concluídas</h3>
+                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-emerald-400 font-bold">0</span>
+                </div>
+                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+              </div>
+              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="concluidas"></div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- VIEW 2: CENTRAL DE FOLLOW-UP -->
+      <!-- ======================================================== -->
+      <section id="view-followup" class="view-content flex-1 p-4 lg:p-6 hidden">
+        <div class="max-w-6xl mx-auto space-y-6">
+          <div>
+            <h1 class="text-2xl font-heading font-extrabold text-white flex items-center gap-2.5">
+              <i class="ph-bold ph-clock-countdown text-[#FECA57]"></i>
+              <span>Central de Follow-up Piff-Paff</span>
+            </h1>
+            <p class="text-xs text-slate-400 mt-1">Organização automática com base na data de retorno e no motivo comercial estratégico.</p>
+          </div>
+
+          <!-- Resumo de Alertas -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-rose-300 uppercase tracking-wider">Atrasados</span>
+                <div id="count-overdue" class="text-3xl font-heading font-extrabold text-rose-400 mt-1">0</div>
+              </div>
+              <i class="ph-bold ph-warning-circle text-4xl text-rose-500/40"></i>
+            </div>
+            <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-amber-300 uppercase tracking-wider">Para Hoje</span>
+                <div id="count-today" class="text-3xl font-heading font-extrabold text-amber-400 mt-1">0</div>
+              </div>
+              <i class="ph-bold ph-calendar-check text-4xl text-amber-500/40"></i>
+            </div>
+            <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-emerald-300 uppercase tracking-wider">Próximos Dias</span>
+                <div id="count-upcoming" class="text-3xl font-heading font-extrabold text-emerald-400 mt-1">0</div>
+              </div>
+              <i class="ph-bold ph-calendar-plus text-4xl text-emerald-500/40"></i>
+            </div>
+          </div>
+
+          <!-- LISTA 1: ATRASADOS -->
+          <div class="rounded-2xl bg-[#0E1722] border border-rose-500/30 p-5 space-y-4">
+            <h2 class="text-base font-heading font-bold text-rose-400 flex items-center gap-2">
+              <i class="ph-bold ph-siren"></i>
+              <span>Follow-ups Atrasados (Ação Imediata Necessária)</span>
+            </h2>
+            <div id="list-overdue" class="space-y-3"></div>
+          </div>
+
+          <!-- LISTA 2: PARA HOJE -->
+          <div class="rounded-2xl bg-[#0E1722] border border-amber-500/30 p-5 space-y-4">
+            <h2 class="text-base font-heading font-bold text-amber-300 flex items-center gap-2">
+              <i class="ph-bold ph-sun"></i>
+              <span>Agendados para Hoje</span>
+            </h2>
+            <div id="list-today" class="space-y-3"></div>
+          </div>
+
+          <!-- LISTA 3: PRÓXIMOS DIAS -->
+          <div class="rounded-2xl bg-[#0E1722] border border-white/10 p-5 space-y-4">
+            <h2 class="text-base font-heading font-bold text-slate-200 flex items-center gap-2">
+              <i class="ph-bold ph-calendar"></i>
+              <span>Próximos Dias</span>
+            </h2>
+            <div id="list-upcoming" class="space-y-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- VIEW 3: BASE DE CLIENTES (TABELA & EXPORTAÇÃO CSV) -->
+      <!-- ======================================================== -->
+      <section id="view-clients" class="view-content flex-1 p-4 lg:p-6 hidden">
+        <div class="max-w-7xl mx-auto space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-heading font-extrabold text-white flex items-center gap-2.5">
+                <i class="ph-bold ph-address-book text-[#00D2D3]"></i>
+                <span>Base Geral de Clientes</span>
+              </h1>
+              <div class="flex items-center gap-2 mt-1">
+                <span id="clients-counter-text" class="text-xs text-slate-400">Exibindo todos os clientes</span>
+                <button id="btn-clear-clients-filters" class="hidden text-xs font-semibold px-2 py-0.5 rounded-md bg-[#00D2D3]/20 text-[#00D2D3] border border-[#00D2D3]/40 hover:bg-[#00D2D3]/30 transition">
+                  <i class="ph-bold ph-x"></i> Limpar Filtros
+                </button>
+              </div>
+            </div>
+
+            <!-- Botões Base Caribe + Exportar CSV com UTF-8 BOM -->
+            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              <button id="btn-load-caribe-base" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#00D2D3]/15 text-[#00D2D3] hover:bg-[#00D2D3]/25 border border-[#00D2D3]/40 text-sm font-semibold transition active:scale-95 shadow-lg shadow-[#00D2D3]/10">
+                <i class="ph-bold ph-database text-lg"></i>
+                <span>Sincronizar Base Completa (185 Clientes)</span>
+              </button>
+              <button id="btn-export-csv" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-sm font-semibold transition active:scale-95 shadow-lg shadow-emerald-900/20">
+                <i class="ph-bold ph-file-csv text-lg"></i>
+                <span>Exportar para Excel (.CSV)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ABAS DE ESTÁGIOS RÁPIDOS -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <button class="stage-tab active px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition whitespace-nowrap" data-stage="all">
+              Todos (<span id="tab-count-all">0</span>)
+            </button>
+            <button class="stage-tab px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition whitespace-nowrap" data-stage="novos">
+              📥 Novos (<span id="tab-count-novos">0</span>)
+            </button>
+            <button class="stage-tab px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition whitespace-nowrap" data-stage="investigacao">
+              🔍 Investigação (<span id="tab-count-investigacao">0</span>)
+            </button>
+            <button class="stage-tab px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition whitespace-nowrap" data-stage="projetos">
+              📐 Projetos (<span id="tab-count-projetos">0</span>)
+            </button>
+            <button class="stage-tab px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition whitespace-nowrap" data-stage="proposta">
+              💬 Proposta (<span id="tab-count-proposta">0</span>)
+            </button>
+            <button class="stage-tab px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition whitespace-nowrap" data-stage="fechamento">
+              🤝 Fechamento (<span id="tab-count-fechamento">0</span>)
+            </button>
+            <button class="stage-tab px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition whitespace-nowrap" data-stage="concluidas">
+              🎉 Concluídas (<span id="tab-count-concluidas">0</span>)
+            </button>
+          </div>
+
+          <!-- Barra de Pesquisa e Filtros Secundários -->
+          <div class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-1">
+              <i class="ph-bold ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input id="input-search-clients" type="text" placeholder="Buscar por nome, telefone, instagram, cidade ou produto..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0E1722] border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#00D2D3] transition" />
+            </div>
+            <select id="select-filter-stage" class="px-3.5 py-2.5 rounded-xl bg-[#0E1722] border border-white/10 text-sm text-slate-200 focus:outline-none focus:border-[#00D2D3]">
+              <option value="all">Todos os Estágios</option>
+              <option value="novos">Novos</option>
+              <option value="investigacao">Investigação</option>
+              <option value="projetos">Projetos</option>
+              <option value="proposta">Proposta</option>
+              <option value="fechamento">Fechamento</option>
+              <option value="concluidas">Concluídas</option>
+            </select>
+            <select id="select-filter-temp" class="px-3.5 py-2.5 rounded-xl bg-[#0E1722] border border-white/10 text-sm text-slate-200 focus:outline-none focus:border-[#00D2D3]">
+              <option value="all">Todas as Temperaturas</option>
+              <option value="quente">🔥 Quente</option>
+              <option value="morno">🟡 Morno</option>
+              <option value="frio">❄️ Frio</option>
+            </select>
+          </div>
+
+          <!-- Tabela de Clientes (Desktop) -->
+          <div class="rounded-2xl bg-[#0E1722] border border-white/10 overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm text-slate-300">
+                <thead class="bg-[#14212E] text-xs uppercase tracking-wider text-slate-400 font-heading border-b border-white/10">
+                  <tr>
+                    <th class="py-3.5 px-4 font-bold">Cliente / Contato</th>
+                    <th class="py-3.5 px-4 font-bold">Cidade</th>
+                    <th class="py-3.5 px-4 font-bold">Estágio</th>
+                    <th class="py-3.5 px-4 font-bold">Valor</th>
+                    <th class="py-3.5 px-4 font-bold">Temperatura</th>
+                    <th class="py-3.5 px-4 font-bold">Próxima Ação Piff-Paff</th>
+                    <th class="py-3.5 px-4 font-bold">Follow-up</th>
+                    <th class="py-3.5 px-4 font-bold text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="table-clients-body" class="divide-y divide-white/5 font-sans"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 1: LEITOR INTELIGENTE DE WHATSAPP -->
+  <!-- ======================================================== -->
+  <div id="modal-reader" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-[#101C27] border border-[#00D2D3]/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#00D2D3]/20 border border-[#00D2D3]/40 flex items-center justify-center text-[#00D2D3] text-xl">
+            <i class="ph-bold ph-robot"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-bold text-lg text-white">Leitor Inteligente Piff-Paff</h3>
+            <p class="text-xs text-slate-400">Cole uma conversa do WhatsApp, transcrição de áudio ou anotações.</p>
+          </div>
+        </div>
+        <button id="btn-close-reader" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition">
+          <i class="ph-bold ph-x text-xl"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 overflow-y-auto">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+            Cole aqui o texto da conversa (Ctrl + V):
+          </label>
+          <textarea id="reader-raw-text" rows="7" placeholder="Exemplo:&#10;[16/08 14:10] Gabriel Lima (Campinas - SP): Boa tarde! Vi o Conjunto Ravello de 2,30m com corda náutica. Vocês entregam em Campinas? Se pagar à vista no Pix consegue fechar por R$ 42.000? O arquiteto já validou." class="w-full p-4 rounded-xl bg-[#0A1118] border border-white/10 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#00D2D3] transition font-mono leading-relaxed"></textarea>
+        </div>
+
+        <button id="btn-execute-read" class="w-full py-3 rounded-xl bg-gradient-to-r from-[#00D2D3] to-blue-500 text-black font-heading font-extrabold text-sm hover:brightness-110 shadow-lg shadow-[#00D2D3]/20 transition flex items-center justify-center gap-2">
+          <i class="ph-bold ph-lightning text-lg"></i>
+          <span>Processar Leitura com Motor Piff-Paff</span>
+        </button>
+
+        <div id="reader-preview-box" class="hidden p-4 rounded-xl bg-[#0A1118] border border-cyan-500/30 space-y-3">
+          <div class="flex items-center justify-between text-xs border-b border-white/10 pb-2">
+            <span class="font-bold text-[#00D2D3] flex items-center gap-1.5">
+              <i class="ph-bold ph-check-circle"></i> Leitura Concluída com Sucesso!
+            </span>
+            <span id="preview-temp-badge" class="px-2 py-0.5 rounded-full font-bold text-[11px]"></span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <span class="text-slate-500">Nome:</span>
+              <strong id="preview-name" class="block text-slate-200"></strong>
+            </div>
+            <div>
+              <span class="text-slate-500">Telefone / WhatsApp:</span>
+              <strong id="preview-phone" class="block text-slate-200"></strong>
+            </div>
+            <div>
+              <span class="text-slate-500">Cidade:</span>
+              <strong id="preview-city" class="block text-slate-200"></strong>
+            </div>
+            <div>
+              <span class="text-slate-500">Valor Negociado:</span>
+              <strong id="preview-value" class="block text-emerald-400 font-bold"></strong>
+            </div>
+          </div>
+
+          <div class="text-xs pt-1 border-t border-white/5">
+            <span class="text-slate-500">Produtos / Medidas Identificados:</span>
+            <p id="preview-products" class="text-slate-300 font-medium"></p>
+          </div>
+
+          <div class="text-xs pt-1 border-t border-white/5">
+            <span class="text-slate-500">Próxima Ação Piff-Paff Recomendada:</span>
+            <p id="preview-action" class="text-amber-300 font-semibold"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-[#14212E] border-t border-white/10 flex items-center justify-end gap-3">
+        <button id="btn-cancel-reader" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition">
+          Cancelar
+        </button>
+        <button id="btn-save-parsed-lead" class="hidden px-5 py-2 rounded-xl bg-[#00D2D3] text-black text-sm font-heading font-extrabold hover:brightness-110 shadow-lg shadow-[#00D2D3]/20 transition flex items-center gap-2">
+          <i class="ph-bold ph-floppy-disk"></i>
+          <span>Cadastrar no Funil</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 2: DETALHES COMPLETOS DO LEAD & MATRIZ PIFF-PAFF -->
+  <!-- ======================================================== -->
+  <div id="modal-lead-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-3xl bg-[#101C27] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="px-6 py-4 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="detail-temp-icon" class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"></div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="detail-lead-name" class="font-heading font-extrabold text-xl text-white"></h3>
+              <span id="detail-priority-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"></span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
+              <span id="detail-city"><i class="ph-bold ph-map-pin"></i> </span>
+              <span id="detail-line"><i class="ph-bold ph-tag"></i> </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="btn-speak-analysis" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/40 text-xs font-bold transition active:scale-95" title="Ouvir análise lida pelo computador">
+            <i class="ph-bold ph-speaker-high text-base"></i>
+            <span>Ouvir Análise</span>
+          </button>
+          <a id="detail-wa-link" href="#" target="_blank" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-bold transition active:scale-95">
+            <i class="ph-bold ph-whatsapp-logo text-base"></i>
+            <span>WhatsApp</span>
+          </a>
+          <button id="btn-close-detail" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition">
+            <i class="ph-bold ph-x text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-6 overflow-y-auto">
+        <!-- Barra Gabriel x Jhennifer -->
+        <div class="p-4 rounded-2xl bg-[#0A1118] border border-white/10 space-y-2">
+          <div class="flex items-center justify-between text-xs font-bold">
+            <span class="text-[#00D2D3] flex items-center gap-1">
+              <i class="ph-bold ph-user"></i> Gabriel: <span id="bar-gabriel-pct">50%</span> (Curadoria / Diagnóstico)
+            </span>
+            <span class="text-[#FF4757] flex items-center gap-1">
+              Jhennifer: <span id="bar-jhennifer-pct">50%</span> (Fechamento / Decisão) <i class="ph-bold ph-check"></i>
+            </span>
+          </div>
+          <div class="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex">
+            <div id="bar-gabriel-fill" class="h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-500" style="width: 50%"></div>
+            <div id="bar-jhennifer-fill" class="h-full bg-gradient-to-r from-amber-500 to-rose-500 transition-all duration-500" style="width: 50%"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="p-3.5 rounded-xl bg-[#14212E] border border-white/5">
+            <span class="text-slate-400 block mb-1">Momento Comercial:</span>
+            <strong id="detail-moment" class="text-sm font-heading font-bold text-white capitalize"></strong>
+          </div>
+          <div class="p-3.5 rounded-xl bg-[#14212E] border border-white/5">
+            <span class="text-slate-400 block mb-1">Emoção Predominante:</span>
+            <strong id="detail-emotion" class="text-sm font-heading font-bold text-amber-300"></strong>
+          </div>
+          <div class="p-3.5 rounded-xl bg-[#14212E] border border-white/5">
+            <span class="text-slate-400 block mb-1">Perfil Comportamental:</span>
+            <strong id="detail-profile" class="text-sm font-heading font-bold text-cyan-300"></strong>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-2xl bg-[#00D2D3]/10 border border-[#00D2D3]/30 space-y-1.5">
+            <span class="text-xs font-bold text-[#00D2D3] flex items-center gap-1.5 uppercase tracking-wider">
+              <i class="ph-bold ph-arrow-circle-right text-base"></i> Próxima Melhor Ação
+            </span>
+            <p id="detail-next-action" class="text-sm text-slate-100 font-medium leading-relaxed"></p>
+          </div>
+          <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-1.5">
+            <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
+              <i class="ph-bold ph-target text-base"></i> Microavanço Desejado
+            </span>
+            <p id="detail-micro-advance" class="text-sm text-slate-100 font-medium leading-relaxed"></p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-[#0A1118] border border-white/10 space-y-3">
+          <div>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Leitura Estratégica Piff-Paff:</span>
+            <p id="detail-strategic-reading" class="text-sm text-slate-200 mt-1 leading-relaxed"></p>
+          </div>
+          <div class="pt-3 border-t border-white/5">
+            <span class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1">
+              <i class="ph-bold ph-warning"></i> O Que Não Fazer Agora:
+            </span>
+            <p id="detail-what-not-to-do" class="text-xs text-rose-200/90 mt-1"></p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="ph-bold ph-notebook"></i> Histórico & Notas da Negociação
+          </span>
+          <div id="detail-notes-container" class="p-4 rounded-2xl bg-[#0A1118] border border-white/10 text-xs text-slate-300 whitespace-pre-line max-h-48 overflow-y-auto leading-relaxed font-mono"></div>
+
+          <div class="flex gap-2">
+            <input id="input-quick-note" type="text" placeholder="Adicionar nova interação ou alinhamento..." class="flex-1 px-3.5 py-2 rounded-xl bg-[#0A1118] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00D2D3]" />
+            <button id="btn-save-quick-note" class="px-3.5 py-2 rounded-xl bg-[#00D2D3]/20 text-[#00D2D3] hover:bg-[#00D2D3]/30 border border-[#00D2D3]/40 text-xs font-bold transition">
+              Adicionar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-[#14212E] border-t border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">Mover Estágio:</span>
+          <select id="detail-stage-select" class="px-3 py-1.5 rounded-xl bg-[#0A1118] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00D2D3]">
+            <option value="novos">📥 Novos</option>
+            <option value="investigacao">🔍 Investigação</option>
+            <option value="projetos">📐 Projetos</option>
+            <option value="proposta">💬 Proposta</option>
+            <option value="fechamento">🤝 Fechamento</option>
+            <option value="concluidas">🎉 Concluídas</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="btn-delete-lead" class="px-3 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition">
+            Excluir Lead
+          </button>
+          <button id="btn-save-detail-changes" class="px-4 py-2 rounded-xl bg-[#00D2D3] text-black font-heading font-extrabold text-xs hover:brightness-110 transition">
+            Salvar Alterações
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 3: NOVO LEAD MANUAL -->
+  <!-- ======================================================== -->
+  <div id="modal-new-lead" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-[#101C27] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-6 py-4 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
+        <h3 class="font-heading font-bold text-lg text-white">Cadastrar Novo Lead</h3>
+        <button id="btn-close-new-lead" class="p-2 text-slate-400 hover:text-white rounded-lg">
+          <i class="ph-bold ph-x text-xl"></i>
+        </button>
+      </div>
+
+      <form id="form-new-lead" class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 uppercase mb-1">Nome do Cliente *</label>
+          <input id="new-lead-name" type="text" required placeholder="Ex: Gabriel Lima" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-300 uppercase mb-1">Telefone / WhatsApp</label>
+            <input id="new-lead-phone" type="tel" placeholder="Ex: 11999998888" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-300 uppercase mb-1">Instagram (@)</label>
+            <input id="new-lead-instagram" type="text" placeholder="Ex: gabriellima" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-300 uppercase mb-1">Cidade / Estado</label>
+            <input id="new-lead-city" type="text" placeholder="Ex: Curitiba - PR" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-300 uppercase mb-1">Valor Estimado (R$)</label>
+            <input id="new-lead-value" type="number" step="100" placeholder="0.00" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-300 uppercase mb-1">Estágio Inicial</label>
+            <select id="new-lead-stage" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white focus:outline-none focus:border-[#00D2D3]">
+              <option value="novos">📥 Novos</option>
+              <option value="investigacao">🔍 Investigação</option>
+              <option value="projetos">📐 Projetos</option>
+              <option value="proposta">💬 Proposta</option>
+              <option value="fechamento">🤝 Fechamento</option>
+              <option value="concluidas">🎉 Concluídas</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-300 uppercase mb-1">Temperatura</label>
+            <select id="new-lead-temp" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white focus:outline-none focus:border-[#00D2D3]">
+              <option value="morno">🟡 Morno</option>
+              <option value="quente">🔥 Quente</option>
+              <option value="frio">❄️ Frio</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-300 uppercase mb-1">Anotações Iniciais / Resumo</label>
+          <textarea id="new-lead-notes" rows="3" placeholder="Informações de produtos de interesse, ambientes, etc..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-3">
+          <button type="button" id="btn-cancel-new-lead" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white transition">Cancelar</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#00D2D3] text-black font-heading font-extrabold text-xs hover:brightness-110 shadow-lg shadow-[#00D2D3]/20 transition">Salvar Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 4: CONFIGURAÇÃO SUPABASE -->
+  <!-- ======================================================== -->
+  <div id="modal-settings" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#101C27] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 class="font-heading font-bold text-lg text-white flex items-center gap-2">
+          <i class="ph-bold ph-database text-[#00D2D3]"></i> Conexão Supabase
+        </h3>
+        <button id="btn-close-settings" class="p-1.5 text-slate-400 hover:text-white rounded-lg">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Insira as chaves do seu projeto Supabase para sincronizar seus leads na nuvem em tempo real e receber os dados do ChatGPT.
+      </p>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 uppercase mb-1">Project URL:</label>
+          <input id="cfg-supabase-url" type="url" value="https://hqqzumdscdjleaedguzh.supabase.co" placeholder="https://xyzcompany.supabase.co" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-300 uppercase mb-1">anon public key / publishable:</label>
+          <input id="cfg-supabase-key" type="password" value="sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8" placeholder="sb_publishable_..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <button id="btn-load-caribe-modal" class="text-xs text-[#00D2D3] hover:underline font-semibold transition">Carregar 185 Clientes (Base Completa)</button>
+          <span class="text-slate-600">•</span>
+          <button id="btn-reset-demo" class="text-xs text-slate-500 hover:text-slate-300 transition">Demo (6 leads)</button>
+        </div>
+        <button id="btn-save-settings" class="px-5 py-2 rounded-xl bg-[#00D2D3] text-black font-heading font-bold text-xs hover:brightness-110 shadow-lg shadow-[#00D2D3]/20 transition">
+          Salvar e Conectar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-semibold bg-[#14212E] border border-white/10"></div>
+
+  <!-- BANCO DE DADOS OFICIAL ANTIGO (131 LEADS) -->
+  <script src="leads_data.js"></script>
+
+  <!-- JAVASCRIPT MASTER: LOGIC, PARSER, DRAG & DROP, TTS, CSV -->
+  <script>
+    // ==========================================
+    // 1. DADOS DE DEMONSTRAÇÃO OFICIAIS PIFF-PAFF (6 LEADS OFICIAIS)
+    // ==========================================
+    const DEFAULT_LEADS = [
+      {
+        id: 'lead-001',
+        name: 'Rai Amaral (Construtora)',
+        phone: '82982343333',
+        instagram: 'raiamaral_eng',
+        email: 'rai@construtoraamaral.com.br',
+        city: 'Maceió - AL',
+        stage: 'proposta',
+        value: 360000,
+        temperature: 'quente',
+        commercial_moment: 'decisao',
+        predominant_emotion: 'Entusiasmo e Urgência de Obra',
+        behavioral_profile: 'Empresarial / Decisor Rápido',
+        buying_signals: '18 sofás para apartamentos decorados, pediu cronograma de entrega',
+        main_objection: 'Prazo de entrega de 150 dias vs 30 dias',
+        gabriel_percentage: 30,
+        jhennifer_percentage: 70,
+        strategic_reading: 'Projeto institucional de alto valor. Construtora precisa equipar 5 empreendimentos nos próximos meses.',
+        next_best_action: 'Apresentar alternativa mista: entrega do lote inicial em 30 dias e restante em 90 dias com desconto de 10% no Pix.',
+        desired_micro_advance: 'Aprovação da diretoria sobre o lote fracionado.',
+        what_not_to_do: 'Não exigir pagamento total adiantado; focar no sinal de 30% e saldo na entrega.',
+        advance_probability: 'alta',
+        priority: 'MAXIMA',
+        commercial_line: 'Linha Internacional',
+        followup_date: new Date().toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[01/09 10:30] Rai Amaral: Olá! Estamos finalizando os decorados do Edifício Varandas de Maceió. Precisamos de 18 conjuntos de sofás e poltronas para entrega até novembro.'
+      },
+      {
+        id: 'lead-002',
+        name: 'Maysa Décimo',
+        phone: '41991234567',
+        instagram: 'maysa.decimo',
+        city: 'Curitiba - PR',
+        stage: 'projetos',
+        value: 180000,
+        temperature: 'quente',
+        commercial_moment: 'decisao',
+        predominant_emotion: 'Exigência estética refinada',
+        behavioral_profile: 'Arquiteta / Curadora de Estilo',
+        buying_signals: 'Enviou planta baixa da cobertura e aprovou o layout 3D',
+        main_objection: 'Dúvida na combinação de cor da corda náutica com o piso travertino',
+        gabriel_percentage: 70,
+        jhennifer_percentage: 30,
+        strategic_reading: 'Cliente de altíssimo padrão. Valoriza acabamentos autorais e exclusividade.',
+        next_best_action: 'Enviar amostra física das cordas terracota e fendi pelo motoboy e agendar alinhamento de 10 min.',
+        desired_micro_advance: 'Definição final das paletas de tecido e corda náutica.',
+        what_not_to_do: 'Não mandar fotos genéricas de catálogo; enviar vídeos reais sob luz natural.',
+        advance_probability: 'alta',
+        priority: 'MAXIMA',
+        commercial_line: 'Linha Premium',
+        followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[02/09 15:45] Maysa: Gabriel, amei o Conjunto Ravello! Mas meu arquiteto quer ver se a corda terracota combina com o mármore da varanda.'
+      },
+      {
+        id: 'lead-003',
+        name: 'Luciana Soares Bezerra',
+        phone: '41998765432',
+        instagram: 'luciana.sbezerra',
+        city: 'Curitiba - PR',
+        stage: 'fechamento',
+        value: 158800,
+        temperature: 'quente',
+        commercial_moment: 'fechamento',
+        predominant_emotion: 'Decidida e Pronta para Pagar',
+        behavioral_profile: 'Pragmática e Objetiva',
+        buying_signals: 'Solicitou dados bancários para Pix com desconto comercial',
+        main_objection: 'Apenas validação do prazo de entrega antes do feriado',
+        gabriel_percentage: 10,
+        jhennifer_percentage: 90,
+        strategic_reading: 'Negociação em fechamento imediato. Mesa de centro, mesa retangular e 4 espreguiçadeiras Tela Slim.',
+        next_best_action: 'Formalizar pedido comercial no WhatsApp com link de pagamento e confirmação de estoque imediato.',
+        desired_micro_advance: 'Comprovante do Pix de sinal.',
+        what_not_to_do: 'Não reabrir dúvidas ou oferecer novos produtos agora.',
+        advance_probability: 'alta',
+        priority: 'MAXIMA',
+        commercial_line: 'Linha Premium',
+        followup_date: new Date().toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[03/09 11:20] Luciana: Já mostrei pro meu marido e vamos fechar. Consegue manter os 10% no Pix e entregar até o dia 20?'
+      },
+      {
+        id: 'lead-004',
+        name: 'Cristiano Salvatori',
+        phone: '54999747088',
+        instagram: 'cristianosalvatori',
+        city: 'Garibaldi - RS',
+        stage: 'investigacao',
+        value: 69660,
+        temperature: 'morno',
+        commercial_moment: 'pesquisa',
+        predominant_emotion: 'Cautela e Comparação',
+        behavioral_profile: 'Analítico e Detalhista',
+        buying_signals: 'Pediu especificações de durabilidade para área externa com serra/frio',
+        main_objection: 'Preocupação com corrosão e mofo nas almofadas em dias úmidos',
+        gabriel_percentage: 80,
+        jhennifer_percentage: 20,
+        strategic_reading: 'Cliente da Serra Gaúcha preocupado com intempéries e geada.',
+        next_best_action: 'Explicar a tecnologia da espuma náutica drenante e o alumínio naval com pintura eletrostática anti-UV.',
+        desired_micro_advance: 'Concordância do cliente com a superioridade técnica da estrutura náutica.',
+        what_not_to_do: 'Não ignorar a objeção climática; é o principal fator de decisão dele.',
+        advance_probability: 'media',
+        priority: 'ALTA',
+        commercial_line: 'Linha Premium',
+        followup_date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[04/09 16:00] Cristiano: Aqui em Garibaldi faz muito frio e umidade no inverno. Esse tecido não pega bolor se ficar na chuva?'
+      },
+      {
+        id: 'lead-005',
+        name: 'Carla Guimarães',
+        phone: '31988887766',
+        instagram: 'carlaguimaraes_decor',
+        city: 'Belo Horizonte - MG',
+        stage: 'novos',
+        value: 42000,
+        temperature: 'frio',
+        commercial_moment: 'pesquisa',
+        predominant_emotion: 'Curiosidade Inicial',
+        behavioral_profile: 'Exploradora',
+        buying_signals: 'Perguntou valores da chaise Tulum no direct do Instagram',
+        main_objection: 'Preço sem ter entendido os diferenciais de fabricação naval',
+        gabriel_percentage: 90,
+        jhennifer_percentage: 10,
+        strategic_reading: 'Lead recém-chegado via Instagram. Ainda não conhece a autoridade da marca.',
+        next_best_action: 'Fazer acolhimento elegante, perguntar medidas do espaço e convidar para receber o lookbook digital.',
+        desired_micro_advance: 'Descobrir se o ambiente é varanda coberta ou área aberta de piscina.',
+        what_not_to_do: 'Não enviar tabela de preços crua e fria sem contextualizar o design autoral.',
+        advance_probability: 'media',
+        priority: 'MEDIA',
+        commercial_line: 'Linha Standard',
+        followup_date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[05/09 18:30] Carla: Boa noite! Qual o valor daquela chaise redonda com ombrelone?'
+      },
+      {
+        id: 'lead-006',
+        name: 'Rodrigo Fontes',
+        phone: '11977776655',
+        instagram: 'rodrigofontes.arq',
+        city: 'São Paulo - SP',
+        stage: 'concluidas',
+        value: 98500,
+        temperature: 'quente',
+        commercial_moment: 'fechamento',
+        predominant_emotion: 'Satisfação Total',
+        behavioral_profile: 'Parceiro Comercial Recorrente',
+        buying_signals: 'Pedido entregue com sucesso, cliente final elogiou o acabamento',
+        main_objection: 'Nenhuma (pós-venda)',
+        gabriel_percentage: 20,
+        jhennifer_percentage: 80,
+        strategic_reading: 'Venda concluída e faturada. Arquiteto muito satisfeito.',
+        next_best_action: 'Solicitar fotos profissionais da área externa pronta para portfolio mútuo e oferecer comissão de especificação.',
+        desired_micro_advance: 'Recebimento das fotos em alta resolução.',
+        what_not_to_do: 'Não deixar de agradecer e nutrir a parceria para os próximos projetos.',
+        advance_probability: 'alta',
+        priority: 'ALTA',
+        commercial_line: 'Linha Premium',
+        followup_date: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[28/08 14:00] Rodrigo: Pessoal, os móveis chegaram na casa do cliente em Alphaville. Ficaram impecáveis!'
+      }
+    ];
+
+    // ==========================================
+    // 2. ESTADO GLOBAL & PERSISTÊNCIA
+    // ==========================================
+    let leads = [];
+    let activeLead = null;
+    let pendingParsedLead = null;
+    let currentTempFilter = 'all';
+    let currentClientsStageTab = 'all';
+
+    function initStorage() {
+      const stored = localStorage.getItem('piffpaff_leads_v4_185');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            leads = parsed;
+            return;
+          }
+        } catch (e) {
+          console.warn('Erro ao carregar do localStorage:', e);
+        }
+      }
+
+      // Se não há storage v4 salvo, carrega automaticamente os 185 clientes oficiais do CRM
+      const baseLeads = (typeof CARIBE_185_LEADS !== 'undefined' && Array.isArray(CARIBE_185_LEADS)) ? CARIBE_185_LEADS :
+                        (typeof CARIBE_131_LEADS !== 'undefined' && Array.isArray(CARIBE_131_LEADS)) ? CARIBE_131_LEADS : null;
+
+      if (baseLeads && baseLeads.length > 0) {
+        leads = [...baseLeads];
+        saveStorage();
+      } else {
+        leads = [...DEFAULT_LEADS];
+        saveStorage();
+      }
+    }
+
+    function saveStorage() {
+      localStorage.setItem('piffpaff_leads_v4_185', JSON.stringify(leads));
+      updateMetrics();
+    }
+
+    function loadCaribeBase(silent = false) {
+      const baseLeads = (typeof CARIBE_185_LEADS !== 'undefined' && Array.isArray(CARIBE_185_LEADS)) ? CARIBE_185_LEADS :
+                        (typeof CARIBE_131_LEADS !== 'undefined' && Array.isArray(CARIBE_131_LEADS)) ? CARIBE_131_LEADS : null;
+
+      if (baseLeads && baseLeads.length > 0) {
+        leads = [...baseLeads];
+        saveStorage();
+        renderKanban();
+        renderFollowupList();
+        renderClientsTable();
+        const totalVal = leads.reduce((a, c) => a + (Number(c.value) || 0), 0);
+        if (!silent) showToast(`Base completa de ${leads.length} clientes carregada com sucesso! (${formatBRL(totalVal)})`, 'success');
+      } else {
+        showToast('Base de clientes (leads_data.js) não encontrada.', 'error');
+      }
+    }
+
+    // ==========================================
+    // 2.1 SINCRONIZAÇÃO EM NUVEM (SUPABASE REST API)
+    // ==========================================
+    async function syncFromSupabase(silent = false) {
+      const url = localStorage.getItem('supabase_url') || 'https://hqqzumdscdjleaedguzh.supabase.co';
+      const key = localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+      if (!url || !key) return;
+
+      try {
+        const res = await fetch(`${url}/rest/v1/leads?select=*&order=value.desc`, {
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`
+          }
+        });
+        if (res.ok) {
+          const cloudLeads = await res.json();
+          if (Array.isArray(cloudLeads) && cloudLeads.length > 0) {
+            leads = cloudLeads;
+            saveStorage();
+            renderKanban();
+            renderFollowupList();
+            renderClientsTable();
+            const pill = document.getElementById('status-supabase-text');
+            if (pill) pill.textContent = 'Supabase Sincronizado (' + cloudLeads.length + ')';
+            if (!silent) showToast(`Nuvem Supabase sincronizada! (${cloudLeads.length} leads)`, 'success');
+          }
+        }
+      } catch (err) {
+        console.warn('Sync Supabase offline/fallback:', err);
+      }
+    }
+
+    async function syncLeadToSupabase(lead) {
+      const url = localStorage.getItem('supabase_url') || 'https://hqqzumdscdjleaedguzh.supabase.co';
+      const key = localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+      if (!url || !key || !lead || !lead.id) return;
+
+      try {
+        await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(lead.id)}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            stage: lead.stage,
+            value: Number(lead.value) || 0,
+            temperature: lead.temperature,
+            next_best_action: lead.next_best_action,
+            notes: lead.notes,
+            last_interaction: new Date().toISOString()
+          })
+        });
+      } catch (e) {
+        console.warn('Erro ao atualizar no Supabase:', e);
+      }
+    }
+
+    async function syncNewLeadToSupabase(lead) {
+      const url = localStorage.getItem('supabase_url') || 'https://hqqzumdscdjleaedguzh.supabase.co';
+      const key = localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+      if (!url || !key || !lead) return;
+
+      try {
+        await fetch(`${url}/rest/v1/leads`, {
+          method: 'POST',
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(lead)
+        });
+      } catch (e) {
+        console.warn('Erro ao inserir novo lead no Supabase:', e);
+      }
+    }
+
+    // ==========================================
+    // 3. RENDERIZAÇÃO DO KANBAN
+    // ==========================================
+    const STAGES = ['novos', 'investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas'];
+
+    function formatBRL(val) {
+      if (!val && val !== 0) return 'R$ 0';
+      return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function renderKanban() {
+      STAGES.forEach(stage => {
+        const container = document.querySelector(`.cards-container[data-stage="${stage}"]`);
+        if (!container) return;
+
+        container.innerHTML = '';
+        const stageLeads = leads.filter(l => l.stage === stage);
+
+        // Atualiza cabeçalho da coluna
+        const col = container.closest('.kanban-col');
+        if (col) {
+          const countBadge = col.querySelector('.col-count');
+          const valueBadge = col.querySelector('.col-value');
+          if (countBadge) countBadge.textContent = stageLeads.length;
+          const stageTotal = stageLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+          if (valueBadge) valueBadge.textContent = formatBRL(stageTotal);
+        }
+
+        // Filtro por temperatura
+        const filtered = stageLeads.filter(l => currentTempFilter === 'all' || l.temperature === currentTempFilter);
+
+        filtered.forEach(lead => {
+          const card = createLeadCard(lead);
+          container.appendChild(card);
+        });
+      });
+
+      updateMetrics();
+    }
+
+    function createLeadCard(lead) {
+      const card = document.createElement('div');
+      card.className = 'lead-card p-4 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-[#00D2D3]/40 shadow-lg cursor-grab active:cursor-grabbing transition-all space-y-2.5';
+      card.setAttribute('draggable', 'true');
+      card.setAttribute('data-id', lead.id);
+
+      // Temperaturas
+      let tempBadge = '';
+      if (lead.temperature === 'quente') {
+        tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">🔥 Quente</span>`;
+      } else if (lead.temperature === 'morno') {
+        tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">🟡 Morno</span>`;
+      } else {
+        tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">❄️ Frio</span>`;
+      }
+
+      // Prioridade
+      let priorityClass = 'text-slate-400 border-white/10';
+      if (lead.priority === 'MAXIMA') priorityClass = 'text-rose-400 bg-rose-500/10 border-rose-500/30 font-bold';
+      else if (lead.priority === 'ALTA') priorityClass = 'text-amber-400 bg-amber-500/10 border-amber-500/30 font-bold';
+
+      card.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <h4 class="font-heading font-bold text-sm text-white hover:text-[#00D2D3] transition">${lead.name}</h4>
+            <div class="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+              <span><i class="ph-bold ph-map-pin"></i> ${lead.city || 'Brasil'}</span>
+              <span>•</span>
+              <span class="text-slate-300">${lead.commercial_line || 'Linha Premium'}</span>
+            </div>
+          </div>
+          ${tempBadge}
+        </div>
+
+        <div class="flex items-center justify-between pt-1 border-t border-white/5 text-xs">
+          <span class="font-heading font-extrabold text-[#FECA57] text-sm">${formatBRL(lead.value)}</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full border ${priorityClass}">${lead.priority || 'MEDIA'}</span>
+        </div>
+
+        <div class="p-2 rounded-lg bg-[#0A1118]/80 text-[11px] text-slate-300 border border-white/5 line-clamp-2">
+          <strong class="text-cyan-300 font-semibold">Próxima ação:</strong> ${lead.next_best_action || 'Contatar cliente para diagnóstico.'}
+        </div>
+
+        <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+          <span class="flex items-center gap-1">
+            <i class="ph-bold ph-calendar"></i> ${lead.followup_date || 'Sem data'}
+          </span>
+          <div class="flex items-center gap-1.5">
+            ${lead.phone ? `
+              <a href="https://wa.me/55${lead.phone.replace(/\D/g,'')}" target="_blank" class="p-1 text-emerald-400 hover:text-emerald-300 rounded hover:bg-white/5" title="Chamar no WhatsApp" onclick="event.stopPropagation()">
+                <i class="ph-bold ph-whatsapp-logo text-base"></i>
+              </a>` : ''}
+            <button class="p-1 text-slate-400 hover:text-[#00D2D3] rounded hover:bg-white/5" title="Ver Detalhes">
+              <i class="ph-bold ph-arrow-square-out text-base"></i>
+            </button>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener('dragstart', (e) => {
+        card.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', lead.id);
+      });
+
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+      });
+
+      card.addEventListener('click', () => {
+        openLeadDetail(lead.id);
+      });
+
+      return card;
+    }
+
+    function setupDragAndDrop() {
+      document.querySelectorAll('.kanban-col').forEach(col => {
+        col.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          col.classList.add('drag-over');
+        });
+
+        col.addEventListener('dragleave', () => {
+          col.classList.remove('drag-over');
+        });
+
+        col.addEventListener('drop', (e) => {
+          e.preventDefault();
+          col.classList.remove('drag-over');
+          const leadId = e.dataTransfer.getData('text/plain');
+          const targetStage = col.getAttribute('data-stage');
+
+          if (leadId && targetStage) {
+            const lead = leads.find(l => l.id === leadId);
+            if (lead && lead.stage !== targetStage) {
+              lead.stage = targetStage;
+              lead.last_interaction = new Date().toISOString();
+              saveStorage();
+              renderKanban();
+              syncLeadToSupabase(lead);
+              showToast(`Lead movido para "${targetStage.toUpperCase()}"`, 'success');
+            }
+          }
+        });
+      });
+    }
+
+    // ==========================================
+    // 4. LEITOR INTELIGENTE (WHATSAPP PARSER)
+    // ==========================================
+    function parseWhatsAppText(rawText) {
+      const text = rawText.trim();
+      const lower = text.toLowerCase();
+
+      let phone = '';
+      const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?\d{4}[-\s]?\d{4}|\d{4}[-\s]?\d{4})/);
+      if (phoneMatch) {
+        phone = phoneMatch[0].replace(/\D/g, '');
+        if (phone.startsWith('55') && phone.length > 11) phone = phone.slice(2);
+      }
+
+      let instagram = '';
+      const instaMatch = text.match(/@([a-zA-Z0-9._]{3,30})/);
+      if (instaMatch) instagram = instaMatch[1].toLowerCase();
+
+      let name = '';
+      const waMatch = text.match(/(?:\[?\d{1,2}\/\d{1,2}(?:,\s*|\s+)\d{1,2}:\d{2}(?::\d{2})?\]?\s*[-~]?\s*)?([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+){1,3})\s*:/);
+      if (waMatch) {
+        name = waMatch[1].trim();
+      } else {
+        const nameLine = text.match(/(?:cliente|nome|contato|falar com):\s*([A-Za-zÀ-ÿ\s]{3,30})/i);
+        if (nameLine) name = nameLine[1].trim();
+      }
+      if (!name && instagram) name = '@' + instagram;
+      else if (!name && phone) name = `Cliente (${phone.slice(0, 2)}) ${phone.slice(2)}`;
+      else if (!name) name = 'Cliente WhatsApp';
+
+      let city = 'Brasil';
+      const cityMatch = text.match(/(?:em|para|de|cidade:?)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)?\s*[-/]\s*[A-Z]{2})/);
+      if (cityMatch) {
+        city = cityMatch[1].trim();
+      } else {
+        const cities = ['São Paulo', 'Campinas', 'Curitiba', 'Rio de Janeiro', 'Belo Horizonte', 'Maceió', 'Garibaldi', 'Florianópolis'];
+        for (const c of cities) {
+          if (new RegExp(`\\b${c}\\b`, 'i').test(text)) { city = c; break; }
+        }
+      }
+
+      const prods = [];
+      if (/sof[áa]/i.test(lower)) prods.push('Sofá Curvo / Modular');
+      if (/poltrona/i.test(lower)) prods.push('Poltronas');
+      if (/mesa/i.test(lower)) prods.push('Mesa de Jantar / Centro');
+      if (/chaise|espregui[çc]adeira/i.test(lower)) prods.push('Chaise / Espreguiçadeira');
+      if (/balan[çc]o/i.test(lower)) prods.push('Balanço Suspenso');
+      if (/ravello/i.test(lower)) prods.push('Conjunto Ravello');
+      if (/santorini/i.test(lower)) prods.push('Conjunto Santorini');
+
+      let value = 0;
+      const valMatch = text.match(/(?:R\$\s*|valor\s*(?:de)?\s*|por\s*)(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)/i);
+      if (valMatch) {
+        const clean = valMatch[1].replace(/\./g, '').replace(',', '.');
+        const parsed = parseFloat(clean);
+        if (!isNaN(parsed) && parsed > 500) value = parsed;
+      }
+
+      let temperature = 'morno';
+      let commercial_moment = 'pesquisa';
+      let stage = 'novos';
+      let gabriel_percentage = 60;
+      let jhennifer_percentage = 40;
+      let next_best_action = 'Apresentar curadoria técnica e validar medidas do ambiente.';
+      let desired_micro_advance = 'Definição da linha de preferência e especificações.';
+      let what_not_to_do = 'Não pressionar por fechamento antes de validar medidas.';
+
+      if (/pix|fechar|pagar|sinal|desconto|dados banc[áa]rios/i.test(lower)) {
+        temperature = 'quente';
+        commercial_moment = 'fechamento';
+        stage = 'fechamento';
+        gabriel_percentage = 20;
+        jhennifer_percentage = 80;
+        next_best_action = 'Formalizar proposta comercial no WhatsApp com link de pagamento e prazo.';
+        desired_micro_advance = 'Envio do comprovante de sinal do Pix.';
+        what_not_to_do = 'Não reabrir dúvidas desnecessárias sobre outros modelos.';
+      } else if (/planta|projeto|arquiteto|medidas|layout/i.test(lower)) {
+        temperature = 'quente';
+        commercial_moment = 'decisao';
+        stage = 'projetos';
+        gabriel_percentage = 70;
+        jhennifer_percentage = 30;
+        next_best_action = 'Validar layout 3D com o arquiteto e enviar amostra de cordas náuticas.';
+        desired_micro_advance = 'Aprovação final das medidas e paleta de acabamentos.';
+        what_not_to_do = 'Não mandar fotos genéricas de catálogo sem relação com o projeto.';
+      }
+
+      return {
+        id: 'lead-' + Date.now(),
+        name,
+        phone,
+        instagram,
+        city,
+        stage,
+        value,
+        temperature,
+        commercial_moment,
+        predominant_emotion: temperature === 'quente' ? 'Decisão iminente' : 'Interesse consultivo',
+        behavioral_profile: 'Direto / Pragmático',
+        buying_signals: prods.length > 0 ? prods.join(', ') : 'Interesse demonstrado na conversa',
+        main_objection: 'Aguardando validação',
+        gabriel_percentage,
+        jhennifer_percentage,
+        strategic_reading: 'Lead processado automaticamente pelo Leitor Inteligente Piff-Paff.',
+        next_best_action,
+        desired_micro_advance,
+        what_not_to_do,
+        advance_probability: temperature === 'quente' ? 'alta' : 'media',
+        priority: value > 50000 || temperature === 'quente' ? 'MAXIMA' : 'ALTA',
+        commercial_line: /internacional/i.test(lower) ? 'Linha Internacional' : 'Linha Premium',
+        followup_date: new Date().toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: `[${new Date().toLocaleString('pt-BR')} - Leitura WhatsApp]:\n${text}`
+      };
+    }
+
+    // ==========================================
+    // 5. DETALHES DO LEAD & AUDIO TTS
+    // ==========================================
+    function openLeadDetail(leadId) {
+      const lead = leads.find(l => l.id === leadId);
+      if (!lead) return;
+      activeLead = lead;
+
+      document.getElementById('detail-lead-name').textContent = lead.name;
+      document.getElementById('detail-city').innerHTML = `<i class="ph-bold ph-map-pin"></i> ${lead.city || 'Brasil'}`;
+      document.getElementById('detail-line').innerHTML = `<i class="ph-bold ph-tag"></i> ${lead.commercial_line || 'Linha Premium'}`;
+
+      const prioPill = document.getElementById('detail-priority-pill');
+      prioPill.textContent = lead.priority || 'MEDIA';
+      if (lead.priority === 'MAXIMA') prioPill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-rose-500/20 text-rose-300 border border-rose-500/30';
+      else if (lead.priority === 'ALTA') prioPill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      else prioPill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-white/10 text-slate-300';
+
+      const iconBox = document.getElementById('detail-temp-icon');
+      if (lead.temperature === 'quente') {
+        iconBox.className = 'w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-xl';
+        iconBox.innerHTML = '🔥';
+      } else if (lead.temperature === 'morno') {
+        iconBox.className = 'w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl';
+        iconBox.innerHTML = '🟡';
+      } else {
+        iconBox.className = 'w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-xl';
+        iconBox.innerHTML = '❄️';
+      }
+
+      const gabrielPct = lead.gabriel_percentage || 50;
+      const jhenniferPct = 100 - gabrielPct;
+      document.getElementById('bar-gabriel-pct').textContent = gabrielPct + '%';
+      document.getElementById('bar-jhennifer-pct').textContent = jhenniferPct + '%';
+      document.getElementById('bar-gabriel-fill').style.width = gabrielPct + '%';
+      document.getElementById('bar-jhennifer-fill').style.width = jhenniferPct + '%';
+
+      document.getElementById('detail-moment').textContent = lead.commercial_moment || 'Pesquisa';
+      document.getElementById('detail-emotion').textContent = lead.predominant_emotion || 'Dúvida';
+      document.getElementById('detail-profile').textContent = lead.behavioral_profile || 'Analítico';
+
+      document.getElementById('detail-next-action').textContent = lead.next_best_action || 'Contatar cliente para diagnóstico.';
+      document.getElementById('detail-micro-advance').textContent = lead.desired_micro_advance || 'Definir modelo preferido.';
+      document.getElementById('detail-strategic-reading').textContent = lead.strategic_reading || 'Sem leitura estratégica registrada.';
+      document.getElementById('detail-what-not-to-do').textContent = lead.what_not_to_do || 'Não pressionar por fechamento prematuro.';
+
+      document.getElementById('detail-notes-container').textContent = lead.notes || 'Nenhum histórico registrado.';
+      document.getElementById('detail-stage-select').value = lead.stage;
+
+      const waLink = document.getElementById('detail-wa-link');
+      if (lead.phone) {
+        waLink.href = `https://wa.me/55${lead.phone.replace(/\D/g, '')}`;
+        waLink.classList.remove('hidden');
+      } else {
+        waLink.classList.add('hidden');
+      }
+
+      document.getElementById('modal-lead-detail').classList.remove('hidden');
+    }
+
+    function speakLeadAnalysis() {
+      if (!activeLead) return;
+      if (!('speechSynthesis' in window)) {
+        alert('Seu navegador não suporta leitura em voz alta.');
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+
+      const textToSpeak = `Análise Piff-Paff para o cliente ${activeLead.name}. Temperatura: ${activeLead.temperature}. Momento comercial: ${activeLead.commercial_moment || 'pesquisa'}. Próxima melhor ação: ${activeLead.next_best_action}. Microavanço desejado: ${activeLead.desired_micro_advance}. O que não fazer: ${activeLead.what_not_to_do}.`;
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+
+      window.speechSynthesis.speak(utterance);
+      showToast('🔊 PC realizando a leitura da análise...', 'info');
+    }
+
+    // ==========================================
+    // 6. CENTRAL DE FOLLOW-UP
+    // ==========================================
+    function renderFollowupCenter() {
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const overdue = leads.filter(l => l.followup_date && l.followup_date < todayStr && l.stage !== 'concluidas');
+      const today = leads.filter(l => l.followup_date === todayStr && l.stage !== 'concluidas');
+      const upcoming = leads.filter(l => l.followup_date && l.followup_date > todayStr && l.stage !== 'concluidas');
+
+      document.getElementById('count-overdue').textContent = overdue.length;
+      document.getElementById('count-today').textContent = today.length;
+      document.getElementById('count-upcoming').textContent = upcoming.length;
+
+      const renderList = (containerId, list, badgeClass, badgeText) => {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        if (list.length === 0) {
+          container.innerHTML = `<div class="text-xs text-slate-500 py-3 italic">Nenhum contato nesta lista no momento.</div>`;
+          return;
+        }
+
+        list.forEach(lead => {
+          const item = document.createElement('div');
+          item.className = 'p-3.5 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition';
+          item.innerHTML = `
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="font-heading font-bold text-white text-sm cursor-pointer hover:text-[#00D2D3]" onclick="openLeadDetail('${lead.id}')">${lead.name}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeClass}">${badgeText}</span>
+                <span class="text-xs font-heading font-bold text-[#FECA57]">${formatBRL(lead.value)}</span>
+              </div>
+              <p class="text-xs text-slate-300"><strong class="text-cyan-300">Ação:</strong> ${lead.next_best_action || 'Entrar em contato'}</p>
+              <div class="text-[11px] text-slate-400">Data programada: ${lead.followup_date}</div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              ${lead.phone ? `
+                <a href="https://wa.me/55${lead.phone.replace(/\D/g,'')}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-semibold flex items-center gap-1">
+                  <i class="ph-bold ph-whatsapp-logo"></i> Chamar
+                </a>` : ''}
+              <button onclick="postponeLead('${lead.id}', 1)" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-slate-300 transition" title="Adiar 1 dia">+1d</button>
+              <button onclick="postponeLead('${lead.id}', 3)" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-slate-300 transition" title="Adiar 3 dias">+3d</button>
+              <button onclick="openLeadDetail('${lead.id}')" class="px-3 py-1.5 rounded-lg bg-[#00D2D3]/20 text-[#00D2D3] hover:bg-[#00D2D3]/30 border border-[#00D2D3]/40 text-xs font-semibold">
+                Análise
+              </button>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      };
+
+      renderList('list-overdue', overdue, 'bg-rose-500/20 text-rose-300 border border-rose-500/30', 'Atrasado');
+      renderList('list-today', today, 'bg-amber-500/20 text-amber-300 border border-amber-500/30', 'Hoje');
+      renderList('list-upcoming', upcoming, 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30', 'Agendado');
+    }
+
+    function postponeLead(leadId, days) {
+      const lead = leads.find(l => l.id === leadId);
+      if (lead) {
+        const newDate = new Date(Date.now() + 86400000 * days).toISOString().split('T')[0];
+        lead.followup_date = newDate;
+        saveStorage();
+        renderFollowupCenter();
+        showToast(`Follow-up adiado para ${newDate}`, 'success');
+      }
+    }
+
+    // ==========================================
+    // 7. BASE DE CLIENTES (TABELA & EXPORTAÇÃO CSV)
+    // ==========================================
+    function renderClientsTable() {
+      const tbody = document.getElementById('table-clients-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      // Atualiza contadores das abas de estágio
+      document.getElementById('tab-count-all').textContent = leads.length;
+      STAGES.forEach(s => {
+        const el = document.getElementById(`tab-count-${s}`);
+        if (el) el.textContent = leads.filter(l => l.stage === s).length;
+      });
+
+      const searchInput = document.getElementById('input-search-clients');
+      const search = (searchInput?.value || '').trim().toLowerCase();
+      const stageSelect = document.getElementById('select-filter-stage');
+      const tempSelect = document.getElementById('select-filter-temp');
+
+      // Se a aba de estágio estiver ativa, sincroniza o select
+      let activeStage = currentClientsStageTab;
+      if (stageSelect && stageSelect.value !== 'all' && activeStage === 'all') {
+        activeStage = stageSelect.value;
+      }
+      const tempFilter = tempSelect?.value || 'all';
+
+      // Atualiza estado visual do botão "Limpar Filtros"
+      const btnClear = document.getElementById('btn-clear-clients-filters');
+      const isFiltered = search !== '' || activeStage !== 'all' || tempFilter !== 'all';
+      if (btnClear) {
+        if (isFiltered) btnClear.classList.remove('hidden');
+        else btnClear.classList.add('hidden');
+      }
+
+      const filtered = leads.filter(l => {
+        const matchSearch = !search ||
+          (l.name && l.name.toLowerCase().includes(search)) ||
+          (l.phone && l.phone.includes(search)) ||
+          (l.instagram && l.instagram.toLowerCase().includes(search)) ||
+          (l.city && l.city.toLowerCase().includes(search)) ||
+          (l.notes && l.notes.toLowerCase().includes(search));
+
+        const matchStage = activeStage === 'all' || l.stage === activeStage;
+        const matchTemp = tempFilter === 'all' || l.temperature === tempFilter;
+
+        return matchSearch && matchStage && matchTemp;
+      });
+
+      // Atualiza texto de contagem
+      const counterText = document.getElementById('clients-counter-text');
+      if (counterText) {
+        if (filtered.length === leads.length) {
+          counterText.textContent = `Exibindo todos os ${leads.length} clientes cadastrados`;
+        } else {
+          counterText.textContent = `Exibindo ${filtered.length} de ${leads.length} clientes (Filtro Ativo)`;
+        }
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="py-8 text-center text-slate-500 text-xs">
+              <i class="ph-bold ph-magnifying-glass text-2xl block mb-2 text-slate-600"></i>
+              Nenhum cliente encontrado com os filtros selecionados.<br/>
+              <button onclick="resetClientsFilters()" class="mt-2 text-[#00D2D3] underline hover:brightness-125">Limpar filtros e ver todos (${leads.length})</button>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      filtered.forEach(lead => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-white/5 transition';
+
+        let tempPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300">❄️ Frio</span>`;
+        if (lead.temperature === 'quente') tempPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300">🔥 Quente</span>`;
+        else if (lead.temperature === 'morno') tempPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">🟡 Morno</span>`;
+
+        tr.innerHTML = `
+          <td class="py-3 px-4">
+            <div class="font-bold text-white cursor-pointer hover:text-[#00D2D3]" onclick="openLeadDetail('${lead.id}')">${lead.name}</div>
+            <div class="text-[11px] text-slate-400">${lead.phone || (lead.instagram ? '@' + lead.instagram : 'Sem contato')}</div>
+          </td>
+          <td class="py-3 px-4 text-slate-300">${lead.city || 'Brasil'}</td>
+          <td class="py-3 px-4 capitalize font-semibold text-slate-200">
+            <span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs">${lead.stage}</span>
+          </td>
+          <td class="py-3 px-4 font-heading font-bold text-[#FECA57]">${formatBRL(lead.value)}</td>
+          <td class="py-3 px-4">${tempPill}</td>
+          <td class="py-3 px-4 text-xs text-slate-300 max-w-xs truncate" title="${lead.next_best_action || ''}">${lead.next_best_action || '-'}</td>
+          <td class="py-3 px-4 text-xs text-slate-400">${lead.followup_date || '-'}</td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="openLeadDetail('${lead.id}')" class="px-2.5 py-1 rounded-lg bg-[#00D2D3]/20 text-[#00D2D3] hover:bg-[#00D2D3]/30 text-xs font-semibold">
+              Ver
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function resetClientsFilters() {
+      currentClientsStageTab = 'all';
+      const stageSelect = document.getElementById('select-filter-stage');
+      const tempSelect = document.getElementById('select-filter-temp');
+      const searchInput = document.getElementById('input-search-clients');
+
+      if (stageSelect) stageSelect.value = 'all';
+      if (tempSelect) tempSelect.value = 'all';
+      if (searchInput) searchInput.value = '';
+
+      document.querySelectorAll('.stage-tab').forEach(t => {
+        if (t.getAttribute('data-stage') === 'all') t.classList.add('active');
+        else t.classList.remove('active');
+      });
+
+      renderClientsTable();
+    }
+
+    function exportLeadsToCsv() {
+      if (leads.length === 0) {
+        alert('Nenhum cliente disponível para exportação.');
+        return;
+      }
+
+      const headers = ['ID', 'Nome', 'Telefone', 'Instagram', 'Cidade', 'Estagio', 'Valor (R$)', 'Temperatura', 'Proxima Acao', 'Microavanco', 'Data Follow-up', 'Notas'];
+      const escape = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
+
+      const rows = leads.map(l => [
+        escape(l.id),
+        escape(l.name),
+        escape(l.phone || ''),
+        escape(l.instagram || ''),
+        escape(l.city || ''),
+        escape(l.stage),
+        escape(l.value || 0),
+        escape(l.temperature),
+        escape(l.next_best_action || ''),
+        escape(l.desired_micro_advance || ''),
+        escape(l.followup_date || ''),
+        escape((l.notes || '').replace(/\r?\n/g, ' -- '))
+      ]);
+
+      const csvContent = '\uFEFF' + [
+        headers.join(';'),
+        ...rows.map(r => r.join(';'))
+      ].join('\r\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `piff-paff-crm-clientes-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Exportação concluída com sucesso para o Excel!', 'success');
+    }
+
+    // ==========================================
+    // 8. TOAST NOTIFICATIONS & METRICS
+    // ==========================================
+    function showToast(msg, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+
+      if (type === 'success') {
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-semibold bg-emerald-950/90 text-emerald-200 border border-emerald-500/40';
+      } else {
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-semibold bg-[#14212E] text-slate-100 border border-[#00D2D3]/40';
+      }
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3500);
+    }
+
+    function updateMetrics() {
+      const totalPipeline = leads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+      document.getElementById('sidebar-total-pipeline').textContent = formatBRL(totalPipeline);
+      document.getElementById('badge-kanban-total').textContent = leads.length;
+      document.getElementById('badge-clients-total').textContent = leads.length;
+
+      const hotCount = leads.filter(l => l.temperature === 'quente').length;
+      document.getElementById('sidebar-hot-count').textContent = `${hotCount} clientes`;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const overdue = leads.filter(l => l.followup_date && l.followup_date < todayStr && l.stage !== 'concluidas');
+      document.getElementById('badge-followup-urgent').textContent = overdue.length;
+    }
+
+    // ==========================================
+    // 9. EVENT LISTENERS E NAVEGAÇÃO
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', () => {
+      initStorage();
+
+      // Credenciais oficiais do Supabase
+      if (!localStorage.getItem('supabase_url')) {
+        localStorage.setItem('supabase_url', 'https://hqqzumdscdjleaedguzh.supabase.co');
+      }
+      if (!localStorage.getItem('supabase_key')) {
+        localStorage.setItem('supabase_key', 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8');
+      }
+      const pillText = document.getElementById('status-supabase-text');
+      if (pillText) pillText.textContent = 'Supabase Conectado';
+
+      renderKanban();
+      setupDragAndDrop();
+      syncFromSupabase(true);
+
+      // Navegação entre Views (Kanban, Follow-up, Clientes)
+      const navButtons = document.querySelectorAll('.nav-btn, .nav-btn-mobile');
+      navButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const view = btn.getAttribute('data-view');
+          switchView(view);
+          document.getElementById('mobile-drawer').classList.add('hidden');
+        });
+      });
+
+      function switchView(viewName) {
+        document.querySelectorAll('.view-content').forEach(sec => sec.classList.add('hidden'));
+        document.getElementById(`view-${viewName}`).classList.remove('hidden');
+
+        document.querySelectorAll('.nav-btn').forEach(b => {
+          if (b.getAttribute('data-view') === viewName) {
+            b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-white bg-[#00D2D3]/15 text-[#00D2D3] border border-[#00D2D3]/30';
+          } else {
+            b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent';
+          }
+        });
+
+        if (viewName === 'kanban') {
+          renderKanban();
+        } else if (viewName === 'followup') {
+          renderFollowupCenter();
+        } else if (viewName === 'clients') {
+          // Ao abrir a Base de Clientes, redefine os filtros para 'all' por padrão para exibir todos os 6 clientes!
+          resetClientsFilters();
+        }
+      }
+
+      // Mobile Menu Toggle
+      document.getElementById('btn-toggle-mobile-menu').addEventListener('click', () => {
+        document.getElementById('mobile-drawer').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-mobile-menu').addEventListener('click', () => {
+        document.getElementById('mobile-drawer').classList.add('hidden');
+      });
+
+      // Filtros de Temperatura no Kanban
+      document.querySelectorAll('.filter-temp').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentTempFilter = btn.getAttribute('data-temp');
+          document.querySelectorAll('.filter-temp').forEach(b => b.classList.remove('ring-2', 'ring-[#00D2D3]'));
+          btn.classList.add('ring-2', 'ring-[#00D2D3]');
+          renderKanban();
+        });
+      });
+
+      // Abas de Estágio na Base de Clientes
+      document.querySelectorAll('.stage-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentClientsStageTab = tab.getAttribute('data-stage');
+          const stageSelect = document.getElementById('select-filter-stage');
+          if (stageSelect) stageSelect.value = currentClientsStageTab;
+          renderClientsTable();
+        });
+      });
+
+      document.getElementById('btn-clear-clients-filters')?.addEventListener('click', resetClientsFilters);
+
+      // Modal Leitor WhatsApp
+      const modalReader = document.getElementById('modal-reader');
+      const openReader = () => {
+        document.getElementById('reader-raw-text').value = '';
+        document.getElementById('reader-preview-box').classList.add('hidden');
+        document.getElementById('btn-save-parsed-lead').classList.add('hidden');
+        modalReader.classList.remove('hidden');
+      };
+      document.getElementById('btn-open-reader-top').addEventListener('click', openReader);
+      document.getElementById('btn-close-reader').addEventListener('click', () => modalReader.classList.add('hidden'));
+      document.getElementById('btn-cancel-reader').addEventListener('click', () => modalReader.classList.add('hidden'));
+
+      // Processar Leitura
+      document.getElementById('btn-execute-read').addEventListener('click', () => {
+        const raw = document.getElementById('reader-raw-text').value;
+        if (!raw.trim()) {
+          alert('Por favor, cole o texto da conversa antes de processar.');
+          return;
+        }
+
+        const parsed = parseWhatsAppText(raw);
+        pendingParsedLead = parsed;
+
+        document.getElementById('preview-name').textContent = parsed.name;
+        document.getElementById('preview-phone').textContent = parsed.phone || (parsed.instagram ? '@' + parsed.instagram : 'Não detectado');
+        document.getElementById('preview-city').textContent = parsed.city;
+        document.getElementById('preview-value').textContent = formatBRL(parsed.value);
+        document.getElementById('preview-products').textContent = parsed.buying_signals;
+        document.getElementById('preview-action').textContent = parsed.next_best_action;
+
+        const pBadge = document.getElementById('preview-temp-badge');
+        pBadge.textContent = parsed.temperature.toUpperCase();
+        if (parsed.temperature === 'quente') pBadge.className = 'px-2 py-0.5 rounded-full font-bold text-[11px] bg-rose-500/20 text-rose-300';
+        else if (parsed.temperature === 'morno') pBadge.className = 'px-2 py-0.5 rounded-full font-bold text-[11px] bg-amber-500/20 text-amber-300';
+        else pBadge.className = 'px-2 py-0.5 rounded-full font-bold text-[11px] bg-blue-500/20 text-blue-300';
+
+        document.getElementById('reader-preview-box').classList.remove('hidden');
+        document.getElementById('btn-save-parsed-lead').classList.remove('hidden');
+      });
+
+      // Salvar Lead Processado
+      document.getElementById('btn-save-parsed-lead').addEventListener('click', () => {
+        if (!pendingParsedLead) return;
+
+        let existingIndex = -1;
+        if (pendingParsedLead.phone) {
+          existingIndex = leads.findIndex(l => l.phone && l.phone === pendingParsedLead.phone);
+        }
+        if (existingIndex === -1 && pendingParsedLead.instagram) {
+          existingIndex = leads.findIndex(l => l.instagram && l.instagram === pendingParsedLead.instagram);
+        }
+
+        if (existingIndex >= 0) {
+          const ex = leads[existingIndex];
+          leads[existingIndex] = {
+            ...ex,
+            ...pendingParsedLead,
+            id: ex.id,
+            notes: (ex.notes || '') + '\n\n' + pendingParsedLead.notes
+          };
+          showToast(`Lead "${ex.name}" atualizado com sucesso!`, 'success');
+        } else {
+          leads.unshift(pendingParsedLead);
+          showToast(`Novo lead "${pendingParsedLead.name}" cadastrado no funil!`, 'success');
+        }
+
+        saveStorage();
+        renderKanban();
+        modalReader.classList.add('hidden');
+      });
+
+      // Modal Detalhes Lead
+      document.getElementById('btn-close-detail').addEventListener('click', () => {
+        document.getElementById('modal-lead-detail').classList.add('hidden');
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      });
+
+      document.getElementById('btn-speak-analysis').addEventListener('click', speakLeadAnalysis);
+
+      document.getElementById('btn-save-quick-note').addEventListener('click', () => {
+        const input = document.getElementById('input-quick-note');
+        const note = input.value.trim();
+        if (!note || !activeLead) return;
+
+        const timestamp = new Date().toLocaleString('pt-BR');
+        const entry = `[${timestamp}]: ${note}`;
+        activeLead.notes = activeLead.notes ? `${activeLead.notes}\n\n${entry}` : entry;
+        activeLead.last_interaction = new Date().toISOString();
+
+        document.getElementById('detail-notes-container').textContent = activeLead.notes;
+        input.value = '';
+        saveStorage();
+        showToast('Nota adicionada ao histórico!', 'success');
+      });
+
+      document.getElementById('btn-save-detail-changes').addEventListener('click', () => {
+        if (!activeLead) return;
+        const newStage = document.getElementById('detail-stage-select').value;
+        activeLead.stage = newStage;
+        saveStorage();
+        renderKanban();
+        document.getElementById('modal-lead-detail').classList.add('hidden');
+        showToast('Alterações salvas com sucesso!', 'success');
+      });
+
+      document.getElementById('btn-delete-lead').addEventListener('click', () => {
+        if (!activeLead) return;
+        if (confirm(`Tem certeza que deseja excluir o lead ${activeLead.name}?`)) {
+          leads = leads.filter(l => l.id !== activeLead.id);
+          saveStorage();
+          renderKanban();
+          document.getElementById('modal-lead-detail').classList.add('hidden');
+          showToast('Lead excluído.', 'info');
+        }
+      });
+
+      // Modal Novo Lead Manual
+      const modalNewLead = document.getElementById('modal-new-lead');
+      document.getElementById('btn-open-new-lead').addEventListener('click', () => modalNewLead.classList.remove('hidden'));
+      document.getElementById('btn-close-new-lead').addEventListener('click', () => modalNewLead.classList.add('hidden'));
+      document.getElementById('btn-cancel-new-lead').addEventListener('click', () => modalNewLead.classList.add('hidden'));
+
+      document.getElementById('form-new-lead').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newL = {
+          id: 'lead-' + Date.now(),
+          name: document.getElementById('new-lead-name').value.trim(),
+          phone: document.getElementById('new-lead-phone').value.trim(),
+          instagram: document.getElementById('new-lead-instagram').value.trim().replace(/^@/, ''),
+          city: document.getElementById('new-lead-city').value.trim() || 'Brasil',
+          stage: document.getElementById('new-lead-stage').value,
+          value: parseFloat(document.getElementById('new-lead-value').value) || 0,
+          temperature: document.getElementById('new-lead-temp').value,
+          commercial_moment: 'pesquisa',
+          gabriel_percentage: 60,
+          jhennifer_percentage: 40,
+          next_best_action: 'Realizar contato inicial e entender ambiente do cliente.',
+          desired_micro_advance: 'Apresentar catálogo e validar dimensões.',
+          what_not_to_do: 'Não pressionar por fechamento imediato.',
+          priority: 'ALTA',
+          commercial_line: 'Linha Premium',
+          followup_date: new Date().toISOString().split('T')[0],
+          last_interaction: new Date().toISOString(),
+          notes: document.getElementById('new-lead-notes').value.trim()
+        };
+
+        leads.unshift(newL);
+        saveStorage();
+        renderKanban();
+        modalNewLead.classList.add('hidden');
+        document.getElementById('form-new-lead').reset();
+        showToast(`Lead "${newL.name}" adicionado com sucesso!`, 'success');
+      });
+
+      // Modal Configurações
+      const modalSettings = document.getElementById('modal-settings');
+      document.getElementById('btn-open-settings').addEventListener('click', () => modalSettings.classList.remove('hidden'));
+      document.getElementById('btn-open-settings-mobile').addEventListener('click', () => {
+        document.getElementById('mobile-drawer').classList.add('hidden');
+        modalSettings.classList.remove('hidden');
+      });
+      document.getElementById('status-supabase-pill').addEventListener('click', () => modalSettings.classList.remove('hidden'));
+      document.getElementById('btn-close-settings').addEventListener('click', () => modalSettings.classList.add('hidden'));
+
+      document.getElementById('btn-save-settings').addEventListener('click', () => {
+        const url = document.getElementById('cfg-supabase-url').value.trim();
+        const key = document.getElementById('cfg-supabase-key').value.trim();
+        if (url && key) {
+          localStorage.setItem('supabase_url', url);
+          localStorage.setItem('supabase_key', key);
+          document.getElementById('status-supabase-text').textContent = 'Supabase Conectado';
+          showToast('Credenciais do Supabase salvas com sucesso!', 'success');
+        }
+        modalSettings.classList.add('hidden');
+      });
+
+      document.getElementById('btn-reset-demo').addEventListener('click', () => {
+        if (confirm('Deseja alternar para os 6 dados de demonstração iniciais?')) {
+          leads = [...DEFAULT_LEADS];
+          saveStorage();
+          renderKanban();
+          renderFollowupList();
+          renderClientsTable();
+          modalSettings.classList.add('hidden');
+          showToast('6 dados de demonstração recarregados!', 'info');
+        }
+      });
+
+      document.getElementById('btn-load-caribe-modal')?.addEventListener('click', () => {
+        loadCaribeBase();
+        modalSettings.classList.add('hidden');
+      });
+
+      document.getElementById('btn-load-caribe-base')?.addEventListener('click', () => {
+        if (confirm('Deseja sincronizar e recarregar a base oficial completa de 185 clientes do CRM?')) {
+          loadCaribeBase();
+        }
+      });
+
+      // Filtros na Tabela de Clientes
+      document.getElementById('input-search-clients')?.addEventListener('input', renderClientsTable);
+      document.getElementById('select-filter-stage')?.addEventListener('change', (e) => {
+        currentClientsStageTab = e.target.value;
+        document.querySelectorAll('.stage-tab').forEach(t => {
+          if (t.getAttribute('data-stage') === currentClientsStageTab) t.classList.add('active');
+          else t.classList.remove('active');
+        });
+        renderClientsTable();
+      });
+      document.getElementById('select-filter-temp')?.addEventListener('change', renderClientsTable);
+      document.getElementById('btn-export-csv')?.addEventListener('click', exportLeadsToCsv);
+    });
+  </script>
+</body>
+</html>
+
