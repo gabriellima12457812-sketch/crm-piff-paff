@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pasta Digital do Pedido #5299 - Márcia Portela | CRM Caribe & JCB Móveis</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            heading: ['"Space Grotesk"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #070D14;
+      color: #E2E8F0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen p-3 sm:p-6 lg:p-8 flex flex-col justify-between">
+
+  <!-- Container Central da Pasta Digital -->
+  <main class="w-full max-w-6xl mx-auto bg-[#0A1118] text-slate-100 rounded-2xl border border-white/10 shadow-2xl overflow-hidden font-sans my-auto">
+    
+    <!-- ========================================================================= -->
+    <!-- CABEÇALHO PRINCIPAL DA PASTA DIGITAL DO PEDIDO -->
+    <!-- ========================================================================= -->
+    <header class="bg-gradient-to-r from-[#0F1C28] via-[#142435] to-[#0E1B27] border-b border-white/10 px-6 py-5 sm:py-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        <div class="flex items-start gap-3.5">
+          <div class="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 shadow-lg shadow-cyan-950/50">
+            <i class="ph-bold ph-package text-2xl"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <span class="text-xs font-mono font-bold tracking-wider px-2.5 py-0.5 rounded-md bg-cyan-400/10 text-cyan-300 border border-cyan-400/25">
+                PEDIDO #5299
+              </span>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Carga Pronta no CD (Aguardando Coleta)
+              </span>
+              <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 border border-white/5">
+                WhatsApp Consultivo + Arquiteto
+              </span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-white mt-1 tracking-tight font-heading">
+              Pasta Digital do Pedido
+            </h1>
+            <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
+              <span>Cliente: <strong class="text-slate-200">Márcia Portela de Almeida Passos</strong></span>
+              <span class="text-slate-600">•</span>
+              <span>Vendedor: <strong class="text-cyan-300">Gabriel Lima</strong></span>
+              <span class="text-slate-600">•</span>
+              <span class="flex items-center gap-1 text-slate-300">
+                <i class="ph-bold ph-map-pin text-cyan-400"></i>
+                Rondonópolis/MT
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Botões de Ação Rápida -->
+        <div class="flex items-center gap-2 self-start md:self-center">
+          <a
+            href="index.html"
+            class="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 hover:text-white border border-white/10 transition active:scale-95 flex items-center gap-1.5"
+            title="Voltar ao CRM"
+          >
+            <i class="ph-bold ph-arrow-left text-sm"></i>
+            <span>Voltar ao CRM</span>
+          </a>
+          <button
+            onclick="copyText('Pedido #5299 - Márcia Portela de Almeida Passos', 'Ref. Copiada!')"
+            class="px-3.5 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-xs font-bold text-cyan-300 border border-cyan-500/40 transition active:scale-95 flex items-center gap-1.5"
+            title="Copiar dados resumidos do pedido"
+          >
+            <i class="ph-bold ph-copy text-sm"></i>
+            <span id="btn-copy-label">Copiar Ref.</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Abas de Navegação -->
+      <nav class="flex items-center gap-2 mt-5 pt-4 border-t border-white/10 overflow-x-auto no-scrollbar">
+        <button onclick="switchTab('all')" id="tab-btn-all" class="tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm">
+          <span>Visão Completa</span>
+        </button>
+        <button onclick="switchTab('commercial')" id="tab-btn-commercial" class="tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-2 bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10 border border-transparent">
+          <span>1. Resumo Comercial & Itens</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-800 text-slate-400 font-mono">5</span>
+        </button>
+        <button onclick="switchTab('financial')" id="tab-btn-financial" class="tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-2 bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10 border border-transparent">
+          <span>2. Conciliação Financeira</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-800 text-slate-400 font-mono">30.8%</span>
+        </button>
+        <button onclick="switchTab('attachments')" id="tab-btn-attachments" class="tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-2 bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10 border border-transparent">
+          <span>3. Pasta de Anexos</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-800 text-slate-400 font-mono">8</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- ========================================================================= -->
+    <!-- CORPO PRINCIPAL -->
+    <!-- ========================================================================= -->
+    <div class="p-6 space-y-8">
+
+      <!-- ===================================================================== -->
+      <!-- SESSÃO 1: RESUMO COMERCIAL E ITENS -->
+      <!-- ===================================================================== -->
+      <section id="section-commercial" class="tab-content space-y-6">
+        
+        <!-- Header da Sessão -->
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-sm font-bold font-heading">
+              1
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-white tracking-wide font-heading">
+                Resumo Comercial & Itens do Pedido
+              </h2>
+              <p class="text-xs text-slate-400">
+                Dados do cliente, endereçamento e detalhamento granular dos produtos
+              </p>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-bold text-slate-400 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
+            5 produtos no lote
+          </span>
+        </div>
+
+        <!-- Layout: Dados do Cliente, Endereços e Contatos Rápidos -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <!-- Card 1: Cliente & Contato Direto -->
+          <div class="p-4 rounded-xl bg-[#101C27] border border-white/10 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <i class="ph-bold ph-user text-sm"></i>
+                Dados do Cliente
+              </span>
+              <span class="text-[10px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded">
+                CPF: 184.920.318-72
+              </span>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-bold text-white">
+                Márcia Portela de Almeida Passos
+              </h3>
+              <div class="mt-1 flex items-center gap-1 text-[11px] text-amber-300 font-medium">
+                <i class="ph-bold ph-buildings text-amber-400"></i>
+                <span>Studio ARQ & Interiores (Arq. Dayana Tavares)</span>
+              </div>
+            </div>
+
+            <!-- Contatos Rápidos com Ações -->
+            <div class="pt-2 border-t border-white/5 space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <a
+                  href="https://wa.me/5566996089077"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-mono font-bold hover:underline transition"
+                  title="Abrir WhatsApp da Cliente"
+                >
+                  <i class="ph-bold ph-whatsapp-logo text-emerald-400 text-sm"></i>
+                  <span>(66) 99608-9077</span>
+                  <i class="ph-bold ph-arrow-up-right text-xs opacity-70"></i>
+                </a>
+                <button
+                  onclick="copyText('66996089077', 'Telefone copiado!')"
+                  class="p-1 text-slate-400 hover:text-white rounded hover:bg-white/5 transition"
+                  title="Copiar telefone"
+                >
+                  <i class="ph-bold ph-copy text-sm"></i>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-slate-300 truncate max-w-[200px]" title="marcia.portela@almeidapassos.adv.br">
+                  <i class="ph-bold ph-envelope text-slate-400 mr-1"></i>
+                  marcia.portela@almeidapassos.adv.br
+                </span>
+                <button
+                  onclick="copyText('marcia.portela@almeidapassos.adv.br', 'E-mail copiado!')"
+                  class="p-1 text-slate-400 hover:text-white rounded hover:bg-white/5 transition"
+                  title="Copiar e-mail"
+                >
+                  <i class="ph-bold ph-copy text-sm"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Endereço de Entrega Completo -->
+          <div class="p-4 rounded-xl bg-[#101C27] border border-white/10 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <i class="ph-bold ph-map-pin text-sm"></i>
+                Local de Entrega
+              </span>
+              <span class="text-[10px] text-slate-300 bg-white/5 px-2 py-0.5 rounded font-medium">
+                Residencial / Uso Próprio
+              </span>
+            </div>
+
+            <div class="text-xs text-slate-200 leading-relaxed">
+              <p class="font-semibold text-white">
+                Rua Fernando Corrêa da Costa, 1420
+              </p>
+              <p class="text-slate-300">Condomínio Haras Village - Casa 18</p>
+              <p class="text-slate-400">
+                Vila Aurora — Rondonópolis / MT
+              </p>
+              <p class="text-cyan-300 font-mono font-medium mt-1">
+                CEP: 78731-630
+              </p>
+            </div>
+
+            <div class="pt-2 border-t border-white/5 flex justify-end">
+              <button
+                onclick="copyText('Rua Fernando Corrêa da Costa, 1420 - Cond. Haras Village Casa 18 - Vila Aurora, Rondonópolis/MT - CEP 78731-630', 'Endereço copiado!')"
+                class="text-[11px] text-slate-400 hover:text-cyan-300 flex items-center gap-1 transition"
+              >
+                <i class="ph-bold ph-copy text-xs"></i>
+                <span>Copiar Endereço</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 3: Dados Logísticos & Despacho -->
+          <div class="p-4 rounded-xl bg-[#101C27] border border-white/10 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <i class="ph-bold ph-truck text-sm"></i>
+                Expedição & Frete
+              </span>
+              <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded border border-emerald-500/30">
+                FOB Negociado
+              </span>
+            </div>
+
+            <div class="space-y-1.5 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Transportadora:</span>
+                <span class="font-semibold text-slate-200 text-right truncate max-w-[170px]">
+                  Expresso Rondonópolis
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Previsão Despacho:</span>
+                <span class="font-semibold text-amber-300 font-mono">
+                  Segunda-feira (08/09/2026)
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Localização CD:</span>
+                <span class="text-slate-300 font-medium truncate max-w-[170px]">
+                  CD Central - Paletes 03 e 04 (Setor A)
+                </span>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-white/5">
+              <p class="text-[11px] text-slate-400 italic">
+                "Carga 100% pronta e paletizada. Aguardando confirmação do saldo de R$ 17.999,99 para liberar carregamento."
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Itens Granulares do Pedido -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <span>Itens Granulares do Pedido</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-slate-400">
+                5 itens
+              </span>
+            </h3>
+            <span class="text-xs text-slate-400">
+              Subtotal dos Produtos: <strong class="text-white font-mono">R$ 25.999,99</strong>
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            
+            <!-- Item 1: Sofá Santorini -->
+            <div class="p-4 rounded-xl bg-[#121F2B] hover:bg-[#162736] border border-white/10 hover:border-cyan-500/30 transition-all flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <!-- Thumbnail com Destaque: w-16 h-24 sm:w-20 sm:h-28 object-cover -->
+              <div onclick="openLightbox('/images/conjunto-santorini.jpg', 'Sofá 3 Lugares Conforto Náutico Santorini')" class="relative group/thumb shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/10 shadow-lg bg-black/40">
+                <img
+                  src="/images/conjunto-santorini.jpg"
+                  alt="Sofá Santorini"
+                  class="w-16 h-24 sm:w-20 sm:h-28 object-cover rounded-xl transition duration-300 group-hover/thumb:scale-105"
+                  onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80'"
+                />
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition flex items-center justify-center text-white">
+                  <i class="ph-bold ph-eye text-cyan-300 text-lg"></i>
+                </div>
+              </div>
+
+              <div class="flex-1 min-w-0 space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h4 class="text-sm font-bold text-white hover:text-cyan-300 transition">
+                        Sofá 3 Lugares Conforto Náutico Santorini
+                      </h4>
+                      <span class="text-[10px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded">
+                        SOF-SAN-03-TER
+                      </span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5 leading-snug">
+                      Corda Náutica 12mm Terracota com proteção UV, Alumínio Pintura Eletrostática Chumbo microtexturizado, Estofamento Aquablock impermeável.
+                    </p>
+                    <p class="text-[11px] text-slate-400 font-mono mt-0.5">
+                      Dimensões: 2.35m (L) x 0.95m (P) x 0.78m (A)
+                    </p>
+                  </div>
+                  <div class="text-left sm:text-right shrink-0 mt-1 sm:mt-0">
+                    <div class="text-sm font-bold font-mono text-white">
+                      R$ 11.400,00
+                    </div>
+                    <div class="text-[11px] text-slate-400">
+                      1 un × R$ 11.400,00
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BADGE INTELIGENTE: Embalado com Conferente -->
+                <div class="pt-2 border-t border-white/5 flex items-center gap-2 flex-wrap">
+                  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-xs">
+                    <div class="flex items-center gap-1.5 font-semibold">
+                      <i class="ph-bold ph-shield-check text-emerald-400 text-sm"></i>
+                      <span>Embalado</span>
+                    </div>
+                    <span class="text-emerald-500/60">•</span>
+                    <div class="text-[11px]">
+                      Conferente: <strong>Roberto Carlos (Selo Qualidade OK)</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Item 2: Poltronas Santorini -->
+            <div class="p-4 rounded-xl bg-[#121F2B] hover:bg-[#162736] border border-white/10 hover:border-cyan-500/30 transition-all flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div onclick="openLightbox('/images/conjunto-ravello-terracota.jpg', 'Poltrona Living Externa Santorini (Par)')" class="relative group/thumb shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/10 shadow-lg bg-black/40">
+                <img
+                  src="/images/conjunto-ravello-terracota.jpg"
+                  alt="Poltrona Santorini"
+                  class="w-16 h-24 sm:w-20 sm:h-28 object-cover rounded-xl transition duration-300 group-hover/thumb:scale-105"
+                  onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=400&q=80'"
+                />
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition flex items-center justify-center text-white">
+                  <i class="ph-bold ph-eye text-cyan-300 text-lg"></i>
+                </div>
+              </div>
+
+              <div class="flex-1 min-w-0 space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h4 class="text-sm font-bold text-white hover:text-cyan-300 transition">
+                        Poltrona Living Externa Santorini (Par)
+                      </h4>
+                      <span class="text-[10px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded">
+                        POL-SAN-02-TER
+                      </span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5 leading-snug">
+                      Braços ergonômicos em corda trançada manual, almofadas duplas com espuma D33 selada e tecido náutico impermeável.
+                    </p>
+                    <p class="text-[11px] text-slate-400 font-mono mt-0.5">
+                      Dimensões: 0.85m (L) x 0.88m (P) x 0.76m (A)
+                    </p>
+                  </div>
+                  <div class="text-left sm:text-right shrink-0 mt-1 sm:mt-0">
+                    <div class="text-sm font-bold font-mono text-white">
+                      R$ 7.600,00
+                    </div>
+                    <div class="text-[11px] text-slate-400">
+                      2 un × R$ 3.800,00
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BADGE INTELIGENTE: Embalado -->
+                <div class="pt-2 border-t border-white/5 flex items-center gap-2 flex-wrap">
+                  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-xs">
+                    <div class="flex items-center gap-1.5 font-semibold">
+                      <i class="ph-bold ph-shield-check text-emerald-400 text-sm"></i>
+                      <span>Embalado</span>
+                    </div>
+                    <span class="text-emerald-500/60">•</span>
+                    <div class="text-[11px]">
+                      Conferente: <strong>Roberto Carlos (Selo Qualidade OK)</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Item 3: Mesinhas de Centro e Apoio Cumaru -->
+            <div class="p-4 rounded-xl bg-[#121F2B] hover:bg-[#162736] border border-white/10 hover:border-cyan-500/30 transition-all flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div onclick="openLightbox('/images/conjunto-santorini.jpg', 'Mesinhas de Apoio e Centro Cumaru Nobre')" class="relative group/thumb shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/10 shadow-lg bg-black/40">
+                <img
+                  src="/images/conjunto-santorini.jpg"
+                  alt="Mesinhas Cumaru"
+                  class="w-16 h-24 sm:w-20 sm:h-28 object-cover rounded-xl transition duration-300 group-hover/thumb:scale-105"
+                  onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=400&q=80'"
+                />
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition flex items-center justify-center text-white">
+                  <i class="ph-bold ph-eye text-cyan-300 text-lg"></i>
+                </div>
+              </div>
+
+              <div class="flex-1 min-w-0 space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h4 class="text-sm font-bold text-white hover:text-cyan-300 transition">
+                        Mesinhas de Apoio e Centro Cumaru (Conjunto Duplo)
+                      </h4>
+                      <span class="text-[10px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded">
+                        MES-CUM-DUP-01
+                      </span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5 leading-snug">
+                      Tampo em Madeira Cumaru Maciça naval tratada com verniz marítimo fosco, base em alumínio chumbo.
+                    </p>
+                    <p class="text-[11px] text-slate-400 font-mono mt-0.5">
+                      Dimensões: Mesa G (0.70m x 0.45m) | Mesa P (0.50m x 0.52m)
+                    </p>
+                  </div>
+                  <div class="text-left sm:text-right shrink-0 mt-1 sm:mt-0">
+                    <div class="text-sm font-bold font-mono text-white">
+                      R$ 3.200,00
+                    </div>
+                    <div class="text-[11px] text-slate-400">
+                      2 un × R$ 1.600,00
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BADGE INTELIGENTE: Na Costura/Fábrica com Fábrica e Prazo do CD -->
+                <div class="pt-2 border-t border-white/5 flex items-center gap-2 flex-wrap">
+                  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-300 text-xs">
+                    <div class="flex items-center gap-1 font-semibold">
+                      <i class="ph-bold ph-factory text-amber-400 text-sm"></i>
+                      <span>Fábrica: <strong>Fábrica 03 - Marcenaria Fina & Cumaru Nobre</strong></span>
+                    </div>
+                    <span class="text-amber-500/60">•</span>
+                    <div class="flex items-center gap-1 font-mono text-[11px]">
+                      <i class="ph-bold ph-clock text-amber-400"></i>
+                      <span>Prazo CD: <strong>07/09/2026 (No prazo)</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Item 4: Espreguiçadeiras Tulum -->
+            <div class="p-4 rounded-xl bg-[#121F2B] hover:bg-[#162736] border border-white/10 hover:border-cyan-500/30 transition-all flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div onclick="openLightbox('/images/conjunto-tulum.jpg', 'Espreguiçadeira Reclinável Jardim Tulum (Par)')" class="relative group/thumb shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/10 shadow-lg bg-black/40">
+                <img
+                  src="/images/conjunto-tulum.jpg"
+                  alt="Espreguiçadeira Tulum"
+                  class="w-16 h-24 sm:w-20 sm:h-28 object-cover rounded-xl transition duration-300 group-hover/thumb:scale-105"
+                  onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=400&q=80'"
+                />
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition flex items-center justify-center text-white">
+                  <i class="ph-bold ph-eye text-cyan-300 text-lg"></i>
+                </div>
+              </div>
+
+              <div class="flex-1 min-w-0 space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h4 class="text-sm font-bold text-white hover:text-cyan-300 transition">
+                        Espreguiçadeira Reclinável Jardim Tulum (Par)
+                      </h4>
+                      <span class="text-[10px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded">
+                        ESP-TUL-REC-02
+                      </span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5 leading-snug">
+                      4 posições de reclinação, rodízios emborrachados embutidos, tela sling de alta resistência com costura reforçada.
+                    </p>
+                    <p class="text-[11px] text-slate-400 font-mono mt-0.5">
+                      Dimensões: 2.05m (L) x 0.72m (P) x 0.35m (A)
+                    </p>
+                  </div>
+                  <div class="text-left sm:text-right shrink-0 mt-1 sm:mt-0">
+                    <div class="text-sm font-bold font-mono text-white">
+                      R$ 3.799,99
+                    </div>
+                    <div class="text-[11px] text-slate-400">
+                      2 un × R$ 1.899,99
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BADGE INTELIGENTE: Na Costura/Fábrica com Fábrica e Prazo do CD -->
+                <div class="pt-2 border-t border-white/5 flex items-center gap-2 flex-wrap">
+                  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-300 text-xs">
+                    <div class="flex items-center gap-1 font-semibold">
+                      <i class="ph-bold ph-factory text-amber-400 text-sm"></i>
+                      <span>Fábrica: <strong>Fábrica 02 - Metalúrgica & Tapeçaria Externa</strong></span>
+                    </div>
+                    <span class="text-amber-500/60">•</span>
+                    <div class="flex items-center gap-1 font-mono text-[11px]">
+                      <i class="ph-bold ph-clock text-amber-400"></i>
+                      <span>Prazo CD: <strong>06/09/2026 (No prazo)</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Item 5: Brinde Especial Cesta Café da Manhã -->
+            <div class="p-4 rounded-xl bg-[#121F2B] hover:bg-[#162736] border border-white/10 hover:border-amber-500/30 transition-all flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div onclick="openLightbox('/images/logo-oficial.png', 'Brinde Especial: Cesta Café da Manhã')" class="relative group/thumb shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/10 shadow-lg bg-black/40">
+                <img
+                  src="/images/logo-oficial.png"
+                  alt="Brinde Cesta Café da Manhã"
+                  class="w-16 h-24 sm:w-20 sm:h-28 object-contain p-2 bg-[#0A1118] rounded-xl transition duration-300 group-hover/thumb:scale-105"
+                />
+                <span class="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-amber-500 text-black text-[9px] font-black uppercase tracking-wider shadow">
+                  Brinde
+                </span>
+              </div>
+
+              <div class="flex-1 min-w-0 space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h4 class="text-sm font-bold text-white hover:text-amber-300 transition">
+                        Brinde Especial: Cesta Artesanal Café da Manhã & Home Care Náutico
+                      </h4>
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                        <i class="ph-bold ph-sparkle text-xs"></i> Brinde de Fidelização
+                      </span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5 leading-snug">
+                      Kit boas-vindas com impermeabilizante náutico, flanela de microfibra e cesta gourmet personalizada para a cliente.
+                    </p>
+                    <p class="text-[11px] text-slate-400 font-mono mt-0.5">
+                      Edição Especial Pós-Venda / Fidelização VIP
+                    </p>
+                  </div>
+                  <div class="text-left sm:text-right shrink-0 mt-1 sm:mt-0">
+                    <div class="text-sm font-bold font-mono text-emerald-400">
+                      R$ 0,00 (Cortesia)
+                    </div>
+                    <div class="text-[11px] text-slate-400">
+                      1 un • Cortesia Comercial
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BADGE INTELIGENTE: Embalado na Expedição -->
+                <div class="pt-2 border-t border-white/5 flex items-center gap-2 flex-wrap">
+                  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-xs">
+                    <div class="flex items-center gap-1.5 font-semibold">
+                      <i class="ph-bold ph-shield-check text-emerald-400 text-sm"></i>
+                      <span>Embalado</span>
+                    </div>
+                    <span class="text-emerald-500/60">•</span>
+                    <div class="text-[11px]">
+                      Conferente: <strong>Mariana Souza (Expedição Central)</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SESSÃO 2: CONCILIAÇÃO FINANCEIRA -->
+      <!-- ===================================================================== -->
+      <section id="section-financial" class="tab-content space-y-6">
+        
+        <!-- Header da Sessão -->
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm font-bold font-heading">
+              2
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-white tracking-wide font-heading">
+                Conciliação Financeira do Pedido
+              </h2>
+              <p class="text-xs text-slate-400">
+                Acompanhamento do sinal, entrada e saldo restante para liberação de carregamento
+              </p>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/25">
+            Condição: 30% Entrada + Saldo no Despacho
+          </span>
+        </div>
+
+        <!-- Cartões de Indicadores Financeiros -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          
+          <!-- Card 1: Valor Total -->
+          <div class="p-4 rounded-xl bg-[#101C27] border border-white/10 space-y-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Valor Total do Pedido
+            </span>
+            <div class="text-xl sm:text-2xl font-black font-mono text-white">
+              R$ 25.999,99
+            </div>
+            <div class="text-[11px] text-slate-400 flex items-center justify-between">
+              <span>Arredondamento CRM:</span>
+              <span class="font-mono text-slate-300">R$ 26.000,00</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Já Pago -->
+          <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 space-y-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+              <i class="ph-bold ph-check-circle text-sm"></i>
+              Total Já Pago (Sinal + Entrada)
+            </span>
+            <div class="text-xl sm:text-2xl font-black font-mono text-emerald-400">
+              R$ 8.000,00
+            </div>
+            <div class="text-[11px] text-emerald-300/80 flex items-center justify-between">
+              <span>Percentual Quitado:</span>
+              <span class="font-mono font-bold">30,77%</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Saldo / Falta -->
+          <div class="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 space-y-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
+              <i class="ph-bold ph-clock text-sm"></i>
+              Saldo Restante (Falta Pagar)
+            </span>
+            <div class="text-xl sm:text-2xl font-black font-mono text-amber-300">
+              R$ 17.999,99
+            </div>
+            <div class="text-[11px] text-amber-200/80 flex items-center justify-between">
+              <span>Previsão de Quitação:</span>
+              <span class="font-semibold text-amber-300">No Despacho / Coleta</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Barra de Progresso com "Pago" e "Falta" -->
+        <div class="p-4 rounded-xl bg-[#101C27] border border-white/10 space-y-3">
+          <div class="flex items-center justify-between text-xs font-bold">
+            <div class="flex items-center gap-2 text-emerald-400">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <span>Pago: R$ 8.000,00 (30,8%)</span>
+            </div>
+            <div class="flex items-center gap-2 text-amber-300">
+              <span>Falta: R$ 17.999,99 (69,2%)</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+            </div>
+          </div>
+
+          <!-- Barra segmentada -->
+          <div class="w-full h-4 rounded-full bg-slate-900 border border-white/5 overflow-hidden flex shadow-inner">
+            <div style="width: 30.77%" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 transition-all duration-700 relative flex items-center justify-end pr-2">
+              <span class="text-[9px] font-black text-black font-mono drop-shadow">30.8%</span>
+            </div>
+            <div style="width: 69.23%" class="h-full bg-gradient-to-r from-amber-500/20 via-amber-500/40 to-amber-600/30 transition-all duration-700 relative flex items-center justify-start pl-2">
+              <span class="text-[9px] font-bold text-amber-200 font-mono">69.2%</span>
+            </div>
+          </div>
+
+          <!-- Aviso de Regra de Negócio de Expedição -->
+          <div class="flex items-start gap-2.5 text-xs text-slate-300 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
+            <i class="ph-bold ph-warning text-amber-400 text-base shrink-0 mt-0.5"></i>
+            <p>
+              <strong>Trava Financeira de Expedição:</strong> A coleta pela transportadora <span class="text-white font-medium">Expresso Rondonópolis</span> e liberação da minuta de frete ocorrem somente após a confirmação bancária do saldo de <strong class="text-amber-300 font-mono">R$ 17.999,99</strong>.
+            </p>
+          </div>
+        </div>
+
+        <!-- Timeline de Pagamentos com Marcação de Valores Já Pagos -->
+        <div class="space-y-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">
+            Timeline de Pagamentos & Conciliação Bancária
+          </h3>
+
+          <div class="relative pl-6 sm:pl-8 space-y-6 before:absolute before:left-2.5 sm:before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-white/10">
+            
+            <!-- Marco 1: Sinal -->
+            <div class="relative group">
+              <div class="absolute -left-6 sm:-left-8 top-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center border-2 bg-emerald-500 border-emerald-300 text-black shadow-lg shadow-emerald-500/30">
+                <i class="ph-bold ph-check text-xs"></i>
+              </div>
+              <div class="p-4 rounded-xl border bg-[#101C27] border-white/10 hover:border-emerald-500/30 transition">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider font-mono bg-emerald-500/20 text-emerald-300">
+                        Sinal de Reserva
+                      </span>
+                      <h4 class="text-sm font-bold text-white">
+                        Sinal de Reserva do Lote Pronta-Entrega
+                      </h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                      <span>Método: <strong class="text-slate-200">PIX</strong></span>
+                      <span class="text-slate-600">•</span>
+                      <span>Data: <strong class="text-slate-200">02/09/2026 às 18:45</strong></span>
+                    </p>
+                  </div>
+                  <div class="text-left sm:text-right">
+                    <div class="text-base font-black font-mono text-emerald-400">
+                      R$ 5.000,00
+                    </div>
+                    <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 bg-emerald-500/15 text-emerald-300">
+                      Pago & Compensado
+                    </span>
+                  </div>
+                </div>
+                <p class="text-xs text-slate-300 mt-2 pt-2 border-t border-white/5 italic">
+                  Sinal imediato para garantia do conjunto reservado por Gabriel.
+                </p>
+              </div>
+            </div>
+
+            <!-- Marco 2: Entrada -->
+            <div class="relative group">
+              <div class="absolute -left-6 sm:-left-8 top-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center border-2 bg-emerald-500 border-emerald-300 text-black shadow-lg shadow-emerald-500/30">
+                <i class="ph-bold ph-check text-xs"></i>
+              </div>
+              <div class="p-4 rounded-xl border bg-[#101C27] border-white/10 hover:border-emerald-500/30 transition">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider font-mono bg-emerald-500/20 text-emerald-300">
+                        Entrada (30%)
+                      </span>
+                      <h4 class="text-sm font-bold text-white">
+                        Entrada - Complemento dos 30% Contratuais
+                      </h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                      <span>Método: <strong class="text-slate-200">PIX</strong></span>
+                      <span class="text-slate-600">•</span>
+                      <span>Data: <strong class="text-slate-200">03/09/2026 às 11:20</strong></span>
+                    </p>
+                  </div>
+                  <div class="text-left sm:text-right">
+                    <div class="text-base font-black font-mono text-emerald-400">
+                      R$ 3.000,00
+                    </div>
+                    <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 bg-emerald-500/15 text-emerald-300">
+                      Pago & Compensado
+                    </span>
+                  </div>
+                </div>
+                <p class="text-xs text-slate-300 mt-2 pt-2 border-t border-white/5 italic">
+                  Realizado após a assinatura formal do contrato #5299 pela cliente Márcia.
+                </p>
+              </div>
+            </div>
+
+            <!-- Marco 3: Saldo -->
+            <div class="relative group">
+              <div class="absolute -left-6 sm:-left-8 top-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center border-2 bg-slate-900 border-amber-400 text-amber-400 shadow-lg shadow-amber-500/20">
+                <i class="ph-bold ph-clock text-xs"></i>
+              </div>
+              <div class="p-4 rounded-xl border bg-[#121A22] border-dashed border-amber-500/30 transition">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider font-mono bg-amber-500/20 text-amber-300">
+                        Saldo no Despacho
+                      </span>
+                      <h4 class="text-sm font-bold text-white">
+                        Saldo Restante para Liberação de Carga
+                      </h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                      <span>Método: <strong class="text-slate-200">PIX / TED</strong></span>
+                      <span class="text-slate-600">•</span>
+                      <span>Data: <strong class="text-slate-200">Previsto para 08/09/2026</strong></span>
+                    </p>
+                  </div>
+                  <div class="text-left sm:text-right">
+                    <div class="text-base font-black font-mono text-amber-300">
+                      R$ 17.999,99
+                    </div>
+                    <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 bg-amber-500/15 text-amber-300">
+                      A Pagar (Até o Carregamento)
+                    </span>
+                  </div>
+                </div>
+                <p class="text-xs text-slate-300 mt-2 pt-2 border-t border-white/5 italic">
+                  Quitação mandatória antes da entrega física das mercadorias à transportadora.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SESSÃO 3: PASTA DE ANEXOS -->
+      <!-- ===================================================================== -->
+      <section id="section-attachments" class="tab-content space-y-6">
+        
+        <!-- Header da Sessão -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-pink-500/15 border border-pink-500/30 flex items-center justify-center text-pink-400 text-sm font-bold font-heading">
+              3
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-white tracking-wide font-heading">
+                Pasta de Anexos do Pedido
+              </h2>
+              <p class="text-xs text-slate-400">
+                Contratos, comprovantes bancários de sinal/entrada e registros fotográficos da fábrica
+              </p>
+            </div>
+          </div>
+
+          <!-- Filtros de Tipo de Arquivo -->
+          <div class="flex items-center gap-1.5 self-start sm:self-center bg-[#101C27] p-1 rounded-xl border border-white/10">
+            <button onclick="filterAttachments('all')" id="filter-att-all" class="att-filter-btn px-3 py-1 rounded-lg text-xs font-bold transition bg-cyan-500/20 text-cyan-300">
+              Todos (8)
+            </button>
+            <button onclick="filterAttachments('pdf')" id="filter-att-pdf" class="att-filter-btn px-3 py-1 rounded-lg text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1.5">
+              <i class="ph-bold ph-file-pdf text-rose-400 text-sm"></i>
+              PDFs (4)
+            </button>
+            <button onclick="filterAttachments('image')" id="filter-att-image" class="att-filter-btn px-3 py-1 rounded-lg text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1.5">
+              <i class="ph-bold ph-image text-purple-400 text-sm"></i>
+              Fotos (4)
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid de Anexos -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          
+          <!-- Anexo 1: Contrato Assinado (PDF) -->
+          <div class="att-item att-type-pdf p-3.5 rounded-xl bg-[#101C27] hover:bg-[#14222F] border border-white/10 hover:border-cyan-500/30 transition flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-sm">
+                <i class="ph-bold ph-file-pdf text-xl text-rose-400"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase bg-rose-500/20 text-rose-300">PDF</span>
+                  <h4 class="text-xs font-semibold text-white truncate max-w-[200px]" title="Contrato_Assinado_Pedido_5299_Marcia_Portela.pdf">
+                    Contrato_Assinado_Pedido_5299_Marcia_Portela.pdf
+                  </h4>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span>1.4 MB</span>
+                  <span class="text-slate-600">•</span>
+                  <span>04/09/2026 09:27</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-slate-300">Gabriel Lima</span>
+                </p>
+              </div>
+            </div>
+            <button onclick="alert('Visualização do Contrato Assinado #5299')" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition" title="Abrir Documento">
+              <i class="ph-bold ph-download-simple text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Anexo 2: Comprovante PIX Sinal (PDF) -->
+          <div class="att-item att-type-pdf p-3.5 rounded-xl bg-[#101C27] hover:bg-[#14222F] border border-white/10 hover:border-cyan-500/30 transition flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-sm">
+                <i class="ph-bold ph-file-pdf text-xl text-rose-400"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase bg-rose-500/20 text-rose-300">PDF</span>
+                  <h4 class="text-xs font-semibold text-white truncate max-w-[200px]" title="Comprovante_PIX_Sinal_R$5.000.pdf">
+                    Comprovante_PIX_Sinal_R$5.000.pdf
+                  </h4>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span>340 KB</span>
+                  <span class="text-slate-600">•</span>
+                  <span>02/09/2026 18:48</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-slate-300">Márcia Portela</span>
+                </p>
+              </div>
+            </div>
+            <button onclick="alert('Visualização do Comprovante PIX R$ 5.000,00')" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition" title="Abrir Documento">
+              <i class="ph-bold ph-download-simple text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Anexo 3: Comprovante PIX Entrada (PDF) -->
+          <div class="att-item att-type-pdf p-3.5 rounded-xl bg-[#101C27] hover:bg-[#14222F] border border-white/10 hover:border-cyan-500/30 transition flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-sm">
+                <i class="ph-bold ph-file-pdf text-xl text-rose-400"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase bg-rose-500/20 text-rose-300">PDF</span>
+                  <h4 class="text-xs font-semibold text-white truncate max-w-[200px]" title="Comprovante_PIX_Entrada_R$3.000.pdf">
+                    Comprovante_PIX_Entrada_R$3.000.pdf
+                  </h4>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span>385 KB</span>
+                  <span class="text-slate-600">•</span>
+                  <span>03/09/2026 11:22</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-slate-300">Márcia Portela</span>
+                </p>
+              </div>
+            </div>
+            <button onclick="alert('Visualização do Comprovante PIX R$ 3.000,00')" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition" title="Abrir Documento">
+              <i class="ph-bold ph-download-simple text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Anexo 4: Especificação Arquiteto (PDF) -->
+          <div class="att-item att-type-pdf p-3.5 rounded-xl bg-[#101C27] hover:bg-[#14222F] border border-white/10 hover:border-cyan-500/30 transition flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-sm">
+                <i class="ph-bold ph-file-pdf text-xl text-rose-400"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase bg-rose-500/20 text-rose-300">PDF</span>
+                  <h4 class="text-xs font-semibold text-white truncate max-w-[200px]" title="Especificacao_Layout_AreaGourmet_ArqDayana.pdf">
+                    Especificacao_Layout_AreaGourmet_ArqDayana.pdf
+                  </h4>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span>4.8 MB</span>
+                  <span class="text-slate-600">•</span>
+                  <span>02/09/2026 14:15</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-slate-300">Studio ARQ</span>
+                </p>
+              </div>
+            </div>
+            <button onclick="alert('Visualização da Especificação Técnica do Arquiteto')" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition" title="Abrir Documento">
+              <i class="ph-bold ph-download-simple text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Anexo 5: Foto Sofá Pronto (Miniatura Real JPG) -->
+          <div class="att-item att-type-image p-3.5 rounded-xl bg-[#101C27] hover:bg-[#14222F] border border-white/10 hover:border-cyan-500/30 transition flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <!-- Miniatura Real w-10 h-10 -->
+              <div onclick="openLightbox('/images/conjunto-santorini.jpg', 'Foto Inspeção Sofá Pronto CD')" class="w-10 h-10 rounded-xl overflow-hidden border border-white/15 shrink-0 relative cursor-pointer group shadow-sm bg-black/40">
+                <img src="/images/conjunto-santorini.jpg" alt="Foto Sofá" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" />
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                  <i class="ph-bold ph-eye text-cyan-300 text-xs"></i>
+                </div>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase bg-purple-500/20 text-purple-300">JPG</span>
+                  <h4 class="text-xs font-semibold text-white truncate max-w-[200px]" title="Foto_Inspecao_Sofa_Pronto_CD.jpg">
+                    Foto_Inspecao_Sofa_Pronto_CD.jpg
+                  </h4>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span>2.1 MB</span>
+                  <span class="text-slate-600">•</span>
+                  <span>04/09/2026 15:30</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-slate-300">Roberto Carlos (CD)</span>
+                </p>
+              </div>
+            </div>
+            <button onclick="openLightbox('/images/conjunto-santorini.jpg', 'Foto Inspeção Sofá Pronto CD')" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition" title="Visualizar Foto">
+              <i class="ph-bold ph-eye text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Anexo 6: Foto Poltronas (Miniatura Real JPG) -->
+          <div class="att-item att-type-image p-3.5 rounded-xl bg-[#101C27] hover:bg-[#14222F] border border-white/10 hover:border-cyan-500/30 transition flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div onclick="openLightbox('/images/conjunto-ravello-terracota.jpg', 'Foto Poltronas Acabamento Corda')" class="w-10 h-10 rounded-xl overflow-hidden border border-white/15 shrink-0 relative cursor-pointer group shadow-sm bg-black/40">
+                <img src="/images/conjunto-ravello-terracota.jpg" alt="Foto Poltronas" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" />
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                  <i class="ph-bold ph-eye text-cyan-300 text-xs"></i>
+                </div>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase bg-purple-500/20 text-purple-300">JPG</span>
+                  <h4 class="text-xs font-semibold text-white truncate max-w-[200px]" title="Foto_Poltronas_Acabamento_Corda.jpg">
+                    Foto_Poltronas_Acabamento_Corda.jpg
+                  </h4>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span>1.9 MB</span>
+                  <span class="text-slate-600">•</span>
+                  <span>04/09/2026 15:32</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-slate-300">Roberto Carlos (CD)</span>
+                </p>
+              </div>
+            </div>
+            <button onclick="openLightbox('/images/conjunto-ravello-terracota.jpg', 'Foto Poltronas Acabamento Corda')" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition" title="Visualizar Foto">
+              <i class="ph-bold ph-eye text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Anexo 7: Foto Espreguiçadeiras (Miniatura Real PNG) -->
+          <div class="att-item att-type-image p-3.5 rounded-xl bg-[#101C27] hover:bg-[#14222F] border border-white/10 hover:border-cyan-500/30 transition flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div onclick="openLightbox('/images/conjunto-tulum.jpg', 'Foto Lote Espreguiçadeiras Tulum')" class="w-10 h-10 rounded-xl overflow-hidden border border-white/15 shrink-0 relative cursor-pointer group shadow-sm bg-black/40">
+                <img src="/images/conjunto-tulum.jpg" alt="Foto Espreguiçadeiras" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" />
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                  <i class="ph-bold ph-eye text-cyan-300 text-xs"></i>
+                </div>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase bg-purple-500/20 text-purple-300">PNG</span>
+                  <h4 class="text-xs font-semibold text-white truncate max-w-[200px]" title="Foto_Lote_Espreguicadeiras_Tulum.png">
+                    Foto_Lote_Espreguicadeiras_Tulum.png
+                  </h4>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span>2.8 MB</span>
+                  <span class="text-slate-600">•</span>
+                  <span>05/09/2026 10:10</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-slate-300">Fábrica 02</span>
+                </p>
+              </div>
+            </div>
+            <button onclick="openLightbox('/images/conjunto-tulum.jpg', 'Foto Lote Espreguiçadeiras Tulum')" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition" title="Visualizar Foto">
+              <i class="ph-bold ph-eye text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Anexo 8: Etiqueta Transportadora (Miniatura Real PNG) -->
+          <div class="att-item att-type-image p-3.5 rounded-xl bg-[#101C27] hover:bg-[#14222F] border border-white/10 hover:border-cyan-500/30 transition flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div onclick="openLightbox('/images/logo-oficial.png', 'Etiqueta Despacho Transportadora')" class="w-10 h-10 rounded-xl overflow-hidden border border-white/15 shrink-0 relative cursor-pointer group shadow-sm bg-black/40">
+                <img src="/images/logo-oficial.png" alt="Etiqueta" class="w-full h-full object-contain p-1 group-hover:scale-110 transition duration-300" />
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                  <i class="ph-bold ph-eye text-cyan-300 text-xs"></i>
+                </div>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase bg-purple-500/20 text-purple-300">PNG</span>
+                  <h4 class="text-xs font-semibold text-white truncate max-w-[200px]" title="Etiqueta_Despacho_Expresso_Rondonopolis.png">
+                    Etiqueta_Despacho_Expresso_Rondonopolis.png
+                  </h4>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span>620 KB</span>
+                  <span class="text-slate-600">•</span>
+                  <span>05/09/2026 11:45</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-slate-300">Mariana Souza (Expedição)</span>
+                </p>
+              </div>
+            </div>
+            <button onclick="openLightbox('/images/logo-oficial.png', 'Etiqueta Despacho Transportadora')" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition" title="Visualizar Foto">
+              <i class="ph-bold ph-eye text-sm"></i>
+            </button>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="bg-[#080E14] border-t border-white/10 px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>Pasta Digital sincronizada com CRM & Logística</span>
+      </div>
+      <div class="font-mono text-[11px] text-slate-500">
+        Pedido #5299 • Contrato assinado em 04/09/2026 às 09:27
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- Modal / Lightbox de Imagem Ampliada -->
+  <div id="lightbox-modal" onclick="closeLightbox()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="max-w-3xl w-full bg-[#101C27] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+      <div class="px-5 py-3.5 bg-[#14222F] border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-2 truncate">
+          <i class="ph-bold ph-image text-cyan-400 text-base"></i>
+          <span id="lightbox-title" class="text-xs font-bold text-white truncate">Foto Ampliada</span>
+        </div>
+        <button onclick="closeLightbox()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition">
+          <i class="ph-bold ph-x text-base"></i>
+        </button>
+      </div>
+      <div class="p-4 bg-black/50 flex items-center justify-center max-h-[70vh] overflow-hidden">
+        <img id="lightbox-img" src="" alt="Ampliada" class="max-h-[65vh] w-auto object-contain rounded-lg shadow-lg" />
+      </div>
+      <div class="px-5 py-3 bg-[#14222F] border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+        <span>Registro fotográfico integrado ao pedido #5299</span>
+        <button onclick="closeLightbox()" class="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition text-xs">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifier -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-cyan-500 text-black px-4 py-2 rounded-xl text-xs font-bold shadow-2xl shadow-cyan-500/50 hidden transform transition-all duration-300">
+    <span id="toast-msg">Mensagem</span>
+  </div>
+
+  <!-- Scripts Interativos -->
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = 'tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-2 bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10 border border-transparent';
+      });
+      const activeBtn = document.getElementById('tab-btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.className = 'tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm';
+      }
+
+      if (tabId === 'all') {
+        document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('hidden'));
+      } else {
+        document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+        const target = document.getElementById('section-' + tabId);
+        if (target) target.classList.remove('hidden');
+      }
+    }
+
+    function filterAttachments(type) {
+      document.querySelectorAll('.att-filter-btn').forEach(b => {
+        b.className = 'att-filter-btn px-3 py-1 rounded-lg text-xs font-medium transition text-slate-400 hover:text-white';
+      });
+      const activeBtn = document.getElementById('filter-att-' + type);
+      if (activeBtn) {
+        activeBtn.className = 'att-filter-btn px-3 py-1 rounded-lg text-xs font-bold transition bg-cyan-500/20 text-cyan-300';
+      }
+
+      document.querySelectorAll('.att-item').forEach(item => {
+        if (type === 'all') {
+          item.classList.remove('hidden');
+        } else if (type === 'pdf') {
+          if (item.classList.contains('att-type-pdf')) item.classList.remove('hidden');
+          else item.classList.add('hidden');
+        } else if (type === 'image') {
+          if (item.classList.contains('att-type-image')) item.classList.remove('hidden');
+          else item.classList.add('hidden');
+        }
+      });
+    }
+
+    function copyText(text, label) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(label || 'Copiado para a área de transferência!');
+      });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      const m = document.getElementById('toast-msg');
+      if (t && m) {
+        m.textContent = msg;
+        t.classList.remove('hidden');
+        setTimeout(() => {
+          t.classList.add('hidden');
+        }, 2500);
+      }
+    }
+
+    function openLightbox(url, title) {
+      const modal = document.getElementById('lightbox-modal');
+      const img = document.getElementById('lightbox-img');
+      const ttl = document.getElementById('lightbox-title');
+      if (modal && img) {
+        img.src = url;
+        if (ttl) ttl.textContent = title || 'Visualização da Foto';
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeLightbox() {
+      const modal = document.getElementById('lightbox-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
