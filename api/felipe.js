@@ -757,8 +757,28 @@ export default async function handler(req, res) {
 
       const isFiltered = Boolean(stageFilter || searchFilter || tempFilter || isInstagramQuery);
       const leadsToDisplay = isFiltered ? filteredLeads : mergedLeads;
-      const defaultLimit = (stageFilter || searchFilter) ? 100 : 1000;
-      const limit = parseInt(query.limit || body.limit, 10) || defaultLimit;
+      const isCountOnly = action === 'count' || action === 'contar' || action === 'total' || query.count === 'true';
+
+      const compactLead = (l) => ({
+        id: l.id,
+        name: l.name,
+        phone: l.phone,
+        instagram: l.instagram,
+        city: l.city,
+        stage: l.stage,
+        stage_label: l.stage_label || l.stage,
+        value: l.value,
+        temperature: l.temperature,
+        priority: l.priority,
+        commercial_line: l.commercial_line,
+        followup_status: l.followup_status || (l.stage === 'novo' ? 'Chamar Hoje' : 'Agendado'),
+        followup_date: l.followup_date,
+        channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
+        notes: l.notes ? (l.notes.length > 200 ? l.notes.substring(0, 200) + '...' : l.notes) : ''
+      });
+
+      const defaultLimit = (stageFilter || searchFilter) ? 15 : 10;
+      const limit = Math.min(parseInt(query.limit || body.limit, 10) || defaultLimit, 30);
 
       const formattedStages = Object.entries(stagesSummary).map(([s, c]) => `${s}: ${c}`).join(', ');
       const formattedPipeline = formatBRL(totalPipelineValue);
@@ -767,21 +787,16 @@ export default async function handler(req, res) {
       if (isInstagramQuery) {
         const instaTotal = filteredLeads.reduce((acc, l) => acc + (Number(l.value) || 0), 0);
         message = `Felipe possui ${filteredLeads.length} leads no funil de Instagram Direct com pipeline de ${formatBRL(instaTotal)}. ` +
-          filteredLeads.map((l, i) => `${i + 1}. ${l.name} (@${l.instagram}, ${formatBRL(l.value)}, Etapa: ${l.stage_label || l.stage}, Follow-up: ${l.followup_status || 'Chamar Hoje'})`).join('; ');
+          filteredLeads.slice(0, 5).map((l, i) => `${i + 1}. ${l.name} (@${l.instagram}, ${formatBRL(l.value)}, Etapa: ${l.stage_label || l.stage}, Follow-up: ${l.followup_status || 'Chamar Hoje'})`).join('; ');
       } else if (isFiltered && filteredLeads.length === 0) {
         message = `Nenhum cliente encontrado no funil de ${SELLER_NAME} para a busca "${searchFilter || stageFilter || tempFilter}".`;
       } else {
         message = `${SELLER_NAME} possui atualmente ${mergedLeads.length} clientes cadastrados no CRM (incluindo ${DEFAULT_INSTAGRAM_LEADS_FELIPE.length} no Instagram Direct) com pipeline total de ${formattedPipeline}. Funil WhatsApp: [${formattedStages}].`;
       }
 
-      const leadsResponseList = leadsToDisplay.slice(0, limit).map(l => ({
-        ...l,
-        channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
-        stage_label: l.stage_label || l.stage,
-        followup_status: l.followup_status || (l.stage === 'novo' ? 'Chamar Hoje' : 'Agendado')
-      }));
+      const leadsResponseList = isCountOnly ? [] : leadsToDisplay.slice(0, limit).map(compactLead);
 
-      return res.status(200).json({
+      const responseObj = {
         success: true,
         seller: SELLER_NAME,
         channel: isInstagramQuery ? 'instagram' : 'todos',
@@ -794,9 +809,14 @@ export default async function handler(req, res) {
         stages_summary: stagesSummary,
         stages_instagram: stagesInstagramSummary,
         message: message,
-        leads_returned: leadsResponseList.length,
-        leads: leadsResponseList
-      });
+        leads_returned: leadsResponseList.length
+      };
+
+      if (!isCountOnly) {
+        responseObj.leads = leadsResponseList;
+      }
+
+      return res.status(200).json(responseObj);
     }
 
     // =========================================================================
