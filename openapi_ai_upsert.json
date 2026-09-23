@@ -1,0 +1,185 @@
+﻿{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PIFF PAFF PRO CRM",
+    "description": "API Webhook para gestão total de leads no CRM Multi-Tenant via ChatGPT: consultar/contar leads, cadastrar, atualizar, excluir, reorganizar estágios e adicionar novas categorias.",
+    "version": "2.2.0"
+  },
+  "servers": [
+    {
+      "url": "https://crm-piff-paff-v2.vercel.app"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/ai-upsert": {
+      "get": {
+        "operationId": "getLeadsSummaryAI",
+        "summary": "Consulta quantidade total de leads cadastrados, resumo do funil e lista de clientes",
+        "description": "Retorna o total de leads do vendedor, distribuição por estágios, contagem por temperatura, valor total em negociação e lista de clientes do CRM.",
+        "parameters": [
+          {
+            "name": "stage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por estágio: novos, investigacao, projetos, proposta, fechamento, concluidas (opcional)"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Buscar cliente por nome, telefone, instagram ou cidade (opcional)"
+          },
+          {
+            "name": "temperature",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "quente",
+                "morno",
+                "frio"
+              ]
+            },
+            "description": "Filtrar por temperatura do lead (opcional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumo e listagem dos leads obtidos com sucesso do CRM"
+          }
+        }
+      },
+      "post": {
+        "operationId": "manageLeadAI",
+        "summary": "Gerencia leads no CRM (Cadastra, Atualiza, Exclui, Reorganiza, Lista e Categoriza)",
+        "description": "Permite ao ChatGPT cadastrar novos clientes, atualizar dados, excluir leads (action='delete'), reorganizar estágios/prioridades, listar leads e definir categorias.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operação executada com sucesso no CRM"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "UUID",
+        "description": "UUID de identificação do vendedor (Gabriel ou Mayara)"
+      }
+    },
+    "schemas": {
+      "LeadInput": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "upsert",
+              "delete",
+              "reorganize",
+              "list",
+              "count"
+            ],
+            "description": "Ação: 'upsert' (cadastrar/atualizar), 'delete' (excluir lead), 'reorganize' (mover estágio) ou 'list'/'count' (consultar funil)"
+          },
+          "id": {
+            "type": "string",
+            "description": "ID do lead se já existir no CRM"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome completo ou identificação do cliente"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Telefone com DDD (apenas números ou formatado)"
+          },
+          "instagram": {
+            "type": "string",
+            "description": "Arroba do Instagram (ex: @cliente)"
+          },
+          "email": {
+            "type": "string",
+            "description": "E-mail do cliente"
+          },
+          "city": {
+            "type": "string",
+            "description": "Cidade e UF do cliente"
+          },
+          "stage": {
+            "type": "string",
+            "description": "Estágio no funil: novos, investigacao, projetos, proposta, fechamento, concluidas ou categoria personalizada"
+          },
+          "category": {
+            "type": "string",
+            "description": "Categoria ou linha personalizada (ex: Linha Premium, Área Gourmet, etc.)"
+          },
+          "commercial_line": {
+            "type": "string",
+            "description": "Linha comercial do produto"
+          },
+          "value": {
+            "type": "number",
+            "description": "Valor estimado ou negociado em Reais (ex: 25000)"
+          },
+          "temperature": {
+            "type": "string",
+            "enum": [
+              "quente",
+              "morno",
+              "frio"
+            ],
+            "description": "Temperatura comercial do lead"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "MAXIMA",
+              "ALTA",
+              "MEDIA",
+              "BAIXA"
+            ],
+            "description": "Nível de prioridade no atendimento"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Histórico resumido, anotações de conversas e diagnóstico do cliente"
+          },
+          "next_best_action": {
+            "type": "string",
+            "description": "Próximo passo comercial recomendado"
+          },
+          "followup_date": {
+            "type": "string",
+            "description": "Data do proximo follow-up (YYYY-MM-DD). REGRA: Leads novos cadastrados hoje devem ter follow-up para o DIA SEGUINTE (amanha, D+1), nunca para o mesmo dia."
+          }
+        }
+      }
+    }
+  }
+}
