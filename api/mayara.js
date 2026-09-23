@@ -663,10 +663,30 @@ export default async function handler(req, res) {
         );
       }
 
+      const isCountOnly = action === 'count' || action === 'contar' || action === 'total' || query.count === 'true';
+
+      const compactLead = (l) => ({
+        id: l.id,
+        name: l.name,
+        phone: l.phone,
+        instagram: l.instagram,
+        city: l.city,
+        stage: l.stage,
+        stage_label: l.stage_label || l.stage,
+        value: l.value,
+        temperature: l.temperature,
+        priority: l.priority,
+        commercial_line: l.commercial_line,
+        followup_status: l.followup_status || 'Agendado',
+        followup_date: l.followup_date,
+        channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
+        notes: l.notes ? (l.notes.length > 200 ? l.notes.substring(0, 200) + '...' : l.notes) : ''
+      });
+
       const isFiltered = Boolean(stageFilter || searchFilter || tempFilter);
       const leadsToDisplay = isFiltered ? filteredLeads : allLeads;
-      const defaultLimit = (stageFilter || searchFilter) ? 100 : 1000;
-      const limit = parseInt(query.limit || body.limit, 10) || defaultLimit;
+      const defaultLimit = (stageFilter || searchFilter) ? 15 : 10;
+      const limit = Math.min(parseInt(query.limit || body.limit, 10) || defaultLimit, 30);
 
       const formattedStages = Object.entries(stagesSummary).map(([s, c]) => `${s}: ${c}`).join(', ');
       const formattedPipeline = formatBRL(totalPipelineValue);
@@ -674,14 +694,9 @@ export default async function handler(req, res) {
         ? `Nenhum cliente encontrado no funil de ${SELLER_NAME} para a busca "${searchFilter || stageFilter || tempFilter}".`
         : `${SELLER_NAME} possui atualmente ${allLeads.length} clientes cadastrados no CRM com pipeline de ${formattedPipeline}. Funil: [${formattedStages}].`;
 
-      const leadsResponseList = leadsToDisplay.slice(0, limit).map(l => ({
-        ...l,
-        channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
-        stage_label: l.stage_label || l.stage,
-        followup_status: l.followup_status || 'Agendado'
-      }));
+      const leadsResponseList = isCountOnly ? [] : leadsToDisplay.slice(0, limit).map(compactLead);
 
-      return res.status(200).json({
+      const responseObj = {
         success: true,
         seller: SELLER_NAME,
         total_leads: allLeads.length,
@@ -692,9 +707,14 @@ export default async function handler(req, res) {
         stages_summary: stagesSummary,
         temperatures_summary: temperaturesSummary,
         message: message,
-        leads_returned: leadsResponseList.length,
-        leads: leadsResponseList
-      });
+        leads_returned: leadsResponseList.length
+      };
+
+      if (!isCountOnly) {
+        responseObj.leads = leadsResponseList;
+      }
+
+      return res.status(200).json(responseObj);
     }
 
     // =========================================================================
