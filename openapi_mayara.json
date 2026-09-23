@@ -1,404 +1,152 @@
 ﻿{
-    "openapi":  "3.1.0",
-    "info":  {
-                 "title":  "PIFF PAFF CRM - Mayara",
-                 "description":  "API Oficial do CRM Caribe Moveis para Mayara. Permite consultar, cadastrar, atualizar, reorganizar e excluir clientes do funil.",
-                 "version":  "3.2.0"
-             },
-    "servers":  [
-                    {
-                        "url":  "https://crm-piff-paff-v2.vercel.app"
-                    }
-                ],
-    "paths":  {
-                  "/api/mayara":  {
-                                      "get":  {
-                                                  "operationId":  "consultarLeadsMayara",
-                                                  "x-openai-isConsequential":  false,
-                                                  "summary":  "Consulta total de leads e resumo do funil da Mayara",
-                                                  "description":  "Retorna o total de clientes cadastrados, valor do pipeline e resumo do funil da Mayara.",
-                                                  "parameters":  [
-                                                                     {
-                                                                         "name":  "stage",
-                                                                         "in":  "query",
-                                                                         "required":  false,
-                                                                         "description":  "Filtrar por estagio: novos, investigacao, projetos, proposta, fechamento, concluidas",
-                                                                         "schema":  {
-                                                                                        "type":  "string"
-                                                                                    }
-                                                                     },
-                                                                     {
-                                                                         "name":  "search",
-                                                                         "in":  "query",
-                                                                         "required":  false,
-                                                                         "description":  "Buscar cliente por nome, telefone ou cidade",
-                                                                         "schema":  {
-                                                                                        "type":  "string"
-                                                                                    }
-                                                                     },
-                                                                     {
-                                                                         "name":  "temperature",
-                                                                         "in":  "query",
-                                                                         "required":  false,
-                                                                         "description":  "Filtrar por temperatura: quente, morno, frio",
-                                                                         "schema":  {
-                                                                                        "type":  "string"
-                                                                                    }
-                                                                     }
-                                                                 ],
-                                                  "responses":  {
-                                                                    "200":  {
-                                                                                "description":  "Dados do funil da Mayara retornados com sucesso",
-                                                                                "content":  {
-                                                                                                "application/json":  {
-                                                                                                                         "schema":  {
-                                                                                                                                        "type":  "object",
-                                                                                                                                        "properties":  {
-                                                                                                                                                           "success":  {
-                                                                                                                                                                           "type":  "boolean"
-                                                                                                                                                                       },
-                                                                                                                                                           "seller":  {
-                                                                                                                                                                          "type":  "string"
-                                                                                                                                                                      },
-                                                                                                                                                           "total_leads":  {
-                                                                                                                                                                               "type":  "integer"
-                                                                                                                                                                           },
-                                                                                                                                                           "pipeline_total_value":  {
-                                                                                                                                                                                        "type":  "number"
-                                                                                                                                                                                    },
-                                                                                                                                                           "pipeline_total_value_formatted":  {
-                                                                                                                                                                                                  "type":  "string"
-                                                                                                                                                                                              },
-                                                                                                                                                           "message":  {
-                                                                                                                                                                           "type":  "string"
-                                                                                                                                                                       }
-                                                                                                                                                       }
-                                                                                                                                    }
-                                                                                                                     }
-                                                                                            }
-                                                                            }
-                                                                }
-                                              },
-                                      "post":  {
-                                                   "operationId":  "gerenciarLeadMayara",
-                                                   "x-openai-isConsequential":  false,
-                                                   "summary":  "Cadastra e atualiza AUTOMATICAMENTE clientes no CRM da Mayara",
-                                                   "description":  "Cadastra ou atualiza leads no CRM de Mayara. Invoque ao analisar conversas, prints ou dados de clientes. Para Direct/Instagram defina channel=\u0027instagram\u0027; para WhatsApp defina channel=\u0027whatsapp\u0027.",
-                                                   "requestBody":  {
-                                                                       "required":  true,
-                                                                       "content":  {
-                                                                                       "application/json":  {
-                                                                                                                "schema":  {
-                                                                                                                               "$ref":  "#/components/schemas/LeadInput"
-                                                                                                                           }
-                                                                                                            }
-                                                                                   }
-                                                                   },
-                                                   "responses":  {
-                                                                     "200":  {
-                                                                                 "description":  "Operacao executada com sucesso no CRM da Mayara",
-                                                                                 "content":  {
-                                                                                                 "application/json":  {
-                                                                                                                          "schema":  {
-                                                                                                                                         "type":  "object",
-                                                                                                                                         "properties":  {
-                                                                                                                                                            "success":  {
-                                                                                                                                                                            "type":  "boolean"
-                                                                                                                                                                        },
-                                                                                                                                                            "action":  {
-                                                                                                                                                                           "type":  "string"
-                                                                                                                                                                       },
-                                                                                                                                                            "channel":  {
-                                                                                                                                                                            "type":  "string"
-                                                                                                                                                                        },
-                                                                                                                                                            "funnel":  {
-                                                                                                                                                                           "type":  "string"
-                                                                                                                                                                       },
-                                                                                                                                                            "message":  {
-                                                                                                                                                                            "type":  "string"
-                                                                                                                                                                        }
-                                                                                                                                                        }
-                                                                                                                                     }
-                                                                                                                      }
-                                                                                             }
-                                                                             }
-                                                                 }
-                                               }
-                                  },
-                  "/api/mayara/find-instagram":  {
-                                                     "get":  {
-                                                                 "operationId":  "findInstagramLeadMayara",
-                                                                 "x-openai-isConsequential":  false,
-                                                                 "summary":  "Localiza lead no funil de Leads Instagram da Mayara antes de migrar",
-                                                                 "description":  "Localiza um card de lead no funil de prospecção do Instagram da Mayara usando telefone, @username, nome ou ID.",
-                                                                 "parameters":  [
-                                                                                    {
-                                                                                        "name":  "instagram",
-                                                                                        "in":  "query",
-                                                                                        "required":  false,
-                                                                                        "description":  "Perfil do Instagram com ou sem @",
-                                                                                        "schema":  {
-                                                                                                       "type":  "string"
-                                                                                                   }
-                                                                                    },
-                                                                                    {
-                                                                                        "name":  "leadId",
-                                                                                        "in":  "query",
-                                                                                        "required":  false,
-                                                                                        "description":  "ID do lead no Instagram (ex: insta-... ou UUID)",
-                                                                                        "schema":  {
-                                                                                                       "type":  "string"
-                                                                                                   }
-                                                                                    },
-                                                                                    {
-                                                                                        "name":  "phone",
-                                                                                        "in":  "query",
-                                                                                        "required":  false,
-                                                                                        "description":  "Telefone para busca se já informado",
-                                                                                        "schema":  {
-                                                                                                       "type":  "string"
-                                                                                                   }
-                                                                                    },
-                                                                                    {
-                                                                                        "name":  "name",
-                                                                                        "in":  "query",
-                                                                                        "required":  false,
-                                                                                        "description":  "Nome do cliente no Instagram",
-                                                                                        "schema":  {
-                                                                                                       "type":  "string"
-                                                                                                   }
-                                                                                    }
-                                                                                ],
-                                                                 "responses":  {
-                                                                                   "200":  {
-                                                                                               "description":  "Resultado da busca de lead no Instagram",
-                                                                                               "content":  {
-                                                                                                               "application/json":  {
-                                                                                                                                        "schema":  {
-                                                                                                                                                       "type":  "object",
-                                                                                                                                                       "properties":  {
-                                                                                                                                                                          "success":  {
-                                                                                                                                                                                          "type":  "boolean"
-                                                                                                                                                                                      },
-                                                                                                                                                                          "found":  {
-                                                                                                                                                                                        "type":  "boolean"
-                                                                                                                                                                                    },
-                                                                                                                                                                          "message":  {
-                                                                                                                                                                                          "type":  "string"
-                                                                                                                                                                                      },
-                                                                                                                                                                          "lead":  {
-                                                                                                                                                                                       "type":  "object"
-                                                                                                                                                                                   }
-                                                                                                                                                                      }
-                                                                                                                                                   }
-                                                                                                                                    }
-                                                                                                           }
-                                                                                           }
-                                                                               }
-                                                             }
-                                                 },
-                  "/api/mayara/move-to-whatsapp":  {
-                                                       "post":  {
-                                                                    "operationId":  "moveInstagramLeadToWhatsAppMayara",
-                                                                    "x-openai-isConsequential":  false,
-                                                                    "summary":  "Transfere lead do Instagram para Negociações WhatsApp da Mayara",
-                                                                    "description":  "Transfere o card de Leads Instagram para NegociaÃ§Ãµes WhatsApp de Mayara, validando duplicidade por telefone, mesclando negociaÃ§Ãµes e preservando histÃ³rico e notas.",
-                                                                    "requestBody":  {
-                                                                                        "required":  true,
-                                                                                        "content":  {
-                                                                                                        "application/json":  {
-                                                                                                                                 "schema":  {
-                                                                                                                                                "$ref":  "#/components/schemas/MoveInstagramToWhatsAppInput"
-                                                                                                                                            }
-                                                                                                                             }
-                                                                                                    }
-                                                                                    },
-                                                                    "responses":  {
-                                                                                      "200":  {
-                                                                                                  "description":  "Lead migrado com sucesso para Negociações WhatsApp",
-                                                                                                  "content":  {
-                                                                                                                  "application/json":  {
-                                                                                                                                           "schema":  {
-                                                                                                                                                          "type":  "object",
-                                                                                                                                                          "properties":  {
-                                                                                                                                                                             "success":  {
-                                                                                                                                                                                             "type":  "boolean"
-                                                                                                                                                                                         },
-                                                                                                                                                                             "sourceLeadId":  {
-                                                                                                                                                                                                  "type":  "string"
-                                                                                                                                                                                              },
-                                                                                                                                                                             "destinationLeadId":  {
-                                                                                                                                                                                                       "type":  "string"
-                                                                                                                                                                                                   },
-                                                                                                                                                                             "merged":  {
-                                                                                                                                                                                            "type":  "boolean"
-                                                                                                                                                                                        },
-                                                                                                                                                                             "stage":  {
-                                                                                                                                                                                           "type":  "string"
-                                                                                                                                                                                       },
-                                                                                                                                                                             "phone":  {
-                                                                                                                                                                                           "type":  "string"
-                                                                                                                                                                                       },
-                                                                                                                                                                             "seller":  {
-                                                                                                                                                                                            "type":  "string"
-                                                                                                                                                                                        },
-                                                                                                                                                                             "origin":  {
-                                                                                                                                                                                            "type":  "string"
-                                                                                                                                                                                        },
-                                                                                                                                                                             "message":  {
-                                                                                                                                                                                             "type":  "string"
-                                                                                                                                                                                         }
-                                                                                                                                                                         }
-                                                                                                                                                      }
-                                                                                                                                       }
-                                                                                                              }
-                                                                                              }
-                                                                                  }
-                                                                }
-                                                   }
-              },
-    "components":  {
-                       "schemas":  {
-                                       "MoveInstagramToWhatsAppInput":  {
-                                                                            "type":  "object",
-                                                                            "required":  [
-                                                                                             "phone"
-                                                                                         ],
-                                                                            "properties":  {
-                                                                                               "phone":  {
-                                                                                                             "type":  "string",
-                                                                                                             "description":  "Número de telefone WhatsApp do cliente com DDD (obrigatório)"
-                                                                                                         },
-                                                                                               "leadId":  {
-                                                                                                              "type":  "string",
-                                                                                                              "description":  "ID do card original no Instagram (ex: insta-...)"
-                                                                                                          },
-                                                                                               "instagram":  {
-                                                                                                                 "type":  "string",
-                                                                                                                 "description":  "Perfil do Instagram com ou sem @"
-                                                                                                             },
-                                                                                               "destinationStage":  {
-                                                                                                                        "type":  "string",
-                                                                                                                        "description":  "Estágio de destino no WhatsApp: investigacao (padrão - Diagnóstico/Qualificado), novos, projetos, proposta, fechamento, concluidas",
-                                                                                                                        "default":  "investigacao"
-                                                                                                                    },
-                                                                                               "transitionNote":  {
-                                                                                                                      "type":  "string",
-                                                                                                                      "description":  "Nota/motivo da transição do Instagram Direct para o WhatsApp"
-                                                                                                                  },
-                                                                                               "name":  {
-                                                                                                            "type":  "string",
-                                                                                                            "description":  "Nome do cliente (opcional)"
-                                                                                                        },
-                                                                                               "value":  {
-                                                                                                             "type":  "number",
-                                                                                                             "description":  "Valor estimado da negociação em Reais (opcional)"
-                                                                                                         },
-                                                                                               "origin":  {
-                                                                                                              "type":  "string",
-                                                                                                              "description":  "Origem do lead (padrão: Instagram)",
-                                                                                                              "default":  "Instagram"
-                                                                                                          }
-                                                                                           }
-                                                                        },
-                                       "LeadInput":  {
-                                                         "type":  "object",
-                                                         "properties":  {
-                                                                            "action":  {
-                                                                                           "type":  "string",
-                                                                                           "enum":  [
-                                                                                                        "upsert",
-                                                                                                        "delete",
-                                                                                                        "reorganize",
-                                                                                                        "list",
-                                                                                                        "count",
-                                                                                                        "findInstagramLead",
-                                                                                                        "moveInstagramLeadToWhatsApp"
-                                                                                                    ],
-                                                                                           "description":  "Acao: \u0027upsert\u0027 (cadastrar/atualizar), \u0027delete\u0027 (excluir), \u0027reorganize\u0027 (mover), \u0027findInstagramLead\u0027 (localizar no Instagram) ou \u0027moveInstagramLeadToWhatsApp\u0027 (migrar para WhatsApp)"
-                                                                                       },
-                                                                            "channel":  {
-                                                                                            "type":  "string",
-                                                                                            "enum":  [
-                                                                                                         "instagram",
-                                                                                                         "whatsapp"
-                                                                                                     ],
-                                                                                            "description":  "Canal de origem: \u0027instagram\u0027 (para Direct/Instagram ou leads sem telefone) ou \u0027whatsapp\u0027 (para negociações com número de WhatsApp)"
-                                                                                        },
-                                                                            "stage_instagram":  {
-                                                                                                    "type":  "string",
-                                                                                                    "enum":  [
-                                                                                                                 "novo",
-                                                                                                                 "abordagem",
-                                                                                                                 "conversa"
-                                                                                                             ],
-                                                                                                    "description":  "Estágio no funil de Prospecção do Instagram: \u0027novo\u0027 (Novo Lead), \u0027abordagem\u0027 (Abordagem Inicial) ou \u0027conversa\u0027 (Em Conversa)"
-                                                                                                },
-                                                                            "id":  {
-                                                                                       "type":  "string",
-                                                                                       "description":  "ID do lead se ja existir"
-                                                                                   },
-                                                                            "name":  {
-                                                                                         "type":  "string",
-                                                                                         "description":  "Nome do cliente extraído da conversa ou print"
-                                                                                     },
-                                                                            "phone":  {
-                                                                                          "type":  "string",
-                                                                                          "description":  "Telefone ou WhatsApp com DDD"
-                                                                                      },
-                                                                            "instagram":  {
-                                                                                              "type":  "string",
-                                                                                              "description":  "Instagram ou arroba do cliente (ex: @marisaroux ou marisaroux)"
-                                                                                          },
-                                                                            "city":  {
-                                                                                         "type":  "string",
-                                                                                         "description":  "Cidade e estado do cliente"
-                                                                                     },
-                                                                            "stage":  {
-                                                                                          "type":  "string",
-                                                                                          "description":  "Estagio WhatsApp: novos, investigacao, projetos, proposta, fechamento, concluidas"
-                                                                                      },
-                                                                            "value":  {
-                                                                                          "type":  "number",
-                                                                                          "description":  "Valor em Reais (ex: 25000)"
-                                                                                      },
-                                                                            "temperature":  {
-                                                                                                "type":  "string",
-                                                                                                "enum":  [
-                                                                                                             "quente",
-                                                                                                             "morno",
-                                                                                                             "frio"
-                                                                                                         ],
-                                                                                                "description":  "Temperatura comercial"
-                                                                                            },
-                                                                            "priority":  {
-                                                                                             "type":  "string",
-                                                                                             "enum":  [
-                                                                                                          "MAXIMA",
-                                                                                                          "ALTA",
-                                                                                                          "MEDIA",
-                                                                                                          "BAIXA"
-                                                                                                      ],
-                                                                                             "description":  "Prioridade de atendimento"
-                                                                                         },
-                                                                            "category":  {
-                                                                                             "type":  "string",
-                                                                                             "description":  "Linha ou categoria personalizada"
-                                                                                         },
-                                                                            "commercial_line":  {
-                                                                                                    "type":  "string",
-                                                                                                    "description":  "Linha comercial (ex: Linha Premium)"
-                                                                                                },
-                                                                            "notes":  {
-                                                                                          "type":  "string",
-                                                                                          "description":  "Anotacoes e historico da negociacao"
-                                                                                      },
-                                                                             "followup_date":  {
-                                                                                                   "type":  "string",
-                                                                                                   "description":  "Data do proximo follow-up (YYYY-MM-DD). REGRA CRITICA PARA NOVO LEAD: Ao cadastrar um lead novo que entrou hoje, a data de follow-up DEVE SER SEMPRE PARA O DIA SEGUINTE (D+1, amanha), NUNCA para o mesmo dia (hoje), pois o corretor acabou de conversar com ele. Cadencia regular: 3 dias seguidos (+1d cada), 2x por semana (+7d), quinzenal (+15d) e mensal (+30d). Excecoes: obra (+35d), imprevisto (+21d) ou data combinada explicitamente."
-                                                                                               }
-                                                                        }
-                                                     }
-                                   }
-                   }
+  "openapi": "3.0.0",
+  "info": {
+    "title": "PIFF PAFF CRM - Mayara",
+    "description": "API Oficial do CRM Piff Paff para Mayara.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://crm-piff-paff-v2.vercel.app"
+    }
+  ],
+  "paths": {
+    "/api/mayara": {
+      "get": {
+        "operationId": "consultarLeadsMayara",
+        "summary": "Consulta total de leads e resumo do funil de Mayara",
+        "description": "Retorna o total de clientes cadastrados, valor do pipeline e resumo do funil de Mayara.",
+        "parameters": [
+          {
+            "name": "stage",
+            "in": "query",
+            "required": false,
+            "description": "Filtrar por estagio: novos, investigacao, projetos, proposta, fechamento, concluidas",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Buscar cliente por nome, telefone ou cidade",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados retornados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "gerenciarLeadMayara",
+        "summary": "Cadastra, atualiza, exclui ou reorganiza leads de Mayara",
+        "description": "Permite cadastrar novos clientes, atualizar notas, excluir leads e mover estagios.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operacao executada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LeadInput": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "upsert",
+              "delete",
+              "reorganize",
+              "list",
+              "count"
+            ],
+            "description": "Acao: 'upsert', 'delete' ou 'reorganize'"
+          },
+          "id": {
+            "type": "string",
+            "description": "ID do lead se ja existir"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome do cliente"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Telefone ou WhatsApp"
+          },
+          "instagram": {
+            "type": "string",
+            "description": "Instagram (@)"
+          },
+          "stage": {
+            "type": "string",
+            "description": "Estagio: novos, investigacao, projetos, proposta, fechamento, concluidas"
+          },
+          "value": {
+            "type": "number",
+            "description": "Valor em Reais (ex: 25000)"
+          },
+          "temperature": {
+            "type": "string",
+            "enum": [
+              "quente",
+              "morno",
+              "frio"
+            ],
+            "description": "Temperatura comercial"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "MAXIMA",
+              "ALTA",
+              "MEDIA",
+              "BAIXA"
+            ],
+            "description": "Prioridade"
+          },
+          "category": {
+            "type": "string",
+            "description": "Linha ou categoria personalizada"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Anotacoes e historico da negociacao"
+          }
+        }
+      }
+    }
+  }
 }
