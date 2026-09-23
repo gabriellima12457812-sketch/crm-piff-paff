@@ -685,8 +685,9 @@ export default async function handler(req, res) {
 
       const isFiltered = Boolean(stageFilter || searchFilter || tempFilter);
       const leadsToDisplay = isFiltered ? filteredLeads : allLeads;
-      const defaultLimit = (stageFilter || searchFilter) ? 15 : 10;
-      const limit = Math.min(parseInt(query.limit || body.limit, 10) || defaultLimit, 30);
+      const requestedLimit = parseInt(query.limit || body.limit, 10);
+      const defaultLimit = (stageFilter || searchFilter) ? 20 : 15;
+      const limit = requestedLimit ? Math.min(requestedLimit, 1000) : defaultLimit;
 
       const formattedStages = Object.entries(stagesSummary).map(([s, c]) => `${s}: ${c}`).join(', ');
       const formattedPipeline = formatBRL(totalPipelineValue);
