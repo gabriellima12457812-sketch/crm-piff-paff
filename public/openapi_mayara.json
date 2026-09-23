@@ -1,0 +1,152 @@
+﻿{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "PIFF PAFF CRM - Mayara",
+    "description": "API Oficial do CRM Piff Paff para Mayara.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://crm-piff-paff-v2.vercel.app"
+    }
+  ],
+  "paths": {
+    "/api/mayara": {
+      "get": {
+        "operationId": "consultarLeadsMayara",
+        "summary": "Consulta total de leads e resumo do funil de Mayara",
+        "description": "Retorna o total de clientes cadastrados, valor do pipeline e resumo do funil de Mayara.",
+        "parameters": [
+          {
+            "name": "stage",
+            "in": "query",
+            "required": false,
+            "description": "Filtrar por estagio: novos, investigacao, projetos, proposta, fechamento, concluidas",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Buscar cliente por nome, telefone ou cidade",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados retornados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "gerenciarLeadMayara",
+        "summary": "Cadastra, atualiza, exclui ou reorganiza leads de Mayara",
+        "description": "Permite cadastrar novos clientes, atualizar notas, excluir leads e mover estagios.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operacao executada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LeadInput": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "upsert",
+              "delete",
+              "reorganize",
+              "list",
+              "count"
+            ],
+            "description": "Acao: 'upsert', 'delete' ou 'reorganize'"
+          },
+          "id": {
+            "type": "string",
+            "description": "ID do lead se ja existir"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome do cliente"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Telefone ou WhatsApp"
+          },
+          "instagram": {
+            "type": "string",
+            "description": "Instagram (@)"
+          },
+          "stage": {
+            "type": "string",
+            "description": "Estagio: novos, investigacao, projetos, proposta, fechamento, concluidas"
+          },
+          "value": {
+            "type": "number",
+            "description": "Valor em Reais (ex: 25000)"
+          },
+          "temperature": {
+            "type": "string",
+            "enum": [
+              "quente",
+              "morno",
+              "frio"
+            ],
+            "description": "Temperatura comercial"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "MAXIMA",
+              "ALTA",
+              "MEDIA",
+              "BAIXA"
+            ],
+            "description": "Prioridade"
+          },
+          "category": {
+            "type": "string",
+            "description": "Linha ou categoria personalizada"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Anotacoes e historico da negociacao"
+          }
+        }
+      }
+    }
+  }
+}
