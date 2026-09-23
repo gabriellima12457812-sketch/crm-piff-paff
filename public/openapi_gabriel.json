@@ -1,8 +1,8 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
-    "title": "PIFF PAFF CRM - Gabriel",
-    "description": "API Oficial do CRM Piff Paff para Gabriel.",
+    "title": "PIFF PAFF CRM - Gabriel Lima",
+    "description": "API Oficial do CRM Piff Paff para Gabriel Lima (Zero Autenticação, direta ao Vercel e Supabase).",
     "version": "1.0.0"
   },
   "servers": [
@@ -42,7 +42,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/ConsultarResponse"
                 }
               }
             }
@@ -69,7 +69,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/AcaoResponse"
                 }
               }
             }
@@ -80,6 +80,52 @@
   },
   "components": {
     "schemas": {
+      "ConsultarResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indica se a requisicao foi atendida"
+          },
+          "seller": {
+            "type": "string",
+            "description": "Nome do vendedor"
+          },
+          "total_leads": {
+            "type": "integer",
+            "description": "Total de clientes encontrados"
+          },
+          "total_clients": {
+            "type": "integer",
+            "description": "Total de clientes no banco"
+          },
+          "pipeline_total_value_formatted": {
+            "type": "string",
+            "description": "Valor total formatado em Reais"
+          },
+          "message": {
+            "type": "string",
+            "description": "Resumo explicativo do funil"
+          }
+        }
+      },
+      "AcaoResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indica se a acao foi bem sucedida"
+          },
+          "action": {
+            "type": "string",
+            "description": "Tipo de acao executada (create, update, delete, reorganize)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Mensagem descritiva do resultado da operacao"
+          }
+        }
+      },
       "LeadInput": {
         "type": "object",
         "properties": {
@@ -92,15 +138,15 @@
               "list",
               "count"
             ],
-            "description": "Acao: 'upsert', 'delete' ou 'reorganize'"
+            "description": "Acao a ser executada: 'upsert', 'delete' ou 'reorganize'"
           },
           "id": {
             "type": "string",
-            "description": "ID do lead se ja existir"
+            "description": "ID do lead se ja existir no CRM"
           },
           "name": {
             "type": "string",
-            "description": "Nome do cliente"
+            "description": "Nome completo do cliente"
           },
           "phone": {
             "type": "string",
@@ -108,15 +154,15 @@
           },
           "instagram": {
             "type": "string",
-            "description": "Instagram (@)"
+            "description": "Instagram (@perfil)"
           },
           "stage": {
             "type": "string",
-            "description": "Estagio: novos, investigacao, projetos, proposta, fechamento, concluidas"
+            "description": "Estagio do funil: novos, investigacao, projetos, proposta, fechamento, concluidas"
           },
           "value": {
             "type": "number",
-            "description": "Valor em Reais (ex: 25000)"
+            "description": "Valor da negociacao em Reais (ex: 25000)"
           },
           "temperature": {
             "type": "string",
@@ -135,15 +181,15 @@
               "MEDIA",
               "BAIXA"
             ],
-            "description": "Prioridade"
+            "description": "Prioridade de atendimento"
           },
           "category": {
             "type": "string",
-            "description": "Linha ou categoria personalizada"
+            "description": "Linha ou categoria do produto"
           },
           "notes": {
             "type": "string",
-            "description": "Anotacoes e historico da negociacao"
+            "description": "Anotacoes, historico da conversa e detalhes"
           }
         }
       }
