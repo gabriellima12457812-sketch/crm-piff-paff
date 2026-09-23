@@ -2872,11 +2872,14 @@
       const deletedIds = new Set(getDeletedLeadIds());
       const storageKey = getStorageKey();
       const stored = localStorage.getItem(storageKey);
+      const isGabriel = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
 
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          // Se for Gabriel e o cache tiver menos de 10 leads, significa que foi zerado por sync anterior -> recarrega base completa
+          const minExpected = isGabriel ? 10 : 1;
+          if (Array.isArray(parsed) && parsed.length >= minExpected) {
             leads = parsed.filter(l => !deletedIds.has(l.id));
             return;
           }
@@ -2886,13 +2889,12 @@
       }
 
       // Se não for Gabriel (ex: Felipe ou Mayara): aguarda sync da nuvem com isolamento
-      const isGabriel = authUser && authUser.email && authUser.email.toLowerCase().includes('gabriel');
       if (!isGabriel) {
         leads = [];
         return;
       }
 
-      // Para Gabriel Lima (Admin) ou visualização inicial: carrega a base oficial de 170 leads
+      // Para Gabriel Lima (Admin) ou visualização inicial: carrega a base oficial consolidada (618 leads)
       const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
       if (baseLeads && baseLeads.length > 0) {
         leads = baseLeads.filter(l => !deletedIds.has(l.id));
@@ -2909,9 +2911,9 @@
     }
 
     function loadCaribeBase(silent = false) {
-      const isGabriel = authUser && authUser.email && authUser.email.toLowerCase().includes('gabriel');
+      const isGabriel = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
       if (!isGabriel) {
-        alert('A base histórica de 170 clientes pertence à visão do Administrador. Vendedores possuem funis 100% isolados.');
+        alert('A base histórica pertence à visão do Administrador. Vendedores possuem funis 100% isolados.');
         return;
       }
       const deletedIds = new Set(getDeletedLeadIds());
@@ -3407,6 +3409,24 @@
               cloudInsta.push(defL);
             }
           });
+
+          // PRESERVAÇÃO CRÍTICA DE WHATSAPP / BASE HISTÓRICA DO GABRIEL:
+          // Se a nuvem não retornou leads de WhatsApp para o Gabriel, NUNCA zerar os leads locais!
+          const isGabrielSync = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
+          if (isGabrielSync) {
+            const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : [];
+            const existingWaIds = new Set(cloudWa.map(l => l.id));
+            const existingPhones = new Set(cloudWa.filter(l => l.phone).map(l => String(l.phone).replace(/\D/g, '')));
+
+            const sourcePool = (Array.isArray(leads) && leads.length >= 10) ? leads : baseLeads;
+            sourcePool.forEach(l => {
+              const cleanPhone = l.phone ? String(l.phone).replace(/\D/g, '') : null;
+              const hasPhoneMatch = cleanPhone && existingPhones.has(cleanPhone);
+              if (!existingWaIds.has(l.id) && !hasPhoneMatch) {
+                cloudWa.push(l);
+              }
+            });
+          }
 
           const currentWaJson = JSON.stringify(cloudWa);
           const currentInstaJson = JSON.stringify(cloudInsta);
