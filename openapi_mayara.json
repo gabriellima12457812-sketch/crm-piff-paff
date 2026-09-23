@@ -42,7 +42,27 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConsultarResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "seller": {
+                      "type": "string"
+                    },
+                    "total_leads": {
+                      "type": "integer"
+                    },
+                    "total_clients": {
+                      "type": "integer"
+                    },
+                    "pipeline_total_value_formatted": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -58,7 +78,71 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LeadInput"
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "upsert",
+                      "delete",
+                      "reorganize",
+                      "list",
+                      "count"
+                    ],
+                    "description": "Acao a ser executada: 'upsert', 'delete', 'reorganize' ou 'count'"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "ID do lead se ja existir no CRM"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Nome completo do cliente"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Telefone ou WhatsApp"
+                  },
+                  "instagram": {
+                    "type": "string",
+                    "description": "Instagram (@perfil)"
+                  },
+                  "stage": {
+                    "type": "string",
+                    "description": "Estagio do funil: novos, investigacao, projetos, proposta, fechamento, concluidas"
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Valor da negociacao em Reais (ex: 25000)"
+                  },
+                  "temperature": {
+                    "type": "string",
+                    "enum": [
+                      "quente",
+                      "morno",
+                      "frio"
+                    ],
+                    "description": "Temperatura comercial"
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "MAXIMA",
+                      "ALTA",
+                      "MEDIA",
+                      "BAIXA"
+                    ],
+                    "description": "Prioridade de atendimento"
+                  },
+                  "category": {
+                    "type": "string",
+                    "description": "Linha ou categoria do produto"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "description": "Anotacoes, historico da conversa e detalhes"
+                  }
+                }
               }
             }
           }
@@ -69,127 +153,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AcaoResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "action": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "ConsultarResponse": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "description": "Indica se a requisicao foi atendida"
-          },
-          "seller": {
-            "type": "string",
-            "description": "Nome do vendedor"
-          },
-          "total_leads": {
-            "type": "integer",
-            "description": "Total de clientes encontrados"
-          },
-          "total_clients": {
-            "type": "integer",
-            "description": "Total de clientes no banco"
-          },
-          "pipeline_total_value_formatted": {
-            "type": "string",
-            "description": "Valor total formatado em Reais"
-          },
-          "message": {
-            "type": "string",
-            "description": "Resumo explicativo do funil"
-          }
-        }
-      },
-      "AcaoResponse": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "description": "Indica se a acao foi bem sucedida"
-          },
-          "action": {
-            "type": "string",
-            "description": "Tipo de acao executada (create, update, delete, reorganize)"
-          },
-          "message": {
-            "type": "string",
-            "description": "Mensagem descritiva do resultado da operacao"
-          }
-        }
-      },
-      "LeadInput": {
-        "type": "object",
-        "properties": {
-          "action": {
-            "type": "string",
-            "enum": [
-              "upsert",
-              "delete",
-              "reorganize",
-              "list",
-              "count"
-            ],
-            "description": "Acao a ser executada: 'upsert', 'delete' ou 'reorganize'"
-          },
-          "id": {
-            "type": "string",
-            "description": "ID do lead se ja existir no CRM"
-          },
-          "name": {
-            "type": "string",
-            "description": "Nome completo do cliente"
-          },
-          "phone": {
-            "type": "string",
-            "description": "Telefone ou WhatsApp"
-          },
-          "instagram": {
-            "type": "string",
-            "description": "Instagram (@perfil)"
-          },
-          "stage": {
-            "type": "string",
-            "description": "Estagio do funil: novos, investigacao, projetos, proposta, fechamento, concluidas"
-          },
-          "value": {
-            "type": "number",
-            "description": "Valor da negociacao em Reais (ex: 25000)"
-          },
-          "temperature": {
-            "type": "string",
-            "enum": [
-              "quente",
-              "morno",
-              "frio"
-            ],
-            "description": "Temperatura comercial"
-          },
-          "priority": {
-            "type": "string",
-            "enum": [
-              "MAXIMA",
-              "ALTA",
-              "MEDIA",
-              "BAIXA"
-            ],
-            "description": "Prioridade de atendimento"
-          },
-          "category": {
-            "type": "string",
-            "description": "Linha ou categoria do produto"
-          },
-          "notes": {
-            "type": "string",
-            "description": "Anotacoes, historico da conversa e detalhes"
           }
         }
       }
