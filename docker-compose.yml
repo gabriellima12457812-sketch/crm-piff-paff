@@ -1,0 +1,174 @@
+# ==============================================================================
+# DOCKER COMPOSE — PIFF-PAFF PRO CRM AUTOMATION STACK (COOLIFY READY)
+# Serviços: n8n + PostgreSQL + Redis + Evolution API v2
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. POSTGRESQL (Banco de Dados para n8n e Evolution API)
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: piffpaff-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-PiffPaffSecurePass2026!}
+      POSTGRES_DB: ${POSTGRES_DB:-n8n}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - piffpaff-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------------------------
+  # 2. REDIS (Cache, Filas e Sessões para a Evolution API)
+  # ----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: piffpaff-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-PiffPaffRedis2026!}
+    volumes:
+      - redis_data:/data
+    networks:
+      - piffpaff-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-PiffPaffRedis2026!}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------------------------
+  # 3. EVOLUTION API v2 (Integração WhatsApp Multi-Device)
+  # ----------------------------------------------------------------------------
+  evolution-api:
+    image: atendai/evolution-api:v2.1.2
+    container_name: piffpaff-evolution-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${EVOLUTION_PORT:-8080}:8080"
+    environment:
+      # Configurações do Servidor
+      SERVER_TYPE: http
+      SERVER_PORT: 8080
+      SERVER_URL: ${EVOLUTION_SERVER_URL:-http://localhost:8080}
+      
+      # Segurança e Autenticação da API
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-PiffPaffEvoSecretKey2026!}
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: "true"
+      
+      # Banco de Dados PostgreSQL
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-PiffPaffSecurePass2026!}@postgres:5432/${POSTGRES_DB:-n8n}?schema=evolution"
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
+      DATABASE_SAVE_MESSAGE_UPDATE: "true"
+      DATABASE_SAVE_DATA_CONTACTS: "true"
+      DATABASE_SAVE_DATA_CHATS: "true"
+      
+      # Cache Redis para Desempenho
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: "redis://:${REDIS_PASSWORD:-PiffPaffRedis2026!}@redis:6379/1"
+      CACHE_REDIS_PREFIX_KEY: "evolution"
+      CACHE_REDIS_SAVE_INSTANCES: "true"
+      
+      # Webhook Global para Envio Instantâneo ao n8n
+      WEBHOOK_GLOBAL_ENABLED: "true"
+      WEBHOOK_GLOBAL_URL: ${N8N_WEBHOOK_URL:-http://n8n:5678/webhook/webhook-evolution-whatsapp}
+      WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS: "false"
+      WEBHOOK_EVENTS_MESSAGES_UPSERT: "true"
+      WEBHOOK_EVENTS_MESSAGES_UPDATE: "false"
+      WEBHOOK_EVENTS_SEND_MESSAGE: "true"
+      
+      # Configurações de QR Code
+      QRCODE_LIMIT: 30
+      
+      # Log e Timezone
+      LOG_LEVEL: "ERROR,WARN,INFO"
+      LOG_COLOR: "true"
+      CONFIG_SESSION_PHONE_CLIENT: "PiffPaff CRM"
+      DEL_INSTANCE: "false"
+    volumes:
+      - evolution_instances:/evolution/instances
+    networks:
+      - piffpaff-network
+
+  # ----------------------------------------------------------------------------
+  # 4. N8N (Orquestrador de IA, Fluxos e Automação Comercial)
+  # ----------------------------------------------------------------------------
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: piffpaff-n8n
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      # Banco de Dados
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-n8n}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:-postgres}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-PiffPaffSecurePass2026!}
+      DB_POSTGRESDB_SCHEMA: public
+      
+      # Segurança e Chave de Criptografia
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-piffpaff_n8n_super_secret_key_2026}
+      
+      # URLs Públicas e Webhook (Ajustar no Coolify)
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-https}
+      WEBHOOK_URL: ${N8N_PUBLIC_URL:-https://n8n.seudominio.com/}
+      
+      # Timezone Brasil
+      GENERIC_TIMEZONE: America/Sao_Paulo
+      TZ: America/Sao_Paulo
+      
+      # Execuções e Performance
+      EXECUTIONS_MODE: regular
+      EXECUTIONS_DATA_SAVE_ON_ERROR: all
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: none
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: 168 # 7 dias
+      
+      # Variáveis de Ambiente Globais para nós de IA
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - piffpaff-network
+
+# ------------------------------------------------------------------------------
+# REDES & VOLUMES PERSISTENTES
+# ------------------------------------------------------------------------------
+networks:
+  piffpaff-network:
+    name: piffpaff-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: piffpaff_postgres_data
+  redis_data:
+    name: piffpaff_redis_data
+  evolution_instances:
+    name: piffpaff_evolution_instances
+  n8n_data:
+    name: piffpaff_n8n_data
