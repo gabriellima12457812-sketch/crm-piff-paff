@@ -1,0 +1,224 @@
+{
+  "name": "Piff-Paff CRM - WhatsApp Gabriel (Evolution API + ChatGPT)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook-evolution-whatsapp",
+        "responseMode": "onReceived",
+        "responseData": "{\n  \"status\": \"success\",\n  \"message\": \"Evento Evolution API recebido com sucesso\"\n}",
+        "options": {}
+      },
+      "id": "e43b1740-1234-4567-89ab-cdef01234567",
+      "name": "1. Webhook Evolution API",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "webhookId": "webhook-evolution-whatsapp"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-not-from-me",
+              "leftValue": "={{ $json.body?.data?.key?.fromMe ?? $json.data?.key?.fromMe ?? false }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-not-group",
+              "leftValue": "={{ ($json.body?.data?.key?.remoteJid ?? $json.data?.key?.remoteJid ?? '').includes('@g.us') }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-not-status",
+              "leftValue": "={{ ($json.body?.data?.key?.remoteJid ?? $json.data?.key?.remoteJid ?? '').includes('status@broadcast') }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a12b34cd-56ef-7890-abcd-ef1234567890",
+      "name": "2. Filtrar Mensagens Válidas",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai os dados essenciais da mensagem enviada pelo cliente via Evolution API\nconst payload = $input.first().json;\nconst data = payload.body?.data || payload.data || payload;\n\nconst rawJid = data.key?.remoteJid || data.remoteJid || '';\nconst telefone = rawJid.replace(/@.*$/, '').replace(/\\D/g, '');\nconst pushName = data.pushName || data.key?.pushName || '';\n\n// Extração do texto da mensagem (suporta texto puro, mensagem estendida e legenda de imagem/documento)\nconst messageObj = data.message || {};\nconst textoMensagem =\n  messageObj.conversation ||\n  messageObj.extendedTextMessage?.text ||\n  messageObj.imageMessage?.caption ||\n  messageObj.videoMessage?.caption ||\n  messageObj.documentMessage?.caption ||\n  '';\n\nif (!telefone || telefone.length < 8 || !textoMensagem.trim()) {\n  return []; // Ignora se não houver texto ou telefone válido\n}\n\nreturn [{\n  json: {\n    telefone,\n    pushName,\n    textoMensagem: textoMensagem.trim(),\n    dataHora: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "b23c45de-67fa-8901-bcde-f12345678901",
+      "name": "3. Extrair Dados da Mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.2,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Você é um assistente comercial da Piff-Paff Móveis de Alto Padrão (mobiliário em corda náutica, fibra sintética e alumínio para áreas externas, varandas e piscinas).\\n\\nAnalise a mensagem recebida de um lead no WhatsApp e retorne EXCLUSIVAMENTE um objeto JSON válido com os seguintes campos:\\n- nome: Nome próprio identificado do cliente. Se o cliente se apresentou, use o nome dele. Se não souber, use o pushName fornecido ou string vazia.\\n- resumo_interacao: Resumo objetivo de 1 a 2 frases com os produtos de interesse, medidas, ambiente (área externa, gourmet, piscina) ou dúvidas mencionadas.\\n- intencao: Uma frase curta definindo a intenção comercial (ex: 'Orçamento Sofá Modular', 'Consulta de Catálogo Piscina', 'Dúvida Prazo de Entrega', 'Negociação de Projeto Completo').\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Telefone: {{ $json.telefone }}\\nPushName: {{ $json.pushName }}\\nMensagem do Cliente: {{ $json.textoMensagem }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "c34d56ef-78ab-9012-cdef-123456789012",
+      "name": "4. ChatGPT Analisar Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai e formata a resposta do ChatGPT para o formato exigido pelo CRM do Gabriel\nconst aiResponseRaw = $input.first().json;\nconst prevData = $('3. Extrair Dados da Mensagem').first().json;\n\nlet parsedAi = {};\ntry {\n  const contentStr = aiResponseRaw.choices?.[0]?.message?.content || '{}';\n  parsedAi = JSON.parse(contentStr);\n} catch (e) {\n  parsedAi = {};\n}\n\nconst nomeFinal = (parsedAi.nome || prevData.pushName || '').trim();\nconst resumoFinal = (parsedAi.resumo_interacao || prevData.textoMensagem || 'Contato recebido pelo WhatsApp').trim();\nconst intencaoFinal = (parsedAi.intencao || 'Interesse em Mobiliário de Alto Padrão').trim();\n\n// Payload exato para o Webhook do Gabriel (sem vendedor_id, fixado no back-end Vercel)\nreturn [{\n  json: {\n    telefone: prevData.telefone,\n    nome: nomeFinal,\n    resumo_interacao: resumoFinal,\n    intencao: intencaoFinal\n  }\n}];"
+      },
+      "id": "d45e67fa-89bc-0123-defa-234567890123",
+      "name": "5. Montar Payload CRM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://crm-piff-paff-v2.vercel.app/api/n8n-webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"telefone\": \"{{ $json.telefone }}\",\n  \"nome\": \"{{ $json.nome }}\",\n  \"resumo_interacao\": \"{{ $json.resumo_interacao }}\",\n  \"intencao\": \"{{ $json.intencao }}\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "e56f78ab-90cd-1234-efab-345678901234",
+      "name": "6. Enviar ao CRM Vercel (Gabriel)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        300
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1. Webhook Evolution API": {
+      "main": [
+        [
+          {
+            "node": "2. Filtrar Mensagens Válidas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Filtrar Mensagens Válidas": {
+      "main": [
+        [
+          {
+            "node": "3. Extrair Dados da Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Extrair Dados da Mensagem": {
+      "main": [
+        [
+          {
+            "node": "4. ChatGPT Analisar Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. ChatGPT Analisar Lead": {
+      "main": [
+        [
+          {
+            "node": "5. Montar Payload CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Montar Payload CRM": {
+      "main": [
+        [
+          {
+            "node": "6. Enviar ao CRM Vercel (Gabriel)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "piffpaff-whatsapp-crm-v1-gabriel"
+}
