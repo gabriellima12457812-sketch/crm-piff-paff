@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
   <meta charset="UTF-8" />
@@ -3174,10 +3174,23 @@
           try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
           closeLoginScreen();
           updateSellerBadge(session.user);
-          initArchitectsStorage();
+          initStorage();
           initInstagramStorage();
+          initArchitectsStorage();
+          if (getSellerRole(authUser) === 'admin' && typeof initQuarantineStorage === 'function') {
+            initQuarantineStorage();
+          }
+          renderKanban();
+          renderInstagramBoard();
+          renderFollowupCenter();
+          renderClientsTable();
+          updateMetrics();
+          setupDragAndDrop();
           if (typeof setupSupabaseRealtime === 'function') {
             setupSupabaseRealtime(session.user.id);
+          }
+          if (typeof syncFromSupabase === 'function') {
+            syncFromSupabase(true);
           }
           return true;
         } else {
@@ -3301,11 +3314,9 @@
       // 2. Se o canal ou pipeline for explicitamente definido como WhatsApp
       if (l.channel === 'whatsapp' || l.pipeline === 'whatsapp') return false;
 
-      // 3. Estágios exclusivos do funil de WhatsApp com telefone válido
+      // 3. Estágios exclusivos do funil de WhatsApp
       const st = String(l.stage || '').toLowerCase().trim();
-      const hasPhone = Boolean(l.phone && String(l.phone).replace(/\D/g, '').length >= 8);
-
-      if (hasPhone && ['investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas'].includes(st)) {
+      if (['investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas'].includes(st)) {
         return false;
       }
 
@@ -3316,16 +3327,14 @@
       if (st === 'novo' || st === 'abordagem' || st === 'conversa') return true;
 
       // 6. Se NÃO possui telefone e tem perfil/id de instagram
-      if (!hasPhone) {
-        const idStr = String(l.id || '').toLowerCase();
-        const cleanInsta = String(l.instagram || '').replace(/^@/, '').trim();
-        if (idStr.startsWith('insta-') || idStr.startsWith('crm-fel-') || cleanInsta.length > 1) {
-          return true;
-        }
+      const idStr = String(l.id || '').toLowerCase();
+      const cleanInsta = String(l.instagram || '').replace(/^@/, '').trim();
+      if (idStr.startsWith('insta-') || idStr.startsWith('crm-fel-') || cleanInsta.length > 1) {
+        return true;
       }
 
       // 7. Se tem ID de Instagram mas NÃO tem telefone e notas indicam direct
-      if (!hasPhone && (notes.includes('direct') || notes.includes('anúncio') || notes.includes('anuncio'))) {
+      if (notes.includes('direct') || notes.includes('anúncio') || notes.includes('anuncio')) {
         return true;
       }
 
