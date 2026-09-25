@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/n8n-webhook (ES Module)
 // WEBHOOK EXCLUSIVO PARA O VENDEDOR GABRIEL (n8n + ChatGPT + Evolution API)
 // ==============================================================================
@@ -83,14 +83,14 @@ export default async function handler(req, res) {
     const supabaseUrl = (
       process.env.NEXT_PUBLIC_SUPABASE_URL ||
       process.env.SUPABASE_URL ||
-      'https://hqqzumdscdjleaedguzh.supabase.co'
+      'https://ukuaujxvdziiaxxuuidw.supabase.co'
     ).replace(/\/$/, '');
 
     const serviceKey =
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
       process.env.SUPABASE_SERVICE_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-      'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+      'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
 
     const supabaseHeaders = {
       'apikey': serviceKey,
