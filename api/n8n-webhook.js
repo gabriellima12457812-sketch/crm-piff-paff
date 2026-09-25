@@ -25,6 +25,13 @@ const SELLERS = {
     name: 'Mayara',
     leadPrefix: 'CRM-MAY-WA',
     origem: 'WhatsApp Mayara'
+  },
+  eduardo: {
+    user_id: 'd4444444-4444-4444-4444-444444444444',
+    vendedor_id: 'eduardo',
+    name: 'Eduardo',
+    leadPrefix: 'CRM-EDU-WA',
+    origem: 'WhatsApp Eduardo'
   }
 };
 
@@ -82,10 +89,12 @@ export default async function handler(req, res) {
     }
     body = body || {};
 
-    // Identificação do Vendedor de Destino (Gabriel, Felipe ou Mayara)
+    // Identificação do Vendedor de Destino (Gabriel, Felipe, Mayara ou Eduardo)
     const rawSeller = (body.vendedor_id || body.vendedor || body.instance || req.query?.seller || '').toString().toLowerCase();
     let seller = SELLERS.gabriel;
-    if (rawSeller.includes('mayara')) {
+    if (rawSeller.includes('eduardo')) {
+      seller = SELLERS.eduardo;
+    } else if (rawSeller.includes('mayara')) {
       seller = SELLERS.mayara;
     } else if (rawSeller.includes('felipe')) {
       seller = SELLERS.felipe;
