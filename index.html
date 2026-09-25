@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
   <meta charset="UTF-8" />
@@ -2337,11 +2337,11 @@
       <div class="space-y-3 text-xs">
         <div>
           <label class="block font-bold text-slate-300 uppercase mb-1">Project URL:</label>
-          <input id="cfg-supabase-url" type="url" value="https://hqqzumdscdjleaedguzh.supabase.co" placeholder="https://xyzcompany.supabase.co" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+          <input id="cfg-supabase-url" type="url" value="https://ukuaujxvdziiaxxuuidw.supabase.co" placeholder="https://xyzcompany.supabase.co" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
         </div>
         <div>
           <label class="block font-bold text-slate-300 uppercase mb-1">anon public key / publishable:</label>
-          <input id="cfg-supabase-key" type="password" value="sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8" placeholder="sb_publishable_..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+          <input id="cfg-supabase-key" type="password" value="sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO" placeholder="sb_publishable_..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
         </div>
       </div>
 
@@ -2951,8 +2951,8 @@
     let rawCloudAllLeads = []; // Armazena cache global de leads da nuvem para o Admin Gabriel
 
     function getSupabaseClient() {
-      const url = localStorage.getItem('supabase_url') || 'https://hqqzumdscdjleaedguzh.supabase.co';
-      const key = localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+      const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
+      const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       if (window.supabase && (!window.supabaseClient || window._supabaseUrl !== url)) {
         window.supabaseClient = window.supabase.createClient(url, key);
         window._supabaseUrl = url;
@@ -3215,7 +3215,7 @@
       };
       const config = sellerConfigs[sellerKey] || sellerConfigs.gabriel;
       const fallbackSession = {
-        access_token: localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8',
+        access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
         user: {
           id: config.id,
           email: config.email,
@@ -3354,8 +3354,8 @@
       }
 
       const sellerKey = getSellerKey(authUser);
-      const url = localStorage.getItem('supabase_url') || 'https://hqqzumdscdjleaedguzh.supabase.co';
-      const key = localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+      const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
+      const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
 
       try {
@@ -3930,8 +3930,8 @@
       }
 
       // 2. Fallback direto no Supabase REST
-      const url = localStorage.getItem('supabase_url') || 'https://hqqzumdscdjleaedguzh.supabase.co';
-      const key = localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+      const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
+      const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       if (!url || !key) return;
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
 
@@ -4011,8 +4011,8 @@
       }
 
       // 2. Fallback direto no Supabase REST
-      const url = localStorage.getItem('supabase_url') || 'https://hqqzumdscdjleaedguzh.supabase.co';
-      const key = localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+      const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
+      const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       if (!url || !key) return;
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
 
@@ -4055,8 +4055,8 @@
       }
 
       // 2. Fallback direto no Supabase REST
-      const url = localStorage.getItem('supabase_url') || 'https://hqqzumdscdjleaedguzh.supabase.co';
-      const key = localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+      const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
+      const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       if (!url || !key) return;
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
 
@@ -9545,10 +9545,10 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Credenciais oficiais do Supabase
       if (!localStorage.getItem('supabase_url')) {
-        localStorage.setItem('supabase_url', 'https://hqqzumdscdjleaedguzh.supabase.co');
+        localStorage.setItem('supabase_url', 'https://ukuaujxvdziiaxxuuidw.supabase.co');
       }
       if (!localStorage.getItem('supabase_key')) {
-        localStorage.setItem('supabase_key', 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8');
+        localStorage.setItem('supabase_key', 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO');
       }
       const pillText = document.getElementById('status-supabase-text');
       if (pillText) pillText.textContent = 'Supabase Conectado';
@@ -9700,7 +9700,7 @@
               if (email.toLowerCase() === 'felipe@piffpaff.com.br' && password === 'Felipe@2026') {
                 console.info('Ativando sessão Plug & Play para Felipe...');
                 const fallbackSession = {
-                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8',
+                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
                   user: {
                     id: 'c3333333-3333-3333-3333-333333333333',
                     email: 'felipe@piffpaff.com.br',
