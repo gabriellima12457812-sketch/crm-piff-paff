@@ -1,12 +1,25 @@
-﻿// ==============================================================================
+// ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/n8n-webhook (ES Module)
-// WEBHOOK EXCLUSIVO PARA O VENDEDOR GABRIEL (n8n + ChatGPT + Evolution API)
+// WEBHOOK MULTI-VENDEDOR (GABRIEL & FELIPE) (n8n + ChatGPT + Evolution API)
 // ==============================================================================
 
-// Fixação Obrigatória do Vendedor Gabriel
-const GABRIEL_USER_ID = 'a1111111-1111-1111-1111-111111111111';
-const GABRIEL_VENDEDOR_ID = 'gabriel';
-const GABRIEL_SELLER_NAME = 'Gabriel Lima';
+// Mapeamento Oficial de Vendedores no Supabase CRM
+const SELLERS = {
+  gabriel: {
+    user_id: 'a1111111-1111-1111-1111-111111111111',
+    vendedor_id: 'gabriel',
+    name: 'Gabriel Lima',
+    leadPrefix: 'CRM-GAB-WA',
+    origem: 'WhatsApp Gabriel'
+  },
+  felipe: {
+    user_id: 'c3333333-3333-3333-3333-333333333333',
+    vendedor_id: 'felipe',
+    name: 'Felipe',
+    leadPrefix: 'CRM-FEL-WA',
+    origem: 'WhatsApp Felipe'
+  }
+};
 
 function cleanPhone(raw) {
   if (!raw) return '';
@@ -62,6 +75,10 @@ export default async function handler(req, res) {
     }
     body = body || {};
 
+    // Identificação do Vendedor de Destino (Gabriel ou Felipe)
+    const rawSeller = (body.vendedor_id || body.vendedor || body.instance || req.query?.seller || '').toString().toLowerCase();
+    const seller = rawSeller.includes('felipe') ? SELLERS.felipe : SELLERS.gabriel;
+
     const { telefone, nome, resumo_interacao, intencao } = body;
 
     const rawPhone = telefone || body.phone || body.remoteJid || '';
@@ -99,20 +116,36 @@ export default async function handler(req, res) {
       'Prefer': 'return=representation'
     };
 
-    // 1. Buscar se o telefone já existe na tabela leads
+    // 1. Buscar se o telefone já existe na tabela leads (para este vendedor ou geral)
     const phoneVariants = normalizePhoneVariants(phoneDigits);
     let existingLead = null;
 
     try {
       // Cria filtro OR do PostgREST para todas as variantes do telefone
       const orFilter = phoneVariants.map(p => `phone.eq.${p}`).join(',');
-      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&select=*&limit=1`;
       
+      // Procura primeiro se este vendedor já possui este contato
+      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&user_id=eq.${encodeURIComponent(seller.user_id)}&select=*&limit=1`;
       const searchRes = await fetch(searchUrl, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const searchData = await searchRes.json();
         if (Array.isArray(searchData) && searchData.length > 0) {
           existingLead = searchData[0];
+        }
+      }
+
+      // Se não encontrou para este vendedor, busca se existe algum lead sem user_id ou legado
+      if (!existingLead) {
+        const fallbackSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&select=*&limit=1`;
+        const fbRes = await fetch(fallbackSearchUrl, { headers: supabaseHeaders });
+        if (fbRes.ok) {
+          const fbData = await fbRes.json();
+          if (Array.isArray(fbData) && fbData.length > 0) {
+            const candidate = fbData[0];
+            if (!candidate.user_id || candidate.user_id === seller.user_id) {
+              existingLead = candidate;
+            }
+          }
         }
       }
     } catch (errSearch) {
@@ -126,10 +159,10 @@ export default async function handler(req, res) {
 
     if (!existingLead) {
       // =======================================================================
-      // 2. SE NÃO EXISTIR: INSERT NA TABELA LEADS (EXCLUSIVO GABRIEL)
+      // 2. SE NÃO EXISTIR: INSERT NA TABELA LEADS (VENDEDOR DINÂMICO)
       // =======================================================================
-      const newLeadId = `CRM-GAB-WA-${Date.now()}`;
-      const logNote = `[${nowBR} - WhatsApp n8n + ChatGPT]: ${interactionSummary}${clientIntent ? ` (Intenção: ${clientIntent})` : ''}`;
+      const newLeadId = `${seller.leadPrefix}-${Date.now()}`;
+      const logNote = `[${nowBR} - WhatsApp (${seller.name}) n8n + ChatGPT]: ${interactionSummary}${clientIntent ? ` (Intenção: ${clientIntent})` : ''}`;
 
       const newLeadPayload = {
         id: newLeadId,
@@ -141,21 +174,21 @@ export default async function handler(req, res) {
         categoria: 1, // Regra: Categoria 1 = Banco Principal
         stage: 'novos', // Estágio técnico do Kanban
         etapa_kanban: 'Novos', // Estágio textual
-        origem: 'WhatsApp API',
+        origem: seller.origem,
         channel: 'whatsapp',
         pipeline: 'whatsapp',
-        vendedor_id: GABRIEL_VENDEDOR_ID, // Exclusividade Gabriel
-        user_id: GABRIEL_USER_ID, // UUID Oficial do Gabriel no Supabase
+        vendedor_id: seller.vendedor_id,
+        user_id: seller.user_id,
         value: 0,
         temperature: 'morno',
         commercial_moment: 'pesquisa',
         predominant_emotion: clientIntent,
         behavioral_profile: 'Consumidor Residencial Alto Padrão',
-        buying_signals: `Interação capturada via n8n: ${interactionSummary}`,
+        buying_signals: `Interação capturada via WhatsApp: ${interactionSummary}`,
         main_objection: 'Definição de modelos e medidas',
-        gabriel_percentage: 100,
+        gabriel_percentage: seller.vendedor_id === 'gabriel' ? 100 : 0,
         jhennifer_percentage: 0,
-        strategic_reading: 'Lead recente capturado pelo bot WhatsApp. Responder com abordagem consultiva.',
+        strategic_reading: `Lead recente capturado pelo bot WhatsApp (${seller.name}). Responder com abordagem consultiva.`,
         next_best_action: 'Apresentar catálogo e validar necessidade atual.',
         desired_micro_advance: 'Identificar ambientes da casa e estilo desejado.',
         what_not_to_do: 'Não enviar tabela de preços fria sem contextualizar o produto.',
@@ -179,8 +212,7 @@ export default async function handler(req, res) {
       if (!insertRes.ok) {
         const errText = await insertRes.text();
         console.error('[n8n Webhook] Erro no INSERT de leads:', errText);
-        // Fallback: se falhar por colunas extras (ex: categoria ou etapa_kanban inexistentes na tabela)
-        // Tentamos novamente com colunas padronizadas do schema original
+        // Fallback: colunas padronizadas do schema original
         const fallbackPayload = {
           id: newLeadId,
           name: clientName,
@@ -190,7 +222,7 @@ export default async function handler(req, res) {
           value: 0,
           temperature: 'morno',
           commercial_moment: 'pesquisa',
-          user_id: GABRIEL_USER_ID,
+          user_id: seller.user_id,
           notes: logNote,
           last_interaction: nowISO,
           created_at: nowISO,
@@ -205,7 +237,7 @@ export default async function handler(req, res) {
           const inserted = await fbRes.json();
           finalLead = Array.isArray(inserted) ? inserted[0] : fallbackPayload;
         } else {
-          finalLead = newLeadPayload; // Segue em frente para gravar o histórico
+          finalLead = newLeadPayload;
         }
       } else {
         const inserted = await insertRes.json();
@@ -215,17 +247,17 @@ export default async function handler(req, res) {
       resultAction = 'inserted';
     } else {
       // =======================================================================
-      // 3. SE JÁ EXISTIR: UPDATE FORÇANDO CATEGORIA 1 E VENDEDOR GABRIEL
+      // 3. SE JÁ EXISTIR: UPDATE FORÇANDO CATEGORIA 1 E VENDEDOR DINÂMICO
       // =======================================================================
       const targetId = existingLead.id;
-      const logNote = `\n\n[${nowBR} - Nova Mensagem WhatsApp n8n]: ${interactionSummary}${clientIntent ? ` (Intenção: ${clientIntent})` : ''}`;
+      const logNote = `\n\n[${nowBR} - Nova Mensagem WhatsApp (${seller.name})]: ${interactionSummary}${clientIntent ? ` (Intenção: ${clientIntent})` : ''}`;
       const updatedNotes = (existingLead.notes || '') + logNote;
 
       const updatePayload = {
         categoria: 1, // Garante que pertence ao Banco Principal
-        vendedor_id: GABRIEL_VENDEDOR_ID,
-        user_id: GABRIEL_USER_ID, // Garante que o lead é do Gabriel
-        origem: existingLead.origem || 'WhatsApp API',
+        vendedor_id: seller.vendedor_id,
+        user_id: seller.user_id, // Garante que o lead é do vendedor
+        origem: existingLead.origem || seller.origem,
         data_ultima_interacao: nowISO,
         last_interaction: nowISO,
         notes: updatedNotes,
@@ -248,9 +280,8 @@ export default async function handler(req, res) {
       });
 
       if (!updateRes.ok) {
-        // Fallback para campos seguros
         const safeUpdate = {
-          user_id: GABRIEL_USER_ID,
+          user_id: seller.user_id,
           notes: updatedNotes,
           last_interaction: nowISO,
           updated_at: nowISO
@@ -276,9 +307,9 @@ export default async function handler(req, res) {
         nome_cliente: clientName,
         resumo_interacao: interactionSummary,
         intencao: clientIntent,
-        origem: 'WhatsApp API',
-        vendedor_id: GABRIEL_VENDEDOR_ID,
-        user_id: GABRIEL_USER_ID,
+        origem: seller.origem,
+        vendedor_id: seller.vendedor_id,
+        user_id: seller.user_id,
         created_at: nowISO
       };
 
@@ -297,7 +328,7 @@ export default async function handler(req, res) {
     }
 
     // =======================================================================
-    // 5. DISPARAR BROADCAST REALTIME (LATÊNCIA ZERO NA TELA DO GABRIEL)
+    // 5. DISPARAR BROADCAST REALTIME (LATÊNCIA ZERO NA TELA DO VENDEDOR)
     // =======================================================================
     try {
       const broadcastUrl = `${supabaseUrl}/realtime/v1/api/broadcast`;
@@ -316,8 +347,8 @@ export default async function handler(req, res) {
               payload: {
                 type: 'lead_whatsapp_incoming',
                 action: resultAction,
-                sellerUserId: GABRIEL_USER_ID,
-                seller: GABRIEL_VENDEDOR_ID,
+                sellerUserId: seller.user_id,
+                seller: seller.vendedor_id,
                 lead: finalLead
               }
             }
@@ -332,9 +363,9 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       action: resultAction,
-      vendedor: GABRIEL_SELLER_NAME,
-      vendedor_id: GABRIEL_VENDEDOR_ID,
-      user_id: GABRIEL_USER_ID,
+      vendedor: seller.name,
+      vendedor_id: seller.vendedor_id,
+      user_id: seller.user_id,
       categoria: 1,
       etapa_kanban: finalLead ? (finalLead.stage || finalLead.etapa_kanban || 'Novos') : 'Novos',
       lead: {
@@ -345,8 +376,8 @@ export default async function handler(req, res) {
         notes: finalLead ? finalLead.notes : ''
       },
       message: resultAction === 'inserted'
-        ? `Lead "${clientName}" cadastrado com sucesso no Banco Principal (WhatsApp) do Gabriel!`
-        : `Lead "${clientName}" atualizado com sucesso no Banco Principal (WhatsApp) do Gabriel!`
+        ? `Lead "${clientName}" cadastrado com sucesso no Banco Principal (WhatsApp) de ${seller.name}!`
+        : `Lead "${clientName}" atualizado com sucesso no Banco Principal (WhatsApp) de ${seller.name}!`
     });
 
   } catch (error) {
