@@ -4179,6 +4179,24 @@
       return dateStr;
     }
 
+    function formatTimeAgo(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffMins < 1) return 'Agora';
+      if (diffMins < 60) return `Há ${diffMins} min`;
+      if (diffHours < 24) return `Hoje às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+      if (diffDays === 1) return 'Ontem';
+      if (diffDays < 7) return `Há ${diffDays} dias`;
+      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    }
+
     function renderKanban() {
       const viewKanban = document.getElementById('view-kanban');
       const isKanbanVisible = viewKanban && !viewKanban.classList.contains('hidden');
@@ -4218,6 +4236,18 @@
             const dateA = getPurchaseDate(a);
             const dateB = getPurchaseDate(b);
             return dateB.localeCompare(dateA);
+          });
+        } else {
+          // EXIGÊNCIA COMERCIAL: Ordenação rigorosa por Ordem de Atualização / Mensagem mais recente no TOPO
+          filtered.sort((a, b) => {
+            const getT = (lead) => {
+              if (!lead) return 0;
+              const raw = lead.data_ultima_interacao || lead.last_interaction || lead.updated_at || lead.created_at;
+              if (!raw) return 0;
+              const t = new Date(raw).getTime();
+              return isNaN(t) ? 0 : t;
+            };
+            return getT(b) - getT(a);
           });
         }
 
@@ -4287,9 +4317,9 @@
         </div>
 
         <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
-          <span class="flex items-center gap-1 ${lead.stage === 'concluidas' ? 'text-emerald-400 font-semibold' : ''}" title="${lead.stage === 'concluidas' ? 'Data da Compra' : 'Data de Follow-up'}">
-            <i class="ph-bold ${lead.stage === 'concluidas' ? 'ph-shopping-bag' : 'ph-calendar'}"></i> 
-            ${lead.stage === 'concluidas' ? 'Compra: ' + formatDateBR(getPurchaseDate(lead)) : (lead.followup_date || 'Sem data')}
+          <span class="flex items-center gap-1 ${lead.stage === 'concluidas' ? 'text-emerald-400 font-semibold' : (lead.data_ultima_interacao ? 'text-cyan-300 font-medium' : '')}" title="${lead.stage === 'concluidas' ? 'Data da Compra' : (lead.data_ultima_interacao ? 'Última Mensagem / Atualização' : 'Data de Follow-up')}">
+            <i class="ph-bold ${lead.stage === 'concluidas' ? 'ph-shopping-bag' : (lead.data_ultima_interacao ? 'ph-clock' : 'ph-calendar')}"></i> 
+            ${lead.stage === 'concluidas' ? 'Compra: ' + formatDateBR(getPurchaseDate(lead)) : (lead.data_ultima_interacao ? formatTimeAgo(lead.data_ultima_interacao) : (lead.followup_date || 'Sem data'))}
           </span>
           <div class="flex items-center gap-1.5">
             ${lead.phone ? `
