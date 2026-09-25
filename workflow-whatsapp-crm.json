@@ -1,4 +1,5 @@
 {
+  "id": "PiffPaffGabriel01",
   "name": "Piff-Paff CRM - WhatsApp Gabriel (Evolution API + ChatGPT)",
   "nodes": [
     {
@@ -106,6 +107,7 @@
         "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.2,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Você é um assistente comercial da Piff-Paff Móveis de Alto Padrão (mobiliário em corda náutica, fibra sintética e alumínio para áreas externas, varandas e piscinas).\\n\\nAnalise a mensagem recebida de um lead no WhatsApp e retorne EXCLUSIVAMENTE um objeto JSON válido com os seguintes campos:\\n- nome: Nome próprio identificado do cliente. Se o cliente se apresentou, use o nome dele. Se não souber, use o pushName fornecido ou string vazia.\\n- resumo_interacao: Resumo objetivo de 1 a 2 frases com os produtos de interesse, medidas, ambiente (área externa, gourmet, piscina) ou dúvidas mencionadas.\\n- intencao: Uma frase curta definindo a intenção comercial (ex: 'Orçamento Sofá Modular', 'Consulta de Catálogo Piscina', 'Dúvida Prazo de Entrega', 'Negociação de Projeto Completo').\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Telefone: {{ $json.telefone }}\\nPushName: {{ $json.pushName }}\\nMensagem do Cliente: {{ $json.textoMensagem }}\"\n    }\n  ]\n}",
         "options": {}
       },
+      "continueOnFail": true,
       "id": "c34d56ef-78ab-9012-cdef-123456789012",
       "name": "4. ChatGPT Analisar Lead",
       "type": "n8n-nodes-base.httpRequest",
