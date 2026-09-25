@@ -1,6 +1,6 @@
 {
   "id": "PiffPaffGabriel01",
-  "name": "Piff-Paff CRM - WhatsApp Gabriel (Evolution API + ChatGPT)",
+  "name": "Piff-Paff CRM - WhatsApp Multi-Vendedor (Evolution API + ChatGPT)",
   "nodes": [
     {
       "parameters": {
@@ -72,7 +72,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extrai os dados essenciais da mensagem enviada pelo cliente via Evolution API\nconst payload = $input.first().json;\nconst data = payload.body?.data || payload.data || payload;\n\nconst rawJid = data.key?.remoteJid || data.remoteJid || '';\nconst telefone = rawJid.replace(/@.*$/, '').replace(/\\D/g, '');\nconst pushName = data.pushName || data.key?.pushName || '';\n\n// Extração do texto da mensagem (suporta texto puro, mensagem estendida e legenda de imagem/documento)\nconst messageObj = data.message || {};\nconst textoMensagem =\n  messageObj.conversation ||\n  messageObj.extendedTextMessage?.text ||\n  messageObj.imageMessage?.caption ||\n  messageObj.videoMessage?.caption ||\n  messageObj.documentMessage?.caption ||\n  '';\n\nif (!telefone || telefone.length < 8 || !textoMensagem.trim()) {\n  return []; // Ignora se não houver texto ou telefone válido\n}\n\nreturn [{\n  json: {\n    telefone,\n    pushName,\n    textoMensagem: textoMensagem.trim(),\n    dataHora: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// Extrai os dados essenciais da mensagem enviada pelo cliente via Evolution API\nconst payload = $input.first().json;\nconst data = payload.body?.data || payload.data || payload;\n\nconst rawJid = data.key?.remoteJid || data.remoteJid || '';\nconst telefone = rawJid.replace(/@.*$/, '').replace(/\\D/g, '');\nconst pushName = data.pushName || data.key?.pushName || '';\n\n// Extração do texto da mensagem (suporta texto puro, mensagem estendida e legenda de imagem/documento)\nconst messageObj = data.message || {};\nconst textoMensagem =\n  messageObj.conversation ||\n  messageObj.extendedTextMessage?.text ||\n  messageObj.imageMessage?.caption ||\n  messageObj.videoMessage?.caption ||\n  messageObj.documentMessage?.caption ||\n  '';\n\nif (!telefone || telefone.length < 8 || !textoMensagem.trim()) {\n  return []; // Ignora se não houver texto ou telefone válido\n}\n\n// Extrai a instancia de origem (gabriel ou felipe)\nconst instanceName = (payload.body?.instance || payload.instance || 'gabriel').toString().toLowerCase();\n\nreturn [{\n  json: {\n    instance: instanceName,\n    telefone,\n    pushName,\n    textoMensagem: textoMensagem.trim(),\n    dataHora: new Date().toISOString()\n  }\n}];"
       },
       "id": "b23c45de-67fa-8901-bcde-f12345678901",
       "name": "3. Extrair Dados da Mensagem",
@@ -119,7 +119,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extrai e formata a resposta do ChatGPT para o formato exigido pelo CRM do Gabriel\nconst aiResponseRaw = $input.first().json;\nconst prevData = $('3. Extrair Dados da Mensagem').first().json;\n\nlet parsedAi = {};\ntry {\n  const contentStr = aiResponseRaw.choices?.[0]?.message?.content || '{}';\n  parsedAi = JSON.parse(contentStr);\n} catch (e) {\n  parsedAi = {};\n}\n\nconst nomeFinal = (parsedAi.nome || prevData.pushName || '').trim();\nconst resumoFinal = (parsedAi.resumo_interacao || prevData.textoMensagem || 'Contato recebido pelo WhatsApp').trim();\nconst intencaoFinal = (parsedAi.intencao || 'Interesse em Mobiliário de Alto Padrão').trim();\n\n// Payload exato para o Webhook do Gabriel (sem vendedor_id, fixado no back-end Vercel)\nreturn [{\n  json: {\n    telefone: prevData.telefone,\n    nome: nomeFinal,\n    resumo_interacao: resumoFinal,\n    intencao: intencaoFinal\n  }\n}];"
+        "jsCode": "// Extrai e formata a resposta do ChatGPT para o formato exigido pelo CRM Multi-Vendedor (Gabriel & Felipe)\nconst aiResponseRaw = $input.first().json;\nconst prevData = $('3. Extrair Dados da Mensagem').first().json;\n\nlet parsedAi = {};\ntry {\n  const contentStr = aiResponseRaw.choices?.[0]?.message?.content || '{}';\n  parsedAi = JSON.parse(contentStr);\n} catch (e) {\n  parsedAi = {};\n}\n\nconst nomeFinal = (parsedAi.nome || prevData.pushName || '').trim();\nconst resumoFinal = (parsedAi.resumo_interacao || prevData.textoMensagem || 'Contato recebido pelo WhatsApp').trim();\nconst intencaoFinal = (parsedAi.intencao || 'Interesse em Mobiliário de Alto Padrão').trim();\nconst instance = (prevData.instance || 'gabriel').toLowerCase();\nconst vendedor_id = instance.includes('felipe') ? 'felipe' : 'gabriel';\n\nreturn [{\n  json: {\n    telefone: prevData.telefone,\n    nome: nomeFinal,\n    resumo_interacao: resumoFinal,\n    intencao: intencaoFinal,\n    instance: instance,\n    vendedor_id: vendedor_id\n  }\n}];"
       },
       "id": "d45e67fa-89bc-0123-defa-234567890123",
       "name": "5. Montar Payload CRM",
@@ -145,13 +145,13 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"telefone\": \"{{ $json.telefone }}\",\n  \"nome\": \"{{ $json.nome }}\",\n  \"resumo_interacao\": \"{{ $json.resumo_interacao }}\",\n  \"intencao\": \"{{ $json.intencao }}\"\n}",
+        "jsonBody": "={\n  \"telefone\": \"{{ $json.telefone }}\",\n  \"nome\": \"{{ $json.nome }}\",\n  \"resumo_interacao\": \"{{ $json.resumo_interacao }}\",\n  \"intencao\": \"{{ $json.intencao }}\",\n  \"instance\": \"{{ $json.instance }}\",\n  \"vendedor_id\": \"{{ $json.vendedor_id }}\"\n}",
         "options": {
           "timeout": 10000
         }
       },
       "id": "e56f78ab-90cd-1234-efab-345678901234",
-      "name": "6. Enviar ao CRM Vercel (Gabriel)",
+      "name": "6. Enviar ao CRM Vercel",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -210,7 +210,7 @@
       "main": [
         [
           {
-            "node": "6. Enviar ao CRM Vercel (Gabriel)",
+            "node": "6. Enviar ao CRM Vercel",
             "type": "main",
             "index": 0
           }
@@ -218,9 +218,9 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "piffpaff-whatsapp-crm-v1-gabriel"
+  "versionId": "piffpaff-whatsapp-crm-v2-multi"
 }
