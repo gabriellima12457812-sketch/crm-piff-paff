@@ -183,6 +183,10 @@
           <button type="button" onclick="quickFillSeller('mayara')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/25 text-pink-300 border border-pink-500/30 font-semibold cursor-pointer transition" title="Preencher login da Mayara (Vendedora)">
             <span class="w-2 h-2 rounded-full bg-pink-400"></span> 💼 Mayara (Vendedora)
           </button>
+          <span class="text-slate-600">•</span>
+          <button type="button" onclick="quickFillSeller('eduardo')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-semibold cursor-pointer transition" title="Preencher login do Eduardo (Vendedor)">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 💼 Eduardo (Vendedor)
+          </button>
         </div>
 
         <!-- Abas: Entrar / Criar Conta -->
@@ -2971,7 +2975,7 @@
     function quickFillSeller(seller) {
       if (typeof switchActiveSeller === 'function') {
         switchActiveSeller(seller);
-        showToast(`Conectado com sucesso como ${seller === 'gabriel' ? 'Gabriel Lima (Admin)' : (seller === 'felipe' ? 'Felipe' : 'Mayara')}!`, 'success');
+        showToast(`Conectado com sucesso como ${seller === 'gabriel' ? 'Gabriel Lima (Admin)' : (seller === 'felipe' ? 'Felipe' : (seller === 'mayara' ? 'Mayara' : 'Eduardo'))}!`, 'success');
         return;
       }
       const emailInput = document.getElementById('login-input-email');
@@ -2997,6 +3001,12 @@
           pwdInput.value = 'Mayara@2026';
           pwdInput.focus();
         }
+      } else if (seller === 'eduardo') {
+        if (emailInput) emailInput.value = 'eduardo@piffpaff.com.br';
+        if (pwdInput) {
+          pwdInput.value = 'Eduardo@2026';
+          pwdInput.focus();
+        }
       }
     }
 
@@ -3013,6 +3023,7 @@
       if (email.includes('gabriel')) return 'Gabriel Lima (Administrador)';
       if (email.includes('felipe')) return 'Felipe (Vendedor)';
       if (email.includes('mayara')) return 'Mayara (Vendedora)';
+      if (email.includes('eduardo')) return 'Eduardo (Vendedor)';
       return user.email.split('@')[0];
     }
 
@@ -3020,11 +3031,13 @@
       const u = user || authUser;
       if (!u || !u.email) {
         const saved = localStorage.getItem('piffpaff_active_seller_email') || '';
+        if (saved.toLowerCase().includes('eduardo')) return 'eduardo';
         if (saved.toLowerCase().includes('mayara')) return 'mayara';
         if (saved.toLowerCase().includes('felipe')) return 'felipe';
         return 'gabriel';
       }
       const email = (u.email || '').toLowerCase();
+      if (email.includes('eduardo')) return 'eduardo';
       if (email.includes('mayara')) return 'mayara';
       if (email.includes('felipe')) return 'felipe';
       return 'gabriel';
@@ -3054,6 +3067,9 @@
             } else if (email.includes('felipe')) {
               avatarEl.textContent = 'FP';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-indigo-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
+            } else if (email.includes('eduardo')) {
+              avatarEl.textContent = 'ED';
+              avatarEl.className = 'w-6 h-6 rounded-lg bg-emerald-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
             } else {
               avatarEl.textContent = 'GL';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
@@ -3088,7 +3104,7 @@
 
     function setAdminSellerFilter(filter) {
       currentAdminSellerFilter = filter;
-      ['all', 'gabriel', 'felipe', 'mayara'].forEach(f => {
+      ['all', 'gabriel', 'felipe', 'mayara', 'eduardo'].forEach(f => {
         const btn = document.getElementById(`filter-btn-${f}`);
         if (!btn) return;
         if (f === filter) {
@@ -3111,6 +3127,8 @@
         filtered = filtered.filter(l => l.user_id === 'c3333333-3333-3333-3333-333333333333' || (l.id && l.id.startsWith('CRM-FEL-')));
       } else if (currentAdminSellerFilter === 'mayara') {
         filtered = filtered.filter(l => l.user_id === 'b2222222-2222-2222-2222-222222222222' || (l.id && l.id.startsWith('CRM-MAY-')));
+      } else if (currentAdminSellerFilter === 'eduardo') {
+        filtered = filtered.filter(l => l.user_id === 'd4444444-4444-4444-4444-444444444444' || (l.id && l.id.startsWith('CRM-EDU-')));
       }
 
       const cloudInsta = [];
@@ -3211,7 +3229,8 @@
       const sellerConfigs = {
         gabriel: { id: 'a1111111-1111-1111-1111-111111111111', email: 'gabriel@piffpaff.com.br' },
         felipe: { id: 'c3333333-3333-3333-3333-333333333333', email: 'felipe@piffpaff.com.br' },
-        mayara: { id: 'b2222222-2222-2222-2222-222222222222', email: 'mayara@piffpaff.com.br' }
+        mayara: { id: 'b2222222-2222-2222-2222-222222222222', email: 'mayara@piffpaff.com.br' },
+        eduardo: { id: 'd4444444-4444-4444-4444-444444444444', email: 'eduardo@piffpaff.com.br' }
       };
       const config = sellerConfigs[sellerKey] || sellerConfigs.gabriel;
       const fallbackSession = {
@@ -9742,6 +9761,35 @@
                   user: {
                     id: 'c3333333-3333-3333-3333-333333333333',
                     email: 'felipe@piffpaff.com.br',
+                    role: 'authenticated'
+                  }
+                };
+                currentSession = fallbackSession;
+                authUser = fallbackSession.user;
+                try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
+                document.getElementById('saas-login-screen').classList.add('hidden');
+                updateSellerBadge(authUser);
+                initStorage();
+                initInstagramStorage();
+                initArchitectsStorage();
+                renderKanban();
+                renderInstagramBoard();
+                setupDragAndDrop();
+                if (typeof setupSupabaseRealtime === 'function') {
+                  setupSupabaseRealtime(authUser.id);
+                }
+                showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Modo Plug & Play ativo.`, 'success');
+                await syncFromSupabase(false);
+                return;
+              }
+
+              if (email.toLowerCase() === 'eduardo@piffpaff.com.br' && password === 'Eduardo@2026') {
+                console.info('Ativando sessão Plug & Play para Eduardo...');
+                const fallbackSession = {
+                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
+                  user: {
+                    id: 'd4444444-4444-4444-4444-444444444444',
+                    email: 'eduardo@piffpaff.com.br',
                     role: 'authenticated'
                   }
                 };
