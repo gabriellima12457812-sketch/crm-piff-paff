@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
   <meta charset="UTF-8" />
@@ -9543,12 +9543,15 @@
     // 9. EVENT LISTENERS E NAVEGAÇÃO
     // ==========================================
     document.addEventListener('DOMContentLoaded', () => {
-      // Credenciais oficiais do Supabase
-      if (!localStorage.getItem('supabase_url')) {
+      // Credenciais oficiais do Supabase (Força migração para o novo banco)
+      const storedUrl = localStorage.getItem('supabase_url');
+      if (!storedUrl || !storedUrl.includes('ukuaujxvdziiaxxuuidw')) {
         localStorage.setItem('supabase_url', 'https://ukuaujxvdziiaxxuuidw.supabase.co');
-      }
-      if (!localStorage.getItem('supabase_key')) {
         localStorage.setItem('supabase_key', 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO');
+        try {
+          localStorage.removeItem('piffpaff_leads_a1111111-1111-1111-1111-111111111111');
+          localStorage.removeItem('piffpaff_leads_anon');
+        } catch (e) {}
       }
       const pillText = document.getElementById('status-supabase-text');
       if (pillText) pillText.textContent = 'Supabase Conectado';
@@ -9559,6 +9562,11 @@
       renderKanban();
       updateMetrics();
       setupDragAndDrop();
+
+      // Sincronização imediata com o novo Supabase em nuvem
+      if (typeof syncFromSupabase === 'function') {
+        syncFromSupabase(true);
+      }
 
       // Vinculação garantida dos cliques nos cards de resumo de Follow-up
       const cardToday = document.getElementById('card-alert-today');
