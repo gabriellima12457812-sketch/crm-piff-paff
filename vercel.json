@@ -1,5 +1,4 @@
 {
-  "cleanUrls": false,
   "rewrites": [
     {
       "source": "/",
@@ -8,6 +7,14 @@
     {
       "source": "/pasta_digital",
       "destination": "/pasta_digital.html"
+    },
+    {
+      "source": "/atendimento",
+      "destination": "/atendimento.html"
+    },
+    {
+      "source": "/qualificacao",
+      "destination": "/atendimento.html"
     }
   ],
   "headers": [
