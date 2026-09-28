@@ -316,6 +316,12 @@
         <span id="status-supabase-text">Supabase Ativo</span>
       </div>
 
+      <!-- WhatsApp Connection Pill (Abre QR Code do Vendedor Atual) -->
+      <button type="button" id="status-whatsapp-pill" onclick="openSettingsModal('whatsapp')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-xs font-medium cursor-pointer transition select-none active:scale-95" title="Conexão WhatsApp do Vendedor">
+        <span id="status-whatsapp-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span id="status-whatsapp-text">WhatsApp</span>
+      </button>
+
       <!-- Badge do Vendedor Multi-Tenant Autenticado com Botão Sair -->
       <div id="seller-auth-badge" onclick="openLoginScreen()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-800 border border-slate-700/60 text-xs select-none cursor-pointer transition" title="Clique para trocar de vendedor">
         <div id="seller-avatar" class="w-6 h-6 rounded-lg bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading">
@@ -2321,44 +2327,180 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- MODAL 4: CONFIGURAÇÃO SUPABASE -->
   <!-- ======================================================== -->
-  <div id="modal-settings" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-[#101C27] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4">
+  <!-- MODAL 4: CONFIGURAÇÕES & WHATSAPP (QR CODE POR VENDEDOR)   -->
+  <!-- ======================================================== -->
+  <div id="modal-settings" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="w-full max-w-lg bg-[#101C27] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 my-8">
+      
+      <!-- Topo com Abas e Fechar -->
       <div class="flex items-center justify-between pb-3 border-b border-white/10">
-        <h3 class="font-heading font-bold text-lg text-white flex items-center gap-2">
-          <i class="ph-bold ph-database text-[#00D2D3]"></i> Conexão Supabase
-        </h3>
-        <button id="btn-close-settings" class="p-1.5 text-slate-400 hover:text-white rounded-lg">
+        <div class="flex items-center gap-2">
+          <button type="button" id="tab-btn-whatsapp" onclick="switchSettingsTab('whatsapp')" class="px-3 py-1.5 rounded-xl font-heading font-bold text-xs flex items-center gap-1.5 bg-[#00D2D3]/15 text-[#00D2D3] border border-[#00D2D3]/30 transition">
+            <i class="ph-bold ph-whatsapp-logo text-base text-emerald-400"></i>
+            <span>WhatsApp do Vendedor</span>
+          </button>
+          <button type="button" id="tab-btn-supabase" onclick="switchSettingsTab('supabase')" class="px-3 py-1.5 rounded-xl font-heading font-bold text-xs flex items-center gap-1.5 text-slate-400 hover:text-white border border-transparent hover:bg-white/5 transition">
+            <i class="ph-bold ph-database text-base text-cyan-400"></i>
+            <span>Supabase & API</span>
+          </button>
+        </div>
+        <button id="btn-close-settings" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition">
           <i class="ph-bold ph-x text-lg"></i>
         </button>
       </div>
 
-      <p class="text-xs text-slate-400 leading-relaxed">
-        Insira as chaves do seu projeto Supabase para sincronizar seus leads na nuvem em tempo real e receber os dados do ChatGPT.
-      </p>
-
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-bold text-slate-300 uppercase mb-1">Project URL:</label>
-          <input id="cfg-supabase-url" type="url" value="https://ukuaujxvdziiaxxuuidw.supabase.co" placeholder="https://xyzcompany.supabase.co" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+      <!-- PAINEL 1: WHATSAPP DO VENDEDOR LOGADO -->
+      <div id="settings-tab-whatsapp-content" class="space-y-4">
+        
+        <!-- Identificação do Vendedor Logado -->
+        <div class="p-3.5 rounded-xl bg-[#0A1118] border border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div id="settings-seller-avatar" class="w-10 h-10 rounded-xl bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-sm font-heading shadow-md">
+              GL
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="settings-seller-name" class="font-heading font-bold text-white text-sm">Gabriel Lima</span>
+                <span id="settings-instance-badge" class="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">instância: gabriel</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Cada vendedor conecta seu próprio WhatsApp exclusivo ao CRM.</p>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block font-bold text-slate-300 uppercase mb-1">anon public key / publishable:</label>
-          <input id="cfg-supabase-key" type="password" value="sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO" placeholder="sb_publishable_..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+
+        <!-- Estado de Conexão: Conectado (Verde) -->
+        <div id="wa-connected-state" class="hidden p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
+          <div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl border border-emerald-500/30 animate-pulse">
+            <i class="ph-bold ph-check-circle"></i>
+          </div>
+          <div>
+            <h4 class="font-heading font-bold text-white text-base">WhatsApp Conectado com Sucesso!</h4>
+            <p id="wa-connected-phone" class="text-xs text-emerald-300 font-mono mt-1 font-semibold"></p>
+            <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+              Mensagens recebidas no seu número entram em tempo real no seu funil comercial e são assistidas pela Inteligência Artificial.
+            </p>
+          </div>
+          <div class="pt-2 flex items-center justify-center gap-2">
+            <button type="button" onclick="checkCurrentSellerWhatsAppStatus(true)" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition">
+              <i class="ph-bold ph-arrows-clockwise text-sm"></i>
+              <span>Verificar Status</span>
+            </button>
+            <button type="button" onclick="disconnectCurrentSellerWhatsApp()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold flex items-center gap-1.5 transition">
+              <i class="ph-bold ph-power text-sm"></i>
+              <span>Desconectar WhatsApp</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Estado de Conexão: Desconectado / Aguardando QR Code -->
+        <div id="wa-disconnected-state" class="space-y-4">
+          <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5">
+            <i class="ph-bold ph-warning text-amber-400 text-base mt-0.5 shrink-0"></i>
+            <p class="text-xs text-amber-200/90 leading-relaxed">
+              Seu WhatsApp ainda não está conectado a esta conta. Conecte pelo <strong>QR Code</strong> abaixo ou pelo <strong>Código de 8 dígitos</strong>.
+            </p>
+          </div>
+
+          <!-- Container do QR Code -->
+          <div class="p-4 rounded-2xl bg-[#0A1118] border border-white/10 text-center space-y-3">
+            <div id="wa-qrcode-loading" class="py-12 flex flex-col items-center justify-center gap-3">
+              <i class="ph-bold ph-spinner animate-spin text-3xl text-[#00D2D3]"></i>
+              <span class="text-xs text-slate-400">Gerando QR Code seguro para sua conta...</span>
+            </div>
+
+            <div id="wa-qrcode-wrapper" class="hidden flex flex-col items-center">
+              <img id="wa-qrcode-img" src="" alt="QR Code WhatsApp" class="w-60 h-60 rounded-xl bg-white p-2 shadow-2xl border border-white/20 select-none pointer-events-auto" />
+              <div class="mt-2.5 flex items-center gap-2 text-xs text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>QR Code ativo. Atualiza em <strong id="wa-timer" class="text-emerald-400 font-mono">25</strong>s</span>
+              </div>
+            </div>
+
+            <div id="wa-qrcode-error" class="hidden py-6 text-center space-y-2">
+              <i class="ph-bold ph-warning-circle text-2xl text-rose-400"></i>
+              <p id="wa-qrcode-error-msg" class="text-xs text-rose-300">Não foi possível carregar o QR Code.</p>
+              <p class="text-[11px] text-slate-400">Certifique-se de que o Docker Desktop está aberto e rodando.</p>
+            </div>
+
+            <button type="button" onclick="fetchWhatsAppQRCode()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 transition active:scale-95">
+              <i class="ph-bold ph-arrows-clockwise text-sm text-[#00D2D3]"></i>
+              <span>Gerar Novo QR Code</span>
+            </button>
+          </div>
+
+          <!-- Alternativa: Conexão por Código de Telefone (Pairing Code) -->
+          <div class="p-3.5 rounded-xl bg-[#0A1118] border border-white/10 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="ph-bold ph-hash text-[#00D2D3]"></i> Ou Conecte por Código de Telefone:
+              </span>
+              <span class="text-[10px] text-slate-500 font-medium">Sem Câmera</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Ideal para conectar celulares à distância sem precisar escanear QR Code com a câmera.
+            </p>
+            <div class="flex items-center gap-2">
+              <input id="wa-pairing-phone" type="tel" placeholder="Ex: 47999998888" class="flex-1 px-3.5 py-2.5 rounded-xl bg-[#101C27] border border-white/10 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3] font-mono">
+              <button type="button" onclick="requestPairingCode()" class="px-3.5 py-2.5 rounded-xl bg-[#00D2D3] hover:bg-[#00b4b5] text-slate-950 font-bold text-xs transition active:scale-95 shrink-0">
+                Gerar Código
+              </button>
+            </div>
+            <div id="wa-pairing-result" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-1">
+              <span class="text-[10px] uppercase font-bold text-emerald-300">Código de 8 Dígitos Gerado:</span>
+              <div id="wa-pairing-code-display" class="font-mono text-2xl font-black text-white tracking-widest bg-black/40 py-2 rounded-lg border border-emerald-500/40 select-all cursor-pointer" onclick="copyPairingCode(this)" title="Clique para copiar">
+                ----
+              </div>
+              <p class="text-[11px] text-slate-400">
+                No celular: <strong>Aparelhos Conectados ➔ Conectar um aparelho ➔ Conectar com número de telefone</strong> e digite o código acima.
+              </p>
+            </div>
+          </div>
+
+          <!-- Instruções Rápidas -->
+          <div class="p-3 rounded-xl bg-white/5 border border-white/5 text-[11px] text-slate-400 space-y-1">
+            <span class="font-bold text-slate-300">📱 Como conectar no WhatsApp:</span>
+            <p>1. Abra o WhatsApp no smartphone onde a conta está cadastrada.</p>
+            <p>2. Acesse <strong>Configurações / 3 pontinhos ➔ Aparelhos Conectados</strong>.</p>
+            <p>3. Toque em <strong>Conectar um aparelho</strong> e aponte para o QR Code acima.</p>
+            <p class="text-amber-300/80">⚠️ Se for telefone fixo (ex: 3050-9208), a leitura precisa ser feita pelo app <strong>WhatsApp Business</strong> instalado no smartphone principal (não pelo WhatsApp Web do navegador).</p>
+          </div>
         </div>
       </div>
 
-      <div class="pt-3 border-t border-white/10 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <button id="btn-load-caribe-modal" class="text-xs text-[#00D2D3] hover:underline font-semibold transition">Carregar 185 Clientes (Base Completa)</button>
-          <span class="text-slate-600">•</span>
-          <button id="btn-reset-demo" class="text-xs text-slate-500 hover:text-slate-300 transition">Demo (6 leads)</button>
+      <!-- PAINEL 2: SUPABASE & SERVIDOR -->
+      <div id="settings-tab-supabase-content" class="hidden space-y-4">
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Insira as chaves do seu projeto Supabase para sincronizar seus leads na nuvem em tempo real e receber os dados do ChatGPT.
+        </p>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-300 uppercase mb-1">Project URL:</label>
+            <input id="cfg-supabase-url" type="url" value="https://ukuaujxvdziiaxxuuidw.supabase.co" placeholder="https://xyzcompany.supabase.co" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-300 uppercase mb-1">anon public key / publishable:</label>
+            <input id="cfg-supabase-key" type="password" value="sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO" placeholder="sb_publishable_..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-300 uppercase mb-1">URL da Evolution API (Servidor WhatsApp):</label>
+            <input id="cfg-evolution-url" type="url" value="http://localhost:8080" placeholder="http://localhost:8080" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+          </div>
         </div>
-        <button id="btn-save-settings" class="px-5 py-2 rounded-xl bg-[#00D2D3] text-black font-heading font-bold text-xs hover:brightness-110 shadow-lg shadow-[#00D2D3]/20 transition">
-          Salvar e Conectar
-        </button>
+
+        <div class="pt-3 border-t border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button id="btn-load-caribe-modal" class="text-xs text-[#00D2D3] hover:underline font-semibold transition">Carregar 185 Clientes</button>
+            <span class="text-slate-600">•</span>
+            <button id="btn-reset-demo" class="text-xs text-slate-500 hover:text-slate-300 transition">Demo (6 leads)</button>
+          </div>
+          <button id="btn-save-settings" class="px-5 py-2 rounded-xl bg-[#00D2D3] text-black font-heading font-bold text-xs hover:brightness-110 shadow-lg shadow-[#00D2D3]/20 transition">
+            Salvar e Conectar
+          </button>
+        </div>
       </div>
+
     </div>
   </div>
   <!-- ======================================================== -->
@@ -10273,27 +10415,375 @@
         showToast(`Lead "${newL.name}" salvo na nuvem com sucesso!`, 'success');
       });
 
-      // Modal Configurações
+      // ========================================================
+      // GESTOR DE CONFIGURAÇÕES & WHATSAPP POR VENDEDOR
+      // ========================================================
       const modalSettings = document.getElementById('modal-settings');
-      document.getElementById('btn-open-settings').addEventListener('click', () => modalSettings.classList.remove('hidden'));
-      document.getElementById('btn-open-settings-mobile').addEventListener('click', () => {
-        document.getElementById('mobile-drawer').classList.add('hidden');
-        modalSettings.classList.remove('hidden');
-      });
-      document.getElementById('status-supabase-pill').addEventListener('click', () => modalSettings.classList.remove('hidden'));
-      document.getElementById('btn-close-settings').addEventListener('click', () => modalSettings.classList.add('hidden'));
+      let waStatusPollingTimer = null;
+      let waQrCountdownTimer = null;
+      let waCountdownSeconds = 25;
 
-      document.getElementById('btn-save-settings').addEventListener('click', () => {
-        const url = document.getElementById('cfg-supabase-url').value.trim();
-        const key = document.getElementById('cfg-supabase-key').value.trim();
+      function getEvolutionApiUrl() {
+        return (localStorage.getItem('piffpaff_evolution_url') || document.getElementById('cfg-evolution-url')?.value || 'http://localhost:8080').replace(/\/+$/, '');
+      }
+
+      function getEvolutionApiKey() {
+        return localStorage.getItem('piffpaff_evolution_key') || 'PiffPaffEvoSecretKey2026!';
+      }
+
+      function openSettingsModal(targetTab = 'whatsapp') {
+        if (!modalSettings) return;
+        modalSettings.classList.remove('hidden');
+        switchSettingsTab(targetTab);
+        if (targetTab === 'whatsapp') {
+          syncSellerInfoInModal();
+          checkCurrentSellerWhatsAppStatus();
+          startWhatsAppPolling();
+        }
+      }
+      window.openSettingsModal = openSettingsModal;
+
+      function closeSettingsModal() {
+        if (!modalSettings) return;
+        modalSettings.classList.add('hidden');
+        stopWhatsAppPolling();
+        stopQrCountdown();
+      }
+      window.closeSettingsModal = closeSettingsModal;
+
+      function switchSettingsTab(tab) {
+        const btnWa = document.getElementById('tab-btn-whatsapp');
+        const btnSb = document.getElementById('tab-btn-supabase');
+        const contentWa = document.getElementById('settings-tab-whatsapp-content');
+        const contentSb = document.getElementById('settings-tab-supabase-content');
+
+        if (tab === 'whatsapp') {
+          btnWa?.classList.add('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
+          btnWa?.classList.remove('text-slate-400', 'border-transparent');
+          btnSb?.classList.remove('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
+          btnSb?.classList.add('text-slate-400', 'border-transparent');
+          contentWa?.classList.remove('hidden');
+          contentSb?.classList.add('hidden');
+          syncSellerInfoInModal();
+          checkCurrentSellerWhatsAppStatus();
+          startWhatsAppPolling();
+        } else {
+          btnSb?.classList.add('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
+          btnSb?.classList.remove('text-slate-400', 'border-transparent');
+          btnWa?.classList.remove('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
+          btnWa?.classList.add('text-slate-400', 'border-transparent');
+          contentSb?.classList.remove('hidden');
+          contentWa?.classList.add('hidden');
+          stopWhatsAppPolling();
+          stopQrCountdown();
+        }
+      }
+      window.switchSettingsTab = switchSettingsTab;
+
+      function syncSellerInfoInModal() {
+        const sellerKey = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
+        const sellerName = (typeof getSellerName === 'function') ? getSellerName(authUser) : 'Gabriel Lima';
+        
+        const nameEl = document.getElementById('settings-seller-name');
+        const badgeEl = document.getElementById('settings-instance-badge');
+        const avatarEl = document.getElementById('settings-seller-avatar');
+
+        if (nameEl) nameEl.textContent = sellerName;
+        if (badgeEl) badgeEl.textContent = `instância: ${sellerKey}`;
+
+        if (avatarEl) {
+          if (sellerKey === 'eduardo') {
+            avatarEl.textContent = 'ED';
+            avatarEl.className = 'w-10 h-10 rounded-xl bg-emerald-500 text-white font-extrabold flex items-center justify-center text-sm font-heading shadow-md';
+          } else if (sellerKey === 'mayara') {
+            avatarEl.textContent = 'MY';
+            avatarEl.className = 'w-10 h-10 rounded-xl bg-rose-500 text-white font-extrabold flex items-center justify-center text-sm font-heading shadow-md';
+          } else if (sellerKey === 'felipe') {
+            avatarEl.textContent = 'FP';
+            avatarEl.className = 'w-10 h-10 rounded-xl bg-indigo-500 text-white font-extrabold flex items-center justify-center text-sm font-heading shadow-md';
+          } else {
+            avatarEl.textContent = 'GL';
+            avatarEl.className = 'w-10 h-10 rounded-xl bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-sm font-heading shadow-md';
+          }
+        }
+      }
+
+      function updateWhatsAppPill(state) {
+        const pill = document.getElementById('status-whatsapp-pill');
+        const dot = document.getElementById('status-whatsapp-dot');
+        const text = document.getElementById('status-whatsapp-text');
+        if (!pill || !dot || !text) return;
+
+        if (state === 'open') {
+          dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+          text.textContent = 'WhatsApp Conectado';
+          text.className = 'text-emerald-300 font-semibold';
+          pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium cursor-pointer transition select-none active:scale-95';
+        } else if (state === 'connecting') {
+          dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+          text.textContent = 'Conectando WhatsApp...';
+          text.className = 'text-amber-300 font-medium';
+          pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium cursor-pointer transition select-none active:scale-95';
+        } else {
+          dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+          text.textContent = 'Conectar WhatsApp';
+          text.className = 'text-slate-300 font-medium';
+          pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-xs font-medium cursor-pointer transition select-none active:scale-95';
+        }
+      }
+
+      async function checkCurrentSellerWhatsAppStatus(isManual = false) {
+        const sellerKey = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
+        const evoUrl = getEvolutionApiUrl();
+        const evoKey = getEvolutionApiKey();
+
+        try {
+          const res = await fetch(`${evoUrl}/instance/connectionState/${sellerKey}`, {
+            headers: { 'apikey': evoKey }
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const state = data?.instance?.state || 'close';
+          
+          updateWhatsAppPill(state);
+
+          const connectedBox = document.getElementById('wa-connected-state');
+          const disconnectedBox = document.getElementById('wa-disconnected-state');
+          const phoneEl = document.getElementById('wa-connected-phone');
+
+          if (state === 'open') {
+            connectedBox?.classList.remove('hidden');
+            disconnectedBox?.classList.add('hidden');
+            if (phoneEl) {
+              const num = data?.instance?.ownerJid ? data.instance.ownerJid.replace(/@.*$/, '') : '';
+              phoneEl.textContent = num ? `Número Conectado: +${num}` : 'Sessão Ativa e Sincronizada';
+            }
+            stopQrCountdown();
+            if (isManual) showToast('WhatsApp verificado: Conectado e ativo! ✅', 'success');
+          } else {
+            connectedBox?.classList.add('hidden');
+            disconnectedBox?.classList.remove('hidden');
+            const img = document.getElementById('wa-qrcode-img');
+            if (!img?.src || img.src === '' || img.src.includes('window.location')) {
+              fetchWhatsAppQRCode();
+            }
+            if (isManual) showToast('WhatsApp desconectado. Escaneie o QR Code.', 'warning');
+          }
+          return state;
+        } catch (err) {
+          console.warn('Erro ao verificar status da Evolution API:', err);
+          updateWhatsAppPill('close');
+          const connectedBox = document.getElementById('wa-connected-state');
+          const disconnectedBox = document.getElementById('wa-disconnected-state');
+          connectedBox?.classList.add('hidden');
+          disconnectedBox?.classList.remove('hidden');
+          if (isManual) showToast('Não foi possível conectar ao servidor WhatsApp (Evolution API). Verifique o Docker Desktop.', 'error');
+          return 'error';
+        }
+      }
+      window.checkCurrentSellerWhatsAppStatus = checkCurrentSellerWhatsAppStatus;
+
+      async function fetchWhatsAppQRCode() {
+        const sellerKey = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
+        const evoUrl = getEvolutionApiUrl();
+        const evoKey = getEvolutionApiKey();
+
+        const loadingEl = document.getElementById('wa-qrcode-loading');
+        const wrapperEl = document.getElementById('wa-qrcode-wrapper');
+        const errorEl = document.getElementById('wa-qrcode-error');
+        const errorMsgEl = document.getElementById('wa-qrcode-error-msg');
+        const imgEl = document.getElementById('wa-qrcode-img');
+
+        loadingEl?.classList.remove('hidden');
+        wrapperEl?.classList.add('hidden');
+        errorEl?.classList.add('hidden');
+        stopQrCountdown();
+
+        try {
+          const res = await fetch(`${evoUrl}/instance/connect/${sellerKey}`, {
+            headers: { 'apikey': evoKey }
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          if (data && data.base64) {
+            if (imgEl) imgEl.src = data.base64;
+            loadingEl?.classList.add('hidden');
+            wrapperEl?.classList.remove('hidden');
+            startQrCountdown();
+          } else if (data && data.code) {
+            if (imgEl) imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(data.code)}`;
+            loadingEl?.classList.add('hidden');
+            wrapperEl?.classList.remove('hidden');
+            startQrCountdown();
+          } else {
+            const state = await checkCurrentSellerWhatsAppStatus();
+            if (state !== 'open') {
+              throw new Error('Nenhum QR Code retornado pela instância.');
+            }
+          }
+        } catch (err) {
+          console.error('Erro ao gerar QR Code:', err);
+          loadingEl?.classList.add('hidden');
+          wrapperEl?.classList.add('hidden');
+          errorEl?.classList.remove('hidden');
+          if (errorMsgEl) errorMsgEl.textContent = `Erro ao conectar com Evolution API: ${err.message || 'Servidor indisponível'}`;
+        }
+      }
+      window.fetchWhatsAppQRCode = fetchWhatsAppQRCode;
+
+      function startQrCountdown() {
+        stopQrCountdown();
+        waCountdownSeconds = 25;
+        const timerEl = document.getElementById('wa-timer');
+        if (timerEl) timerEl.textContent = waCountdownSeconds;
+
+        waQrCountdownTimer = setInterval(() => {
+          waCountdownSeconds--;
+          if (timerEl) timerEl.textContent = waCountdownSeconds;
+          if (waCountdownSeconds <= 0) {
+            stopQrCountdown();
+            fetchWhatsAppQRCode();
+          }
+        }, 1000);
+      }
+
+      function stopQrCountdown() {
+        if (waQrCountdownTimer) {
+          clearInterval(waQrCountdownTimer);
+          waQrCountdownTimer = null;
+        }
+      }
+
+      function startWhatsAppPolling() {
+        stopWhatsAppPolling();
+        waStatusPollingTimer = setInterval(async () => {
+          if (!modalSettings || modalSettings.classList.contains('hidden')) {
+            stopWhatsAppPolling();
+            return;
+          }
+          const state = await checkCurrentSellerWhatsAppStatus();
+          if (state === 'open') {
+            stopWhatsAppPolling();
+            stopQrCountdown();
+            showToast('WhatsApp Conectado com Sucesso! 🎉', 'success');
+          }
+        }, 4000);
+      }
+
+      function stopWhatsAppPolling() {
+        if (waStatusPollingTimer) {
+          clearInterval(waStatusPollingTimer);
+          waStatusPollingTimer = null;
+        }
+      }
+
+      async function requestPairingCode() {
+        const sellerKey = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
+        const evoUrl = getEvolutionApiUrl();
+        const evoKey = getEvolutionApiKey();
+        const phoneInput = document.getElementById('wa-pairing-phone');
+        const rawPhone = (phoneInput?.value || '').replace(/\D/g, '');
+
+        if (!rawPhone || rawPhone.length < 8) {
+          showToast('Por favor, informe o número de telefone com DDD (ex: 47999998888 ou 4730509208).', 'warning');
+          return;
+        }
+
+        const phoneWithCountry = rawPhone.startsWith('55') ? rawPhone : ('55' + rawPhone);
+        const resultBox = document.getElementById('wa-pairing-result');
+        const display = document.getElementById('wa-pairing-code-display');
+
+        try {
+          showToast('Solicitando Código de Pareamento de 8 Dígitos...', 'info');
+          const res = await fetch(`${evoUrl}/instance/connect/${sellerKey}?number=${phoneWithCountry}`, {
+            headers: { 'apikey': evoKey }
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const pairingCode = data?.pairingCode || data?.code;
+
+          if (pairingCode) {
+            if (display) display.textContent = pairingCode;
+            resultBox?.classList.remove('hidden');
+            showToast('Código gerado! Digite no WhatsApp do celular.', 'success');
+            startWhatsAppPolling();
+          } else {
+            showToast('Não foi possível gerar o código. Tente pelo QR Code.', 'error');
+          }
+        } catch (err) {
+          console.error('Erro ao gerar código de pareamento:', err);
+          showToast(`Erro ao gerar código: ${err.message}`, 'error');
+        }
+      }
+      window.requestPairingCode = requestPairingCode;
+
+      function copyPairingCode(el) {
+        const text = el.textContent.trim();
+        if (text && text !== '----') {
+          navigator.clipboard.writeText(text);
+          showToast(`Código ${text} copiado para a área de transferência!`, 'success');
+        }
+      }
+      window.copyPairingCode = copyPairingCode;
+
+      async function disconnectCurrentSellerWhatsApp() {
+        const sellerKey = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
+        const sellerName = (typeof getSellerName === 'function') ? getSellerName(authUser) : 'Vendedor';
+        
+        if (!confirm(`Deseja realmente desconectar o WhatsApp de ${sellerName}?\nPara voltar a receber mensagens, será necessário ler o QR Code novamente.`)) {
+          return;
+        }
+
+        const evoUrl = getEvolutionApiUrl();
+        const evoKey = getEvolutionApiKey();
+
+        try {
+          showToast('Desconectando WhatsApp...', 'info');
+          await fetch(`${evoUrl}/instance/logout/${sellerKey}`, {
+            method: 'DELETE',
+            headers: { 'apikey': evoKey }
+          });
+          showToast('WhatsApp desconectado com sucesso!', 'info');
+          await checkCurrentSellerWhatsAppStatus();
+          fetchWhatsAppQRCode();
+        } catch (err) {
+          console.warn('Erro ao desconectar:', err);
+          showToast('Erro ao desconectar WhatsApp.', 'error');
+        }
+      }
+      window.disconnectCurrentSellerWhatsApp = disconnectCurrentSellerWhatsApp;
+
+      // Eventos dos botões de abrir configurações
+      document.getElementById('btn-open-settings')?.addEventListener('click', () => openSettingsModal('whatsapp'));
+      document.getElementById('btn-open-settings-mobile')?.addEventListener('click', () => {
+        document.getElementById('mobile-drawer')?.classList.add('hidden');
+        openSettingsModal('whatsapp');
+      });
+      document.getElementById('status-supabase-pill')?.addEventListener('click', () => openSettingsModal('supabase'));
+      document.getElementById('btn-close-settings')?.addEventListener('click', closeSettingsModal);
+
+      // Salvar credenciais Supabase e Evolution URL
+      document.getElementById('btn-save-settings')?.addEventListener('click', () => {
+        const url = document.getElementById('cfg-supabase-url')?.value.trim();
+        const key = document.getElementById('cfg-supabase-key')?.value.trim();
+        const evo = document.getElementById('cfg-evolution-url')?.value.trim();
         if (url && key) {
           localStorage.setItem('supabase_url', url);
           localStorage.setItem('supabase_key', key);
           document.getElementById('status-supabase-text').textContent = 'Supabase Conectado';
-          showToast('Credenciais do Supabase salvas com sucesso!', 'success');
         }
-        modalSettings.classList.add('hidden');
+        if (evo) {
+          localStorage.setItem('piffpaff_evolution_url', evo);
+        }
+        showToast('Configurações salvas com sucesso!', 'success');
+        closeSettingsModal();
       });
+
+      // Carregar status do WhatsApp ao inicializar
+      setTimeout(() => {
+        checkCurrentSellerWhatsAppStatus();
+      }, 1500);
 
       document.getElementById('btn-reset-demo').addEventListener('click', () => {
         if (confirm('Deseja alternar para os 6 dados de demonstração iniciais?')) {
