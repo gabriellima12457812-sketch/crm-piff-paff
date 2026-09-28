@@ -10701,21 +10701,33 @@
         const display = document.getElementById('wa-pairing-code-display');
 
         try {
+          const localNum = rawPhone.startsWith('55') ? rawPhone.slice(2) : rawPhone;
+          const isLandline = localNum.length <= 10;
+          
+          if (isLandline) {
+            showToast('⚠️ Telefones fixos (8 dígitos como 3050-9208) não aceitam código de texto no WhatsApp. Conecte apontando a câmera do WhatsApp Business para o QR Code acima!', 'warning', 8000);
+            resultBox?.classList.add('hidden');
+            return;
+          }
+
           showToast('Solicitando Código de Pareamento de 8 Dígitos...', 'info');
           const res = await fetch(`${evoUrl}/instance/connect/${sellerKey}?number=${phoneWithCountry}`, {
             headers: { 'apikey': evoKey }
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
-          const pairingCode = data?.pairingCode || data?.code;
+          
+          // NUNCA usar data.code como fallback, pois data.code é a string bruta do QR Code (+150 caracteres)
+          const pairingCode = data?.pairingCode;
 
-          if (pairingCode) {
+          if (pairingCode && typeof pairingCode === 'string' && pairingCode.length <= 12) {
             if (display) display.textContent = pairingCode;
             resultBox?.classList.remove('hidden');
-            showToast('Código gerado! Digite no WhatsApp do celular.', 'success');
+            showToast('Código de 8 dígitos gerado! Digite no WhatsApp do celular.', 'success');
             startWhatsAppPolling();
           } else {
-            showToast('Não foi possível gerar o código. Tente pelo QR Code.', 'error');
+            resultBox?.classList.add('hidden');
+            showToast('A API não gerou código de 8 dígitos para este número. Conecte lendo o QR Code acima.', 'warning');
           }
         } catch (err) {
           console.error('Erro ao gerar código de pareamento:', err);
