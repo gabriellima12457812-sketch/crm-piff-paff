@@ -1,6 +1,7 @@
 // ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/n8n-webhook (ES Module)
-// WEBHOOK MULTI-VENDEDOR (GABRIEL & FELIPE) (n8n + ChatGPT + Evolution API)
+// WEBHOOK DIRETO MULTI-VENDEDOR (EVOLUTION API NATIVA + N8N + SUPABASE REALTIME)
+// Suporta: Gabriel Lima, Felipe, Mayara e Eduardo
 // ==============================================================================
 
 // Mapeamento Oficial de Vendedores no Supabase CRM
@@ -74,7 +75,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
-      error: 'Método não permitido. Utilize POST para acionar o webhook do n8n.'
+      error: 'Método não permitido. Utilize POST para acionar o webhook.'
     });
   }
 
@@ -89,8 +90,41 @@ export default async function handler(req, res) {
     }
     body = body || {};
 
-    // Identificação do Vendedor de Destino (Gabriel, Felipe, Mayara ou Eduardo)
-    const rawSeller = (body.vendedor_id || body.vendedor || body.instance || req.query?.seller || '').toString().toLowerCase();
+    // =======================================================================
+    // 1. SUPORTE NATIVO EVOLUTION API v2 (messages.upsert) & N8N
+    // =======================================================================
+    const evoData = Array.isArray(body.data) ? body.data[0] : (body.data || body);
+    const key = evoData?.key || {};
+
+    // 1.1 Filtrar mensagens enviadas pelo próprio usuário (fromMe)
+    if (key.fromMe === true && !body.force) {
+      return res.status(200).json({
+        success: true,
+        ignored: true,
+        reason: 'Mensagem enviada pelo próprio vendedor (fromMe)'
+      });
+    }
+
+    // 1.2 Filtrar mensagens de grupos (@g.us) e status broadcast
+    const rawJid = key.remoteJid || evoData?.remoteJid || body.remoteJid || '';
+    if (rawJid.includes('@g.us') || rawJid.includes('status@broadcast')) {
+      return res.status(200).json({
+        success: true,
+        ignored: true,
+        reason: 'Mensagem de grupo ou status broadcast ignorada'
+      });
+    }
+
+    // 1.3 Identificação do Vendedor de Destino (Gabriel, Felipe, Mayara ou Eduardo)
+    const rawSeller = (
+      body.vendedor_id ||
+      body.vendedor ||
+      body.instance ||
+      req.query?.seller ||
+      req.query?.instance ||
+      ''
+    ).toString().toLowerCase();
+
     let seller = SELLERS.gabriel;
     if (rawSeller.includes('eduardo')) {
       seller = SELLERS.eduardo;
@@ -100,24 +134,65 @@ export default async function handler(req, res) {
       seller = SELLERS.felipe;
     }
 
-    const { telefone, nome, resumo_interacao, intencao } = body;
+    // 1.4 Extração de Texto da Mensagem (suporta todos os formatos WhatsApp)
+    const messageObj = evoData?.message || {};
+    let extractedText =
+      messageObj.conversation ||
+      messageObj.extendedTextMessage?.text ||
+      messageObj.imageMessage?.caption ||
+      messageObj.videoMessage?.caption ||
+      messageObj.documentMessage?.caption ||
+      '';
 
-    const rawPhone = telefone || body.phone || body.remoteJid || '';
+    if (!extractedText) {
+      if (messageObj.audioMessage) extractedText = '[Áudio recebido do cliente]';
+      else if (messageObj.stickerMessage) extractedText = '[Figurinha enviada pelo cliente]';
+      else if (messageObj.locationMessage) extractedText = '[Localização compartilhada pelo cliente]';
+      else if (messageObj.contactMessage) extractedText = '[Contato compartilhado pelo cliente]';
+    }
+
+    // 1.5 Extração de Telefone
+    const rawPhone = body.telefone || body.phone || rawJid.replace(/@.*$/, '') || '';
     const phoneDigits = cleanPhone(rawPhone);
 
     if (!phoneDigits || phoneDigits.length < 8) {
-      return res.status(400).json({
-        success: false,
-        error: 'Número de telefone inválido ou não informado. O telefone deve ter no mínimo 8 dígitos.',
-        received: { telefone, nome }
+      return res.status(200).json({
+        success: true,
+        ignored: true,
+        reason: 'Número de telefone não identificado ou evento não transacional',
+        event: body.event || 'unknown'
       });
     }
 
-    const clientName = (nome || body.client || body.name || `Lead WhatsApp ${phoneDigits.slice(-4)}`).toString().trim();
-    const interactionSummary = (resumo_interacao || body.summary || body.resumo || 'Interação inicial via WhatsApp API').toString().trim();
-    const clientIntent = (intencao || body.intent || body.predominant_emotion || 'Interesse em Mobiliário').toString().trim();
+    // 1.6 Nome do Cliente
+    const pushName = evoData?.pushName || '';
+    const clientName = (
+      body.nome ||
+      body.client ||
+      body.name ||
+      pushName ||
+      `Lead WhatsApp ${phoneDigits.slice(-4)}`
+    ).toString().trim();
 
-    // Credenciais Supabase
+    // 1.7 Resumo e Intenção Comercial
+    const interactionSummary = (
+      body.resumo_interacao ||
+      body.summary ||
+      body.resumo ||
+      extractedText ||
+      'Mensagem recebida no WhatsApp'
+    ).toString().trim();
+
+    const clientIntent = (
+      body.intencao ||
+      body.intent ||
+      body.predominant_emotion ||
+      (extractedText ? `Mensagem: ${extractedText.slice(0, 100)}` : 'Interesse em Mobiliário de Alto Padrão')
+    ).toString().trim();
+
+    // =======================================================================
+    // 2. CONEXÃO SUPABASE
+    // =======================================================================
     const supabaseUrl = (
       process.env.NEXT_PUBLIC_SUPABASE_URL ||
       process.env.SUPABASE_URL ||
@@ -137,15 +212,14 @@ export default async function handler(req, res) {
       'Prefer': 'return=representation'
     };
 
-    // 1. Buscar se o telefone já existe na tabela leads (para este vendedor ou geral)
+    // =======================================================================
+    // 3. BUSCA DE LEAD EXISTENTE (POR TELEFONE OU ID DETERMINÍSTICO)
+    // =======================================================================
     const phoneVariants = normalizePhoneVariants(phoneDigits);
     let existingLead = null;
 
     try {
-      // Cria filtro OR do PostgREST para todas as variantes do telefone
       const orFilter = phoneVariants.map(p => `phone.eq.${p}`).join(',');
-      
-      // Procura primeiro se este vendedor já possui este contato
       const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&user_id=eq.${encodeURIComponent(seller.user_id)}&select=*&limit=1`;
       const searchRes = await fetch(searchUrl, { headers: supabaseHeaders });
       if (searchRes.ok) {
@@ -155,22 +229,19 @@ export default async function handler(req, res) {
         }
       }
 
-      // Se não encontrou para este vendedor, busca se existe algum lead sem user_id ou legado
+      // Se não encontrou vinculado a este vendedor, busca se já existe cadastrado na base geral
       if (!existingLead) {
         const fallbackSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&select=*&limit=1`;
         const fbRes = await fetch(fallbackSearchUrl, { headers: supabaseHeaders });
         if (fbRes.ok) {
           const fbData = await fbRes.json();
           if (Array.isArray(fbData) && fbData.length > 0) {
-            const candidate = fbData[0];
-            if (!candidate.user_id || candidate.user_id === seller.user_id) {
-              existingLead = candidate;
-            }
+            existingLead = fbData[0];
           }
         }
       }
     } catch (errSearch) {
-      console.warn('[n8n Webhook] Aviso ao buscar telefone no Supabase:', errSearch);
+      console.warn('[Webhook] Aviso ao buscar telefone no Supabase:', errSearch);
     }
 
     const nowISO = new Date().toISOString();
@@ -180,10 +251,10 @@ export default async function handler(req, res) {
 
     if (!existingLead) {
       // =======================================================================
-      // 2. SE NÃO EXISTIR: INSERT NA TABELA LEADS (VENDEDOR DINÂMICO)
+      // 4. INSERT COM ID DETERMINÍSTICO (PREVINE DUPLICATAS POR RACE CONDITION)
       // =======================================================================
-      const newLeadId = `${seller.leadPrefix}-${Date.now()}`;
-      const logNote = `[${nowBR} - WhatsApp (${seller.name}) n8n + ChatGPT]: ${interactionSummary}${clientIntent ? ` (Intenção: ${clientIntent})` : ''}`;
+      const newLeadId = `${seller.leadPrefix}-${phoneDigits}`;
+      const logNote = `[${nowBR} - WhatsApp (${seller.name})]: ${interactionSummary}${clientIntent ? ` (Intenção: ${clientIntent})` : ''}`;
 
       const newLeadPayload = {
         id: newLeadId,
@@ -209,7 +280,7 @@ export default async function handler(req, res) {
         main_objection: 'Definição de modelos e medidas',
         gabriel_percentage: seller.vendedor_id === 'gabriel' ? 100 : 0,
         jhennifer_percentage: 0,
-        strategic_reading: `Lead recente capturado pelo bot WhatsApp (${seller.name}). Responder com abordagem consultiva.`,
+        strategic_reading: `Lead recente capturado via WhatsApp (${seller.name}). Responder com abordagem consultiva.`,
         next_best_action: 'Apresentar catálogo e validar necessidade atual.',
         desired_micro_advance: 'Identificar ambientes da casa e estilo desejado.',
         what_not_to_do: 'Não enviar tabela de preços fria sem contextualizar o produto.',
@@ -231,44 +302,31 @@ export default async function handler(req, res) {
       });
 
       if (!insertRes.ok) {
+        // Se falhou por conflito de chave primária (já inserido por webhook paralelo), faz PATCH
         const errText = await insertRes.text();
-        console.error('[n8n Webhook] Erro no INSERT de leads:', errText);
-        // Fallback: colunas padronizadas do schema original
-        const fallbackPayload = {
-          id: newLeadId,
-          name: clientName,
-          phone: phoneDigits,
-          city: 'Brasil',
-          stage: 'novos',
-          value: 0,
-          temperature: 'morno',
-          commercial_moment: 'pesquisa',
-          user_id: seller.user_id,
+        console.warn('[Webhook] Insert inicial falhou (pode ser chave existente), tentando patch:', errText);
+
+        const safePatch = {
           notes: logNote,
           last_interaction: nowISO,
-          created_at: nowISO,
+          data_ultima_interacao: nowISO,
           updated_at: nowISO
         };
-        const fbRes = await fetch(insertUrl, {
-          method: 'POST',
+        const patchRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(newLeadId)}`, {
+          method: 'PATCH',
           headers: supabaseHeaders,
-          body: JSON.stringify(fallbackPayload)
+          body: JSON.stringify(safePatch)
         });
-        if (fbRes.ok) {
-          const inserted = await fbRes.json();
-          finalLead = Array.isArray(inserted) ? inserted[0] : fallbackPayload;
-        } else {
-          finalLead = newLeadPayload;
-        }
+        finalLead = newLeadPayload;
+        resultAction = patchRes.ok ? 'updated' : 'inserted';
       } else {
         const inserted = await insertRes.json();
         finalLead = Array.isArray(inserted) ? inserted[0] : newLeadPayload;
+        resultAction = 'inserted';
       }
-
-      resultAction = 'inserted';
     } else {
       // =======================================================================
-      // 3. SE JÁ EXISTIR: UPDATE FORÇANDO CATEGORIA 1 E VENDEDOR DINÂMICO
+      // 5. UPDATE DE LEAD EXISTENTE (PRESERVA BANCO PRINCIPAL E HISTÓRICO)
       // =======================================================================
       const targetId = existingLead.id;
       const logNote = `\n\n[${nowBR} - Nova Mensagem WhatsApp (${seller.name})]: ${interactionSummary}${clientIntent ? ` (Intenção: ${clientIntent})` : ''}`;
@@ -277,7 +335,7 @@ export default async function handler(req, res) {
       const updatePayload = {
         categoria: 1, // Garante que pertence ao Banco Principal
         vendedor_id: seller.vendedor_id,
-        user_id: seller.user_id, // Garante que o lead é do vendedor
+        user_id: seller.user_id, // Garante vinculação correta ao vendedor
         origem: existingLead.origem || seller.origem,
         data_ultima_interacao: nowISO,
         last_interaction: nowISO,
@@ -285,10 +343,10 @@ export default async function handler(req, res) {
         updated_at: nowISO
       };
 
-      // Se o lead antigo tinha nome genérico e agora recebemos nome real
+      // Se o nome atual do lead for genérico e agora temos pushName do WhatsApp
       if (
         clientName &&
-        (!existingLead.name || existingLead.name.startsWith('Lead ') || existingLead.name.startsWith('+55'))
+        (!existingLead.name || existingLead.name.startsWith('Lead ') || existingLead.name.startsWith('+55') || existingLead.name.startsWith('Cliente WhatsApp'))
       ) {
         updatePayload.name = clientName;
       }
@@ -319,7 +377,7 @@ export default async function handler(req, res) {
     }
 
     // =======================================================================
-    // 4. INSERT NA TABELA historico_interacoes (COM RESUMO DO CHATGPT)
+    // 6. GRAVAR NA TABELA historico_interacoes
     // =======================================================================
     try {
       const historicoPayload = {
@@ -334,22 +392,17 @@ export default async function handler(req, res) {
         created_at: nowISO
       };
 
-      const histUrl = `${supabaseUrl}/rest/v1/historico_interacoes`;
-      const histRes = await fetch(histUrl, {
+      await fetch(`${supabaseUrl}/rest/v1/historico_interacoes`, {
         method: 'POST',
         headers: supabaseHeaders,
         body: JSON.stringify(historicoPayload)
       });
-
-      if (!histRes.ok) {
-        console.warn('[n8n Webhook] Tabela historico_interacoes pode não existir ainda ou rejeitou campos:', await histRes.text());
-      }
     } catch (errHist) {
-      console.warn('[n8n Webhook] Erro ao gravar historico_interacoes (ignorado para não falhar webhook):', errHist);
+      console.warn('[Webhook] Aviso ao gravar historico_interacoes:', errHist);
     }
 
     // =======================================================================
-    // 5. DISPARAR BROADCAST REALTIME (LATÊNCIA ZERO NA TELA DO VENDEDOR)
+    // 7. BROADCAST REALTIME (LATÊNCIA ZERO NA TELA DO VENDEDOR NO CRM)
     // =======================================================================
     try {
       const broadcastUrl = `${supabaseUrl}/realtime/v1/api/broadcast`;
@@ -377,10 +430,12 @@ export default async function handler(req, res) {
         })
       });
     } catch (errBroadcast) {
-      // Não bloqueia a resposta se broadcast falhar (Postgres CDC cobre)
+      // Postgres CDC garante persistência
     }
 
-    // Resposta de Sucesso ao n8n
+    // =======================================================================
+    // 8. RESPOSTA DE SUCESSO AO EMISSOR
+    // =======================================================================
     return res.status(200).json({
       success: true,
       action: resultAction,
@@ -393,19 +448,18 @@ export default async function handler(req, res) {
         id: finalLead ? finalLead.id : null,
         name: finalLead ? finalLead.name : clientName,
         phone: finalLead ? finalLead.phone : phoneDigits,
-        stage: finalLead ? (finalLead.stage || 'novos') : 'novos',
-        notes: finalLead ? finalLead.notes : ''
+        stage: finalLead ? (finalLead.stage || 'novos') : 'novos'
       },
       message: resultAction === 'inserted'
-        ? `Lead "${clientName}" cadastrado com sucesso no Banco Principal (WhatsApp) de ${seller.name}!`
-        : `Lead "${clientName}" atualizado com sucesso no Banco Principal (WhatsApp) de ${seller.name}!`
+        ? `Lead "${clientName}" cadastrado no CRM de ${seller.name} via WhatsApp!`
+        : `Lead "${clientName}" atualizado no CRM de ${seller.name} via WhatsApp!`
     });
 
   } catch (error) {
-    console.error('[n8n Webhook Error]:', error);
+    console.error('[Webhook Error]:', error);
     return res.status(500).json({
       success: false,
-      error: 'Erro interno ao processar webhook do n8n.',
+      error: 'Erro interno ao processar webhook do WhatsApp.',
       details: error.message
     });
   }
