@@ -3490,7 +3490,7 @@
       // 6. Se NÃO possui telefone e tem perfil/id de instagram
       const idStr = String(l.id || '').toLowerCase();
       const cleanInsta = String(l.instagram || '').replace(/^@/, '').trim();
-      if (idStr.startsWith('insta-') || idStr.startsWith('crm-fel-') || cleanInsta.length > 1) {
+      if (idStr.startsWith('insta-') || idStr.startsWith('crm-fel-') || idStr.startsWith('crm-edu-') || idStr.startsWith('crm-may-') || idStr.startsWith('crm-gab-') || cleanInsta.length > 1) {
         return true;
       }
 
@@ -3552,7 +3552,23 @@
 
         if (Array.isArray(cloudLeads)) {
           const deletedIds = new Set(getDeletedLeadIds());
-          const userCloudLeads = cloudLeads.filter(l => !deletedIds.has(l.id));
+          // FILTRO ESTRITO DE ISOLAMENTO: cada vendedor visualiza exclusivamente seus prÃ³prios leads
+          const userCloudLeads = cloudLeads.filter(l => {
+            if (deletedIds.has(l.id)) return false;
+            if (sellerKey === 'gabriel') {
+              return !l.user_id || l.user_id === 'a1111111-1111-1111-1111-111111111111' || l.vendedor_id === 'gabriel' || (!l.vendedor_id && !l.user_id);
+            }
+            if (sellerKey === 'felipe') {
+              return l.user_id === 'c3333333-3333-3333-3333-333333333333' || l.vendedor_id === 'felipe' || (l.id && l.id.toLowerCase().includes('-fel-'));
+            }
+            if (sellerKey === 'mayara') {
+              return l.user_id === 'b2222222-2222-2222-2222-222222222222' || l.vendedor_id === 'mayara' || (l.id && l.id.toLowerCase().includes('-may-'));
+            }
+            if (sellerKey === 'eduardo') {
+              return l.user_id === 'd4444444-4444-4444-4444-444444444444' || l.vendedor_id === 'eduardo' || (l.id && l.id.toLowerCase().includes('-edu-'));
+            }
+            return true;
+          });
 
           const cloudInsta = [];
           const cloudWa = [];
@@ -4067,6 +4083,8 @@
         notes: lead.notes || '',
         followup_date: lead.followup_date || null,
         channel: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.channel || (lead.instagram && !lead.phone ? 'instagram' : 'whatsapp')),
+        pipeline: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.pipeline || 'whatsapp'),
+        vendedor_id: sellerKey,
         last_interaction: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: authUser.id
@@ -4146,6 +4164,9 @@
         priority: lead.priority || 'MEDIA',
         commercial_line: lead.commercial_line || 'Linha Premium',
         notes: lead.notes || '',
+        channel: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.channel || 'whatsapp'),
+        pipeline: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.pipeline || 'whatsapp'),
+        vendedor_id: sellerKey,
         followup_date: lead.followup_date || addDays(1),
         last_interaction: new Date().toISOString(),
         created_at: new Date().toISOString(),
@@ -8011,12 +8032,13 @@
 
     const DEFAULT_INSTAGRAM_LEADS_FELIPE = [
       {
-        id: 'CRM-FEL-0001',
+        id: 'CRM-FEL-INSTA-001',
         name: 'Camila Vasconcelos',
-        phone: '11998887711',
+        phone: '',
         instagram: 'camilavasconcelos_arq',
         city: 'São Paulo - SP',
         stage: 'novo',
+        stage_label: 'Novo Lead',
         channel: 'instagram',
         pipeline: 'instagram',
         value: 48000,
@@ -8026,15 +8048,18 @@
         followup_date: new Date().toISOString().split('T')[0],
         last_interaction: new Date().toISOString(),
         notes: '[Direct Instagram] Olá Felipe! Adorei a chaise Tulum. Vocês fabricam com corda terracota?',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        user_id: 'c3333333-3333-3333-3333-333333333333',
+        vendedor_id: 'felipe'
       },
       {
-        id: 'CRM-FEL-0002',
+        id: 'CRM-FEL-INSTA-002',
         name: 'Marcos Vinícius Prado',
-        phone: '19987776622',
+        phone: '',
         instagram: 'marcosprado_design',
         city: 'Campinas - SP',
         stage: 'conversa',
+        stage_label: 'Em Conversa',
         channel: 'instagram',
         pipeline: 'instagram',
         value: 72000,
@@ -8044,7 +8069,75 @@
         followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
         last_interaction: new Date().toISOString(),
         notes: '[Direct Instagram] Marcos: Olá! Preciso de 4 espreguiçadeiras e mesa de centro para cliente.',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        user_id: 'c3333333-3333-3333-3333-333333333333',
+        vendedor_id: 'felipe'
+      }
+    ];
+
+    const DEFAULT_INSTAGRAM_LEADS_EDUARDO = [
+      {
+        id: 'CRM-EDU-INSTA-001',
+        name: 'Patrícia Prado Arquitetura',
+        phone: '',
+        instagram: 'patriciaprado.arq',
+        city: 'Curitiba - PR',
+        stage: 'conversa',
+        stage_label: 'Em Conversa',
+        channel: 'instagram',
+        pipeline: 'instagram',
+        value: 58000,
+        temperature: 'quente',
+        priority: 'ALTA',
+        commercial_line: 'Linha Premium Corda Náutica',
+        followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[Direct Instagram] Olá Eduardo! Estou projetando uma varanda gourmet em Curitiba e preciso de catálogo das chaises e poltronas.',
+        created_at: new Date().toISOString(),
+        user_id: 'd4444444-4444-4444-4444-444444444444',
+        vendedor_id: 'eduardo'
+      },
+      {
+        id: 'CRM-EDU-INSTA-002',
+        name: 'Lucas Brandão Designer',
+        phone: '',
+        instagram: 'lucasbrandaodesign',
+        city: 'Londrina - PR',
+        stage: 'novo',
+        stage_label: 'Novo Lead',
+        channel: 'instagram',
+        pipeline: 'instagram',
+        value: 42000,
+        temperature: 'morno',
+        priority: 'MEDIA',
+        commercial_line: 'Linha Alumínio & Madeira',
+        followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[Direct Instagram] Boa tarde Eduardo, vi a publicação da mesa Ilhéus. Vocês entregam no norte do Paraná?',
+        created_at: new Date().toISOString(),
+        user_id: 'd4444444-4444-4444-4444-444444444444',
+        vendedor_id: 'eduardo'
+      },
+      {
+        id: 'CRM-EDU-INSTA-003',
+        name: 'Mariana Vecchi Interiores',
+        phone: '',
+        instagram: 'marianavecchi.interiores',
+        city: 'Maringá - PR',
+        stage: 'abordagem',
+        stage_label: 'Abordagem Inicial',
+        channel: 'instagram',
+        pipeline: 'instagram',
+        value: 64000,
+        temperature: 'quente',
+        priority: 'ALTA',
+        commercial_line: 'Linha Internacional',
+        followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[Direct Instagram] Oi Eduardo! Cliente pediu orçamento para conjunto de espreguiçadeiras e ombrelone para piscina aquecida.',
+        created_at: new Date().toISOString(),
+        user_id: 'd4444444-4444-4444-4444-444444444444',
+        vendedor_id: 'eduardo'
       }
     ];
 
@@ -8058,25 +8151,32 @@
       const seller = getSellerKey();
       if (seller === 'mayara') return DEFAULT_INSTAGRAM_LEADS_MAYARA;
       if (seller === 'felipe') return DEFAULT_INSTAGRAM_LEADS_FELIPE;
+      if (seller === 'eduardo') return DEFAULT_INSTAGRAM_LEADS_EDUARDO;
       return DEFAULT_INSTAGRAM_LEADS_GABRIEL;
     }
 
     function initInstagramStorage() {
       const key = getInstagramStorageKey();
       const defaultLeads = getDefaultInstagramLeads();
+      const currentSeller = getSellerKey();
       try {
         const stored = localStorage.getItem(key);
         if (stored) {
           const parsed = JSON.parse(stored);
-          // Se tiver menos de 10 leads, significa que estava com o mock antigo de 4/5 leads -> restaura a base completa de 70 leads!
-          if (Array.isArray(parsed) && parsed.length >= 10) {
-            const existingIds = new Set(parsed.map(l => l.id));
-            defaultLeads.forEach(defL => {
-              if (!existingIds.has(defL.id)) {
-                parsed.push(defL);
-              }
-            });
-            instagramLeads = parsed.filter(l => !l.phone || String(l.phone).replace(/\D/g, '').length < 8);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            let cleanedParsed = parsed;
+            // Purga leads residuais herdados indevidamente entre vendedores
+            if (currentSeller === 'eduardo') {
+              cleanedParsed = parsed.filter(l => l.id && (l.id.startsWith('CRM-EDU-') || l.id.startsWith('insta-edu-') || l.user_id === 'd4444444-4444-4444-4444-444444444444' || l.vendedor_id === 'eduardo'));
+              if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
+            } else if (currentSeller === 'felipe') {
+              cleanedParsed = parsed.filter(l => l.id && (l.id.startsWith('CRM-FEL-') || l.id.startsWith('insta-fel-') || l.user_id === 'c3333333-3333-3333-3333-333333333333' || l.vendedor_id === 'felipe'));
+              if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
+            } else if (currentSeller === 'mayara') {
+              cleanedParsed = parsed.filter(l => l.id && (l.id.startsWith('insta-may-') || l.id.startsWith('CRM-MAY-') || l.user_id === 'b2222222-2222-2222-2222-222222222222' || l.vendedor_id === 'mayara'));
+              if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
+            }
+            instagramLeads = cleanedParsed.filter(l => !l.phone || String(l.phone).replace(/\D/g, '').length < 8);
           } else {
             instagramLeads = [...defaultLeads];
             saveInstagramStorage();
@@ -8802,8 +8902,16 @@
       const line = document.getElementById('new-insta-line').value.trim() || 'Linha Premium';
       const notes = document.getElementById('new-insta-notes').value.trim();
 
+      const currentSeller = getSellerKey();
+      const sellerUserId = authUser ? authUser.id : (
+        currentSeller === 'gabriel' ? 'a1111111-1111-1111-1111-111111111111' :
+        currentSeller === 'felipe' ? 'c3333333-3333-3333-3333-333333333333' :
+        currentSeller === 'mayara' ? 'b2222222-2222-2222-2222-222222222222' :
+        'd4444444-4444-4444-4444-444444444444'
+      );
+      const prefix = currentSeller === 'gabriel' ? 'insta-gab-' : (currentSeller === 'felipe' ? 'insta-fel-' : (currentSeller === 'mayara' ? 'insta-may-' : 'insta-edu-'));
       const newLead = {
-        id: 'insta-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+        id: prefix + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
         name: name,
         instagram: handle.replace(/^@/, ''),
         phone: null,
@@ -8816,7 +8924,9 @@
         followup_date: addDays(1),
         followup_status: 'Próximo Contato (Amanhã)',
         notes: notes ? `[Canal: Instagram] ${notes}` : '[Canal: Instagram] Lead cadastrado na prospecção do Instagram.',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        user_id: sellerUserId,
+        vendedor_id: currentSeller
       };
 
       instagramLeads.unshift(newLead);
@@ -9932,6 +10042,34 @@
                   user: {
                     id: 'd4444444-4444-4444-4444-444444444444',
                     email: 'eduardo@piffpaff.com.br',
+                    role: 'authenticated'
+                  }
+                };
+                currentSession = fallbackSession;
+                authUser = fallbackSession.user;
+                try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
+                document.getElementById('saas-login-screen').classList.add('hidden');
+                updateSellerBadge(authUser);
+                initStorage();
+                initInstagramStorage();
+                initArchitectsStorage();
+                renderKanban();
+                renderInstagramBoard();
+                setupDragAndDrop();
+                if (typeof setupSupabaseRealtime === 'function') {
+                  setupSupabaseRealtime(authUser.id);
+                }
+                showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Modo Plug & Play ativo.`, 'success');
+                await syncFromSupabase(false);
+              }
+
+              if (email.toLowerCase() === 'mayara@piffpaff.com.br' && password === 'Mayara@2026') {
+                console.info('Ativando sessão Plug & Play para Mayara...');
+                const fallbackSession = {
+                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
+                  user: {
+                    id: 'b2222222-2222-2222-2222-222222222222',
+                    email: 'mayara@piffpaff.com.br',
                     role: 'authenticated'
                   }
                 };
