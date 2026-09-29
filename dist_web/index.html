@@ -404,7 +404,7 @@
             </button>
 
             <!-- Atalho Direto: Gestor de Contratos (Abre em Nova Aba com Vendedor) -->
-            <a href="contracts.html" target="_blank" rel="noopener noreferrer" onclick="openContractsWithSeller(event)" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent group" title="Abrir Gestor de Contratos em nova aba">
+            <a href="contracts" target="_blank" rel="noopener noreferrer" onclick="openContractsWithSeller(event)" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent group" title="Abrir Gestor de Contratos em nova aba">
               <span class="flex items-center gap-2.5">
                 <i class="ph-bold ph-file-text text-lg text-[#00D2D3]"></i>
                 <span class="group-hover:text-[#00D2D3] transition">Gestor de Contratos</span>
@@ -521,7 +521,7 @@
               <i class="ph-bold ph-users text-xl"></i>
               <span>Base de Clientes</span>
             </button>
-            <a href="contracts.html" target="_blank" rel="noopener noreferrer" onclick="document.getElementById('mobile-drawer').classList.add('hidden'); openContractsWithSeller(event);" class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-[#00D2D3] hover:bg-white/5 transition" title="Abrir Gestor de Contratos em nova aba">
+            <a href="contracts" target="_blank" rel="noopener noreferrer" onclick="document.getElementById('mobile-drawer').classList.add('hidden'); openContractsWithSeller(event);" class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-[#00D2D3] hover:bg-white/5 transition" title="Abrir Gestor de Contratos em nova aba">
               <span class="flex items-center gap-3">
                 <i class="ph-bold ph-file-text text-xl text-[#00D2D3]"></i>
                 <span>Gestor de Contratos</span>
@@ -10245,7 +10245,7 @@
           localStorage.setItem('CARIBE_QUICK_DRAFT', JSON.stringify(draft));
         } catch (e) {}
 
-        const targetUrl = sellerClean ? `contracts.html?seller=${encodeURIComponent(sellerClean)}` : 'contracts.html';
+        const targetUrl = sellerClean ? `contracts?seller=${encodeURIComponent(sellerClean)}` : 'contracts';
         window.open(targetUrl, '_blank');
       }
       window.openContractForLead = openContractForLead;
@@ -10253,7 +10253,7 @@
       function openContractsWithSeller(e) {
         if (e) e.preventDefault();
         const seller = authUser ? getSellerName(authUser).replace(/\s*\(.*\)/, '').trim() : '';
-        const targetUrl = seller ? `contracts.html?seller=${encodeURIComponent(seller)}` : 'contracts.html';
+        const targetUrl = seller ? `contracts?seller=${encodeURIComponent(seller)}` : 'contracts';
         window.open(targetUrl, '_blank');
       }
       window.openContractsWithSeller = openContractsWithSeller;
