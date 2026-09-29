@@ -187,6 +187,10 @@
           <button type="button" onclick="quickFillSeller('eduardo')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-semibold cursor-pointer transition" title="Preencher login do Eduardo (Vendedor)">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 💼 Eduardo (Vendedor)
           </button>
+          <span class="text-slate-600">•</span>
+          <button type="button" onclick="quickFillSeller('rodrigo')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-semibold cursor-pointer transition" title="Preencher login do Rodrigo (Especialista)">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span> 💼 Rodrigo (Especialista)
+          </button>
         </div>
 
         <!-- Abas: Entrar / Criar Conta -->
@@ -3117,7 +3121,14 @@
     function quickFillSeller(seller) {
       if (typeof switchActiveSeller === 'function') {
         switchActiveSeller(seller);
-        showToast(`Conectado com sucesso como ${seller === 'gabriel' ? 'Gabriel Lima (Admin)' : (seller === 'felipe' ? 'Felipe' : (seller === 'mayara' ? 'Mayara' : 'Eduardo'))}!`, 'success');
+        const sellerNames = {
+          gabriel: 'Gabriel Lima (Admin)',
+          felipe: 'Felipe',
+          mayara: 'Mayara',
+          eduardo: 'Eduardo',
+          rodrigo: 'Rodrigo (Especialista)'
+        };
+        showToast(`Conectado com sucesso como ${sellerNames[seller] || seller}!`, 'success');
         return;
       }
       const emailInput = document.getElementById('login-input-email');
@@ -3149,6 +3160,12 @@
           pwdInput.value = 'Eduardo@2026';
           pwdInput.focus();
         }
+      } else if (seller === 'rodrigo') {
+        if (emailInput) emailInput.value = 'rodrigo@piffpaff.com.br';
+        if (pwdInput) {
+          pwdInput.value = 'Rodrigo@2026';
+          pwdInput.focus();
+        }
       }
     }
 
@@ -3166,6 +3183,7 @@
       if (email.includes('felipe')) return 'Felipe (Vendedor)';
       if (email.includes('mayara')) return 'Mayara (Vendedora)';
       if (email.includes('eduardo')) return 'Eduardo (Vendedor)';
+      if (email.includes('rodrigo')) return 'Especialista Rodrigo (Vendedor)';
       return user.email.split('@')[0];
     }
 
@@ -3173,12 +3191,14 @@
       const u = user || authUser;
       if (!u || !u.email) {
         const saved = localStorage.getItem('piffpaff_active_seller_email') || '';
+        if (saved.toLowerCase().includes('rodrigo')) return 'rodrigo';
         if (saved.toLowerCase().includes('eduardo')) return 'eduardo';
         if (saved.toLowerCase().includes('mayara')) return 'mayara';
         if (saved.toLowerCase().includes('felipe')) return 'felipe';
         return 'gabriel';
       }
       const email = (u.email || '').toLowerCase();
+      if (email.includes('rodrigo')) return 'rodrigo';
       if (email.includes('eduardo')) return 'eduardo';
       if (email.includes('mayara')) return 'mayara';
       if (email.includes('felipe')) return 'felipe';
@@ -3212,6 +3232,9 @@
             } else if (email.includes('eduardo')) {
               avatarEl.textContent = 'ED';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-emerald-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
+            } else if (email.includes('rodrigo')) {
+              avatarEl.textContent = 'RD';
+              avatarEl.className = 'w-6 h-6 rounded-lg bg-amber-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
             } else {
               avatarEl.textContent = 'GL';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
@@ -3356,7 +3379,7 @@
         } else {
           // Checa fallback salvo localmente para qualquer vendedor Plug & Play (Default: Gabriel Lima Admin)
           const savedEmail = (localStorage.getItem('piffpaff_active_seller_email') || 'gabriel@piffpaff.com.br').toLowerCase();
-          const targetKey = savedEmail.includes('mayara') ? 'mayara' : (savedEmail.includes('felipe') ? 'felipe' : 'gabriel');
+          const targetKey = savedEmail.includes('rodrigo') ? 'rodrigo' : (savedEmail.includes('eduardo') ? 'eduardo' : (savedEmail.includes('mayara') ? 'mayara' : (savedEmail.includes('felipe') ? 'felipe' : 'gabriel')));
           switchActiveSeller(targetKey);
           return true;
         }
@@ -3372,7 +3395,8 @@
         gabriel: { id: 'a1111111-1111-1111-1111-111111111111', email: 'gabriel@piffpaff.com.br' },
         felipe: { id: 'c3333333-3333-3333-3333-333333333333', email: 'felipe@piffpaff.com.br' },
         mayara: { id: 'b2222222-2222-2222-2222-222222222222', email: 'mayara@piffpaff.com.br' },
-        eduardo: { id: 'd4444444-4444-4444-4444-444444444444', email: 'eduardo@piffpaff.com.br' }
+        eduardo: { id: 'd4444444-4444-4444-4444-444444444444', email: 'eduardo@piffpaff.com.br' },
+        rodrigo: { id: 'e5555555-5555-5555-5555-555555555555', email: 'rodrigo@piffpaff.com.br' }
       };
       const config = sellerConfigs[sellerKey] || sellerConfigs.gabriel;
       const fallbackSession = {
@@ -3566,6 +3590,9 @@
             }
             if (sellerKey === 'eduardo') {
               return l.user_id === 'd4444444-4444-4444-4444-444444444444' || l.vendedor_id === 'eduardo' || (l.id && l.id.toLowerCase().includes('-edu-'));
+            }
+            if (sellerKey === 'rodrigo') {
+              return l.user_id === 'e5555555-5555-5555-5555-555555555555' || l.vendedor_id === 'rodrigo' || (l.id && l.id.toLowerCase().includes('-rod-'));
             }
             return true;
           });
@@ -8146,6 +8173,72 @@
       }
     ];
 
+    const DEFAULT_INSTAGRAM_LEADS_RODRIGO = [
+      {
+        id: 'CRM-ROD-INSTA-001',
+        name: 'Studio R Interiores',
+        phone: '',
+        instagram: 'studior.interiores',
+        city: 'Joinville - SC',
+        stage: 'conversa',
+        stage_label: 'Em Conversa',
+        channel: 'instagram',
+        pipeline: 'instagram',
+        value: 52000,
+        temperature: 'quente',
+        priority: 'ALTA',
+        commercial_line: 'Linha Premium Corda Náutica',
+        followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[Direct Instagram] Olá Rodrigo! Acompanhamos os projetos e gostaríamos de especificar mobiliário externo para residência em condomínio fechado.',
+        created_at: new Date().toISOString(),
+        user_id: 'e5555555-5555-5555-5555-555555555555',
+        vendedor_id: 'rodrigo'
+      },
+      {
+        id: 'CRM-ROD-INSTA-002',
+        name: 'Camila Zanetti Arquitetura',
+        phone: '',
+        instagram: 'camilazanetti_arq',
+        city: 'Balneário Camboriú - SC',
+        stage: 'novo',
+        stage_label: 'Novo Lead',
+        channel: 'instagram',
+        pipeline: 'instagram',
+        value: 48000,
+        temperature: 'morno',
+        priority: 'MEDIA',
+        commercial_line: 'Linha Alumínio & Madeira',
+        followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[Direct Instagram] Olá Rodrigo, vi a foto do conjunto Ravello. Poderia me enviar o catálogo completo e prazo de entrega?',
+        created_at: new Date().toISOString(),
+        user_id: 'e5555555-5555-5555-5555-555555555555',
+        vendedor_id: 'rodrigo'
+      },
+      {
+        id: 'CRM-ROD-INSTA-003',
+        name: 'Bruno Mattos Designer',
+        phone: '',
+        instagram: 'brunomattos.design',
+        city: 'Florianópolis - SC',
+        stage: 'abordagem',
+        stage_label: 'Abordagem Inicial',
+        channel: 'instagram',
+        pipeline: 'instagram',
+        value: 65000,
+        temperature: 'quente',
+        priority: 'ALTA',
+        commercial_line: 'Linha Internacional',
+        followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        last_interaction: new Date().toISOString(),
+        notes: '[Direct Instagram] Boa tarde Rodrigo! Estou com projeto de cobertura duplex em Jurerê precisando de chaises e sofá curvo.',
+        created_at: new Date().toISOString(),
+        user_id: 'e5555555-5555-5555-5555-555555555555',
+        vendedor_id: 'rodrigo'
+      }
+    ];
+
     let instagramLeads = [];
 
     function getInstagramStorageKey() {
@@ -8154,6 +8247,7 @@
 
     function getDefaultInstagramLeads() {
       const seller = getSellerKey();
+      if (seller === 'rodrigo') return DEFAULT_INSTAGRAM_LEADS_RODRIGO;
       if (seller === 'mayara') return DEFAULT_INSTAGRAM_LEADS_MAYARA;
       if (seller === 'felipe') return DEFAULT_INSTAGRAM_LEADS_FELIPE;
       if (seller === 'eduardo') return DEFAULT_INSTAGRAM_LEADS_EDUARDO;
@@ -8179,6 +8273,9 @@
               if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
             } else if (currentSeller === 'mayara') {
               cleanedParsed = parsed.filter(l => l.id && (l.id.startsWith('insta-may-') || l.id.startsWith('CRM-MAY-') || l.user_id === 'b2222222-2222-2222-2222-222222222222' || l.vendedor_id === 'mayara'));
+              if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
+            } else if (currentSeller === 'rodrigo') {
+              cleanedParsed = parsed.filter(l => l.id && (l.id.startsWith('CRM-ROD-') || l.id.startsWith('insta-rod-') || l.user_id === 'e5555555-5555-5555-5555-555555555555' || l.vendedor_id === 'rodrigo'));
               if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
             }
             instagramLeads = cleanedParsed.filter(l => !l.phone || String(l.phone).replace(/\D/g, '').length < 8);
@@ -10066,6 +10163,7 @@
                 }
                 showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Modo Plug & Play ativo.`, 'success');
                 await syncFromSupabase(false);
+                return;
               }
 
               if (email.toLowerCase() === 'mayara@piffpaff.com.br' && password === 'Mayara@2026') {
@@ -10075,6 +10173,35 @@
                   user: {
                     id: 'b2222222-2222-2222-2222-222222222222',
                     email: 'mayara@piffpaff.com.br',
+                    role: 'authenticated'
+                  }
+                };
+                currentSession = fallbackSession;
+                authUser = fallbackSession.user;
+                try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
+                document.getElementById('saas-login-screen').classList.add('hidden');
+                updateSellerBadge(authUser);
+                initStorage();
+                initInstagramStorage();
+                initArchitectsStorage();
+                renderKanban();
+                renderInstagramBoard();
+                setupDragAndDrop();
+                if (typeof setupSupabaseRealtime === 'function') {
+                  setupSupabaseRealtime(authUser.id);
+                }
+                showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Modo Plug & Play ativo.`, 'success');
+                await syncFromSupabase(false);
+                return;
+              }
+
+              if (email.toLowerCase() === 'rodrigo@piffpaff.com.br' && password === 'Rodrigo@2026') {
+                console.info('Ativando sessão Plug & Play para Rodrigo...');
+                const fallbackSession = {
+                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
+                  user: {
+                    id: 'e5555555-5555-5555-5555-555555555555',
+                    email: 'rodrigo@piffpaff.com.br',
                     role: 'authenticated'
                   }
                 };
