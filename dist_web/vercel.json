@@ -58,6 +58,14 @@
       "destination": "/api/eduardo.js?action=moveInstagramLeadToWhatsApp"
     },
     {
+      "source": "/api/rodrigo/find-instagram",
+      "destination": "/api/rodrigo.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/rodrigo/move-to-whatsapp",
+      "destination": "/api/rodrigo.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
       "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos).*)",
       "destination": "/index.html"
     }
