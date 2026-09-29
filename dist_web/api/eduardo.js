@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/EDUARDO (ES Module)
 // ENDPOINT EXCLUSIVO E BLINDADO DO VENDEDOR EDUARDO
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
@@ -12,44 +12,67 @@ const SELLER_CREDENTIALS = { email: 'eduardo@piffpaff.com.br', password: 'Eduard
 // Leads oficiais do funil de Instagram Direct do EDUARDO no CRM
 const DEFAULT_INSTAGRAM_LEADS_EDUARDO = [
   {
-    id: 'CRM-EDU-0001',
-    name: 'Camila Vasconcelos',
-    phone: '11998887711',
-    instagram: 'camilavasconcelos_arq',
-    city: 'São Paulo - SP',
-    stage: 'novo',
-    stage_label: 'Novo Lead',
-    channel: 'instagram',
-    pipeline: 'instagram',
-    value: 48000,
-    temperature: 'quente',
-    priority: 'ALTA',
-    commercial_line: 'Linha Premium',
-    followup_status: 'Próximo Contato (Amanhã)',
-    followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    last_interaction: new Date().toISOString(),
-    notes: '[Direct Instagram] Olá EDUARDO! Adorei a chaise Tulum. Vocês fabricam com corda terracota?',
-    user_id: SELLER_USER_ID
-  },
-  {
-    id: 'CRM-EDU-0002',
-    name: 'Marcos Vinícius Prado',
-    phone: '19987776622',
-    instagram: 'marcosprado_design',
-    city: 'Campinas - SP',
+    id: 'CRM-EDU-INSTA-001',
+    name: 'PatrÃ­cia Prado Arquitetura',
+    phone: '',
+    instagram: 'patriciaprado.arq',
+    city: 'Curitiba - PR',
     stage: 'conversa',
     stage_label: 'Em Conversa',
     channel: 'instagram',
     pipeline: 'instagram',
-    value: 72000,
+    value: 58000,
     temperature: 'quente',
-    priority: 'MAXIMA',
-    commercial_line: 'Linha Internacional',
-    followup_status: 'Agendado (12/09/2026)',
+    priority: 'ALTA',
+    commercial_line: 'Linha Premium Corda NÃ¡utica',
+    followup_status: 'PrÃ³ximo Contato (AmanhÃ£)',
     followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     last_interaction: new Date().toISOString(),
-    notes: '[Direct Instagram] Marcos: Olá! Preciso de 4 espreguiçadeiras e mesa de centro para cliente.',
-    user_id: SELLER_USER_ID
+    notes: '[Direct Instagram] OlÃ¡ Eduardo! Estou projetando uma varanda gourmet em Curitiba e preciso de catÃ¡logo das chaises e poltronas.',
+    user_id: SELLER_USER_ID,
+    vendedor_id: 'eduardo'
+  },
+  {
+    id: 'CRM-EDU-INSTA-002',
+    name: 'Lucas BrandÃ£o Designer',
+    phone: '',
+    instagram: 'lucasbrandaodesign',
+    city: 'Londrina - PR',
+    stage: 'novo',
+    stage_label: 'Novo Lead',
+    channel: 'instagram',
+    pipeline: 'instagram',
+    value: 42000,
+    temperature: 'morno',
+    priority: 'MEDIA',
+    commercial_line: 'Linha AlumÃ­nio & Madeira',
+    followup_status: 'PrÃ³ximo Contato (AmanhÃ£)',
+    followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    last_interaction: new Date().toISOString(),
+    notes: '[Direct Instagram] Boa tarde Eduardo, vi a publicaÃ§Ã£o da mesa IlhÃ©us. VocÃªs entregam no norte do ParanÃ¡?',
+    user_id: SELLER_USER_ID,
+    vendedor_id: 'eduardo'
+  },
+  {
+    id: 'CRM-EDU-INSTA-003',
+    name: 'Mariana Vecchi Interiores',
+    phone: '',
+    instagram: 'marianavecchi.interiores',
+    city: 'MaringÃ¡ - PR',
+    stage: 'abordagem',
+    stage_label: 'Abordagem Inicial',
+    channel: 'instagram',
+    pipeline: 'instagram',
+    value: 64000,
+    temperature: 'quente',
+    priority: 'ALTA',
+    commercial_line: 'Linha Internacional',
+    followup_status: 'Data Agendada com Cliente',
+    followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    last_interaction: new Date().toISOString(),
+    notes: '[Direct Instagram] Oi Eduardo! Cliente pediu orÃ§amento para conjunto de espreguiÃ§adeiras e ombrelone para piscina aquecida.',
+    user_id: SELLER_USER_ID,
+    vendedor_id: 'eduardo'
   }
 ];
 
