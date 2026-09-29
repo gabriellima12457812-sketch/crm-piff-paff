@@ -10,16 +10,12 @@
       "destination": "/pasta_digital.html"
     },
     {
-      "source": "/contracts",
-      "destination": "/contracts.html"
-    },
-    {
       "source": "/pedidos",
-      "destination": "/contracts.html"
+      "destination": "/contracts"
     },
     {
       "source": "/gerador-pedidos",
-      "destination": "/contracts.html"
+      "destination": "/contracts"
     },
     {
       "source": "/atendimento",
