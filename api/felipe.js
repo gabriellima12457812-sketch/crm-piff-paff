@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/felipe (ES Module)
 // ENDPOINT EXCLUSIVO E BLINDADO DO VENDEDOR FELIPE
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
@@ -12,11 +12,11 @@ const SELLER_CREDENTIALS = { email: 'felipe@piffpaff.com.br', password: 'Felipe@
 // Leads oficiais do funil de Instagram Direct do Felipe no CRM
 const DEFAULT_INSTAGRAM_LEADS_FELIPE = [
   {
-    id: 'CRM-FEL-0001',
+    id: 'CRM-FEL-INSTA-001',
     name: 'Camila Vasconcelos',
-    phone: '11998887711',
+    phone: '',
     instagram: 'camilavasconcelos_arq',
-    city: 'São Paulo - SP',
+    city: 'SÃ£o Paulo - SP',
     stage: 'novo',
     stage_label: 'Novo Lead',
     channel: 'instagram',
@@ -25,16 +25,17 @@ const DEFAULT_INSTAGRAM_LEADS_FELIPE = [
     temperature: 'quente',
     priority: 'ALTA',
     commercial_line: 'Linha Premium',
-    followup_status: 'Próximo Contato (Amanhã)',
+    followup_status: 'PrÃ³ximo Contato (AmanhÃ£)',
     followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     last_interaction: new Date().toISOString(),
-    notes: '[Direct Instagram] Olá Felipe! Adorei a chaise Tulum. Vocês fabricam com corda terracota?',
-    user_id: SELLER_USER_ID
+    notes: '[Direct Instagram] OlÃ¡ Felipe! Adorei a chaise Tulum. VocÃªs fabricam com corda terracota?',
+    user_id: SELLER_USER_ID,
+    vendedor_id: 'felipe'
   },
   {
-    id: 'CRM-FEL-0002',
-    name: 'Marcos Vinícius Prado',
-    phone: '19987776622',
+    id: 'CRM-FEL-INSTA-002',
+    name: 'Marcos VinÃ­cius Prado',
+    phone: '',
     instagram: 'marcosprado_design',
     city: 'Campinas - SP',
     stage: 'conversa',
@@ -45,11 +46,12 @@ const DEFAULT_INSTAGRAM_LEADS_FELIPE = [
     temperature: 'quente',
     priority: 'MAXIMA',
     commercial_line: 'Linha Internacional',
-    followup_status: 'Agendado (12/09/2026)',
+    followup_status: 'Data Agendada com Cliente',
     followup_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     last_interaction: new Date().toISOString(),
-    notes: '[Direct Instagram] Marcos: Olá! Preciso de 4 espreguiçadeiras e mesa de centro para cliente.',
-    user_id: SELLER_USER_ID
+    notes: '[Direct Instagram] Marcos: OlÃ¡! Preciso de 4 espreguiÃ§adeiras e mesa de centro para cliente.',
+    user_id: SELLER_USER_ID,
+    vendedor_id: 'felipe'
   }
 ];
 
@@ -318,8 +320,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://hqqzumdscdjleaedguzh.supabase.co').replace(/\/$/, '');
-    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://ukuaujxvdziiaxxuuidw.supabase.co').replace(/\/$/, '');
+    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
     const authToken = await getAuthToken(supabaseUrl, publishableKey);
 
     const supabaseHeaders = {
