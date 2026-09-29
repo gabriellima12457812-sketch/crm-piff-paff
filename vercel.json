@@ -1,4 +1,4 @@
-{
+﻿{
   "rewrites": [
     {
       "source": "/",
@@ -9,12 +9,60 @@
       "destination": "/pasta_digital.html"
     },
     {
+      "source": "/contracts",
+      "destination": "/contracts.html"
+    },
+    {
+      "source": "/pedidos",
+      "destination": "/contracts.html"
+    },
+    {
+      "source": "/gerador-pedidos",
+      "destination": "/contracts.html"
+    },
+    {
       "source": "/atendimento",
       "destination": "/atendimento.html"
     },
     {
       "source": "/qualificacao",
       "destination": "/atendimento.html"
+    },
+    {
+      "source": "/api/felipe/find-instagram",
+      "destination": "/api/felipe.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/felipe/move-to-whatsapp",
+      "destination": "/api/felipe.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/api/gabriel/find-instagram",
+      "destination": "/api/gabriel.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/gabriel/move-to-whatsapp",
+      "destination": "/api/gabriel.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/api/mayara/find-instagram",
+      "destination": "/api/mayara.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/mayara/move-to-whatsapp",
+      "destination": "/api/mayara.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/api/eduardo/find-instagram",
+      "destination": "/api/eduardo.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/eduardo/move-to-whatsapp",
+      "destination": "/api/eduardo.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
