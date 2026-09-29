@@ -33,6 +33,13 @@ const SELLERS = {
     name: 'Eduardo',
     leadPrefix: 'CRM-EDU-WA',
     origem: 'WhatsApp Eduardo'
+  },
+  rodrigo: {
+    user_id: 'e5555555-5555-5555-5555-555555555555',
+    vendedor_id: 'rodrigo',
+    name: 'Rodrigo',
+    leadPrefix: 'CRM-ROD-WA',
+    origem: 'WhatsApp Rodrigo'
   }
 };
 
