@@ -96,14 +96,8 @@ export default async function handler(req, res) {
     const evoData = Array.isArray(body.data) ? body.data[0] : (body.data || body);
     const key = evoData?.key || {};
 
-    // 1.1 Filtrar mensagens enviadas pelo próprio usuário (fromMe)
-    if (key.fromMe === true && !body.force) {
-      return res.status(200).json({
-        success: true,
-        ignored: true,
-        reason: 'Mensagem enviada pelo próprio vendedor (fromMe)'
-      });
-    }
+    // 1.1 Identificação de Direção da Mensagem: Enviada pelo Vendedor (fromMe = true) vs Recebida do Cliente (fromMe = false)
+    const isFromMe = Boolean(key.fromMe === true || body.fromMe === true);
 
     // 1.2 Filtrar mensagens de grupos (@g.us) e status broadcast
     const rawJid = key.remoteJid || evoData?.remoteJid || body.remoteJid || '';
@@ -145,10 +139,22 @@ export default async function handler(req, res) {
       '';
 
     if (!extractedText) {
-      if (messageObj.audioMessage) extractedText = '[Áudio recebido do cliente]';
-      else if (messageObj.stickerMessage) extractedText = '[Figurinha enviada pelo cliente]';
-      else if (messageObj.locationMessage) extractedText = '[Localização compartilhada pelo cliente]';
-      else if (messageObj.contactMessage) extractedText = '[Contato compartilhado pelo cliente]';
+      if (messageObj.audioMessage) {
+        extractedText = isFromMe ? `[Áudio enviado por ${seller.name}]` : '[Áudio recebido do cliente]';
+      } else if (messageObj.imageMessage) {
+        extractedText = isFromMe ? `[Foto enviada por ${seller.name}]` : '[Foto recebida do cliente]';
+      } else if (messageObj.videoMessage) {
+        extractedText = isFromMe ? `[Vídeo enviado por ${seller.name}]` : '[Vídeo recebido do cliente]';
+      } else if (messageObj.documentMessage) {
+        const docName = messageObj.documentMessage.fileName || 'arquivo';
+        extractedText = isFromMe ? `[Documento enviado por ${seller.name}: ${docName}]` : `[Documento recebido do cliente: ${docName}]`;
+      } else if (messageObj.stickerMessage) {
+        extractedText = isFromMe ? `[Figurinha enviada por ${seller.name}]` : '[Figurinha enviada pelo cliente]';
+      } else if (messageObj.locationMessage) {
+        extractedText = isFromMe ? `[Localização compartilhada por ${seller.name}]` : '[Localização compartilhada pelo cliente]';
+      } else if (messageObj.contactMessage) {
+        extractedText = isFromMe ? `[Contato compartilhado por ${seller.name}]` : '[Contato compartilhado pelo cliente]';
+      }
     }
 
     // 1.5 Extração de Telefone
@@ -170,24 +176,28 @@ export default async function handler(req, res) {
       body.nome ||
       body.client ||
       body.name ||
-      pushName ||
+      (!isFromMe ? pushName : '') ||
       `Lead WhatsApp ${phoneDigits.slice(-4)}`
     ).toString().trim();
 
-    // 1.7 Resumo e Intenção Comercial
+    // 1.7 Resumo e Intenção Comercial (Bidirecional)
+    const messageDirectionLabel = isFromMe
+      ? `Mensagem Enviada (${seller.name} ➡️ Cliente)`
+      : `Mensagem Recebida (Cliente ➡️ ${seller.name})`;
+
     const interactionSummary = (
       body.resumo_interacao ||
       body.summary ||
       body.resumo ||
       extractedText ||
-      'Mensagem recebida no WhatsApp'
+      (isFromMe ? 'Mensagem enviada no WhatsApp' : 'Mensagem recebida no WhatsApp')
     ).toString().trim();
 
     const clientIntent = (
       body.intencao ||
       body.intent ||
       body.predominant_emotion ||
-      (extractedText ? `Mensagem: ${extractedText.slice(0, 100)}` : 'Interesse em Mobiliário de Alto Padrão')
+      (isFromMe ? 'Acompanhamento do Vendedor' : (extractedText ? `Mensagem: ${extractedText.slice(0, 100)}` : 'Interesse em Mobiliário de Alto Padrão'))
     ).toString().trim();
 
     // =======================================================================
@@ -254,7 +264,7 @@ export default async function handler(req, res) {
       // 4. INSERT COM ID DETERMINÍSTICO (PREVINE DUPLICATAS POR RACE CONDITION)
       // =======================================================================
       const newLeadId = `${seller.leadPrefix}-${phoneDigits}`;
-      const logNote = `[${nowBR} - WhatsApp (${seller.name})]: ${interactionSummary}${clientIntent ? ` (Intenção: ${clientIntent})` : ''}`;
+      const logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
 
       const newLeadPayload = {
         id: newLeadId,
@@ -329,8 +339,14 @@ export default async function handler(req, res) {
       // 5. UPDATE DE LEAD EXISTENTE (PRESERVA BANCO PRINCIPAL E HISTÓRICO)
       // =======================================================================
       const targetId = existingLead.id;
-      const logNote = `\n\n[${nowBR} - Nova Mensagem WhatsApp (${seller.name})]: ${interactionSummary}${clientIntent ? ` (Intenção: ${clientIntent})` : ''}`;
-      const updatedNotes = (existingLead.notes || '') + logNote;
+      const logNote = `\n\n[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
+      
+      const previousNotes = existingLead.notes || '';
+      let updatedNotes = previousNotes;
+      const snippetToCheck = `]: ${interactionSummary}`.trim();
+      if (!previousNotes.includes(snippetToCheck) || interactionSummary.length < 5) {
+        updatedNotes = previousNotes ? `${previousNotes}${logNote}` : logNote.trim();
+      }
 
       const updatePayload = {
         categoria: 1, // Garante que pertence ao Banco Principal
@@ -383,10 +399,10 @@ export default async function handler(req, res) {
       const historicoPayload = {
         lead_id: finalLead ? finalLead.id : null,
         telefone: phoneDigits,
-        nome_cliente: clientName,
-        resumo_interacao: interactionSummary,
+        nome_cliente: finalLead ? finalLead.name : clientName,
+        resumo_interacao: `[${isFromMe ? `${seller.name} ➡️ Cliente` : `Cliente ➡️ ${seller.name}`}] ${interactionSummary}`,
         intencao: clientIntent,
-        origem: seller.origem,
+        origem: isFromMe ? `WhatsApp Enviado (${seller.name})` : seller.origem,
         vendedor_id: seller.vendedor_id,
         user_id: seller.user_id,
         created_at: nowISO
@@ -419,7 +435,9 @@ export default async function handler(req, res) {
               topic: 'piffpaff-crm-broadcast',
               event: 'crm_event',
               payload: {
-                type: 'lead_whatsapp_incoming',
+                type: 'lead_whatsapp_interaction',
+                isFromMe: isFromMe,
+                direction: isFromMe ? 'outbound' : 'inbound',
                 action: resultAction,
                 sellerUserId: seller.user_id,
                 seller: seller.vendedor_id,
