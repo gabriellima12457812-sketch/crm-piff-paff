@@ -4028,9 +4028,14 @@
         }
       } else if (event.type === 'lead_transferred' && event.lead) {
         handleRealtimeUpdate(event.lead);
-      } else if (event.type === 'lead_whatsapp_incoming' && event.lead) {
-        const isGabriel = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel') || authUser.id === 'a1111111-1111-1111-1111-111111111111';
-        if (isGabriel) {
+      } else if ((event.type === 'lead_whatsapp_incoming' || event.type === 'lead_whatsapp_interaction') && event.lead) {
+        const currentSellerKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+        const targetSellerKey = event.seller || (event.lead.vendedor_id) || 'gabriel';
+        const currentUserId = authUser ? authUser.id : 'a1111111-1111-1111-1111-111111111111';
+        const targetUserId = event.sellerUserId || event.lead.user_id;
+
+        const isSameSeller = (currentSellerKey === targetSellerKey) || (targetUserId && currentUserId === targetUserId) || (!authUser);
+        if (isSameSeller) {
           if (event.action === 'inserted') {
             handleRealtimeInsert(event.lead);
           } else {
