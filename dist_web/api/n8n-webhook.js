@@ -1,7 +1,7 @@
 // ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/n8n-webhook (ES Module)
 // WEBHOOK DIRETO MULTI-VENDEDOR (EVOLUTION API NATIVA + N8N + SUPABASE REALTIME)
-// Suporta: Gabriel Lima, Felipe, Mayara e Eduardo
+// Suporta: Gabriel Lima, Felipe, Mayara, Eduardo e Rodrigo
 // ==============================================================================
 
 // Mapeamento Oficial de Vendedores no Supabase CRM
@@ -65,6 +65,26 @@ function normalizePhoneVariants(raw) {
   return Array.from(variants);
 }
 
+// Trava anti-duplicação inteligente para notas do lead
+function isDuplicateNote(existingNotes, newText) {
+  if (!existingNotes || !newText) return false;
+  const normalize = (str) =>
+    String(str)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+
+  const normNew = normalize(newText);
+  if (!normNew || normNew.length < 2) return false;
+
+  // Analisa as notas recentes (últimos 1000 caracteres)
+  const recentSlice = existingNotes.slice(-1000);
+  const normRecent = normalize(recentSlice);
+
+  return normRecent.includes(normNew);
+}
+
 export default async function handler(req, res) {
   // Configuração Global de CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -116,7 +136,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 1.3 Identificação do Vendedor de Destino (Gabriel, Felipe, Mayara ou Eduardo)
+    // 1.3 Identificação do Vendedor de Destino (Gabriel, Felipe, Mayara, Eduardo ou Rodrigo)
     const rawSeller = (
       body.vendedor_id ||
       body.vendedor ||
@@ -133,6 +153,8 @@ export default async function handler(req, res) {
       seller = SELLERS.mayara;
     } else if (rawSeller.includes('felipe')) {
       seller = SELLERS.felipe;
+    } else if (rawSeller.includes('rodrigo')) {
+      seller = SELLERS.rodrigo;
     }
 
     // 1.4 Extração de Texto da Mensagem (suporta todos os formatos WhatsApp)
@@ -162,6 +184,15 @@ export default async function handler(req, res) {
       } else if (messageObj.contactMessage) {
         extractedText = isFromMe ? `[Contato compartilhado por ${seller.name}]` : '[Contato compartilhado pelo cliente]';
       }
+    }
+
+    // Filtra eventos que não têm texto, nem mídia, nem resumo pré-computado (ex: recibos de entrega, status updates)
+    if (!extractedText && !body.resumo_interacao && !body.summary && !body.resumo) {
+      return res.status(200).json({
+        success: true,
+        ignored: true,
+        reason: 'Evento de WhatsApp sem mensagem de texto ou mídia detectada'
+      });
     }
 
     // 1.5 Extração de Telefone
@@ -265,13 +296,15 @@ export default async function handler(req, res) {
     const nowBR = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     let resultAction = '';
     let finalLead = null;
+    let isDup = false;
+    let logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
 
     if (!existingLead) {
       // =======================================================================
       // 4. INSERT COM ID DETERMINÍSTICO (PREVINE DUPLICATAS POR RACE CONDITION)
       // =======================================================================
       const newLeadId = `${seller.leadPrefix}-${phoneDigits}`;
-      const logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
+      logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
 
       const newLeadPayload = {
         id: newLeadId,
@@ -319,12 +352,24 @@ export default async function handler(req, res) {
       });
 
       if (!insertRes.ok) {
-        // Se falhou por conflito de chave primária (já inserido por webhook paralelo), faz PATCH
+        // Se falhou por conflito de chave primária (já inserido por webhook paralelo), faz PATCH com trava anti-duplicação
         const errText = await insertRes.text();
         console.warn('[Webhook] Insert inicial falhou (pode ser chave existente), tentando patch:', errText);
 
+        let currentNotes = '';
+        try {
+          const checkLeadRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(newLeadId)}&select=notes`, { headers: supabaseHeaders });
+          if (checkLeadRes.ok) {
+            const clData = await checkLeadRes.json();
+            currentNotes = clData?.[0]?.notes || '';
+          }
+        } catch (_) {}
+
+        isDup = isDuplicateNote(currentNotes, interactionSummary);
+        const finalPatchNotes = isDup ? currentNotes : (currentNotes ? `${currentNotes}\n\n${logNote}` : logNote);
+
         const safePatch = {
-          notes: logNote,
+          notes: finalPatchNotes,
           last_interaction: nowISO,
           data_ultima_interacao: nowISO,
           updated_at: nowISO
@@ -334,7 +379,7 @@ export default async function handler(req, res) {
           headers: supabaseHeaders,
           body: JSON.stringify(safePatch)
         });
-        finalLead = newLeadPayload;
+        finalLead = { ...newLeadPayload, notes: finalPatchNotes };
         resultAction = patchRes.ok ? 'updated' : 'inserted';
       } else {
         const inserted = await insertRes.json();
@@ -346,13 +391,16 @@ export default async function handler(req, res) {
       // 5. UPDATE DE LEAD EXISTENTE (PRESERVA BANCO PRINCIPAL E HISTÓRICO)
       // =======================================================================
       const targetId = existingLead.id;
-      const logNote = `\n\n[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
+      logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
+      const noteAppend = `\n\n${logNote}`;
       
       const previousNotes = existingLead.notes || '';
       let updatedNotes = previousNotes;
-      const snippetToCheck = `]: ${interactionSummary}`.trim();
-      if (!previousNotes.includes(snippetToCheck) || interactionSummary.length < 5) {
-        updatedNotes = previousNotes ? `${previousNotes}${logNote}` : logNote.trim();
+
+      // Trava anti-duplicação inteligente
+      isDup = isDuplicateNote(previousNotes, interactionSummary);
+      if (!isDup) {
+        updatedNotes = previousNotes ? `${previousNotes}${noteAppend}` : logNote;
       }
 
       const updatePayload = {
@@ -365,6 +413,11 @@ export default async function handler(req, res) {
         notes: updatedNotes,
         updated_at: nowISO
       };
+
+      // Atualiza intenção/emoção apenas se não for mensagem de saída do vendedor
+      if (clientIntent && !isFromMe) {
+        updatePayload.predominant_emotion = clientIntent;
+      }
 
       // Se o nome atual do lead for genérico e agora temos pushName do WhatsApp
       if (
@@ -400,26 +453,28 @@ export default async function handler(req, res) {
     }
 
     // =======================================================================
-    // 6. GRAVAR NA TABELA historico_interacoes
+    // 6. GRAVAR NA TABELA historico_interacoes (SE NÃO FOR DUPLICADO)
     // =======================================================================
     try {
-      const historicoPayload = {
-        lead_id: finalLead ? finalLead.id : null,
-        telefone: phoneDigits,
-        nome_cliente: finalLead ? finalLead.name : clientName,
-        resumo_interacao: `[${isFromMe ? `${seller.name} ➡️ Cliente` : `Cliente ➡️ ${seller.name}`}] ${interactionSummary}`,
-        intencao: clientIntent,
-        origem: isFromMe ? `WhatsApp Enviado (${seller.name})` : seller.origem,
-        vendedor_id: seller.vendedor_id,
-        user_id: seller.user_id,
-        created_at: nowISO
-      };
+      if (!isDup) {
+        const historicoPayload = {
+          lead_id: finalLead ? finalLead.id : null,
+          telefone: phoneDigits,
+          nome_cliente: finalLead ? finalLead.name : clientName,
+          resumo_interacao: `[${isFromMe ? `${seller.name} ➡️ Cliente` : `Cliente ➡️ ${seller.name}`}] ${interactionSummary}`,
+          intencao: clientIntent,
+          origem: isFromMe ? `WhatsApp Enviado (${seller.name})` : seller.origem,
+          vendedor_id: seller.vendedor_id,
+          user_id: seller.user_id,
+          created_at: nowISO
+        };
 
-      await fetch(`${supabaseUrl}/rest/v1/historico_interacoes`, {
-        method: 'POST',
-        headers: supabaseHeaders,
-        body: JSON.stringify(historicoPayload)
-      });
+        await fetch(`${supabaseUrl}/rest/v1/historico_interacoes`, {
+          method: 'POST',
+          headers: supabaseHeaders,
+          body: JSON.stringify(historicoPayload)
+        });
+      }
     } catch (errHist) {
       console.warn('[Webhook] Aviso ao gravar historico_interacoes:', errHist);
     }
@@ -444,11 +499,26 @@ export default async function handler(req, res) {
               payload: {
                 type: 'lead_whatsapp_interaction',
                 isFromMe: isFromMe,
+                fromMe: isFromMe,
                 direction: isFromMe ? 'outbound' : 'inbound',
+                direcao: isFromMe ? 'outbound' : 'inbound',
                 action: resultAction,
+                isDuplicate: isDup,
                 sellerUserId: seller.user_id,
                 seller: seller.vendedor_id,
-                lead: finalLead
+                lead: finalLead,
+                lead_id: finalLead ? finalLead.id : null,
+                nova_nota: isDup ? null : logNote
+              }
+            },
+            {
+              topic: 'piffpaff-crm-broadcast',
+              event: 'nova_interacao',
+              payload: {
+                lead_id: finalLead ? finalLead.id : null,
+                nova_nota: isDup ? null : logNote,
+                fromMe: isFromMe,
+                direcao: isFromMe ? 'outbound' : 'inbound'
               }
             }
           ]
@@ -464,6 +534,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       action: resultAction,
+      isDuplicate: isDup,
       vendedor: seller.name,
       vendedor_id: seller.vendedor_id,
       user_id: seller.user_id,
@@ -475,9 +546,11 @@ export default async function handler(req, res) {
         phone: finalLead ? finalLead.phone : phoneDigits,
         stage: finalLead ? (finalLead.stage || 'novos') : 'novos'
       },
-      message: resultAction === 'inserted'
-        ? `Lead "${clientName}" cadastrado no CRM de ${seller.name} via WhatsApp!`
-        : `Lead "${clientName}" atualizado no CRM de ${seller.name} via WhatsApp!`
+      message: isDup
+        ? `Interação já registrada recentemente para "${clientName}" (duplicata ignorada com sucesso).`
+        : (resultAction === 'inserted'
+          ? `Lead "${clientName}" cadastrado no CRM de ${seller.name} via WhatsApp!`
+          : `Lead "${clientName}" atualizado no CRM de ${seller.name} via WhatsApp!`)
     });
 
   } catch (error) {
