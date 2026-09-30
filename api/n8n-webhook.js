@@ -85,6 +85,135 @@ function isDuplicateNote(existingNotes, newText) {
   return normRecent.includes(normNew);
 }
 
+// ==============================================================================
+// PARSER INTELIGENTE DE VALORES MONETÁRIOS (WhatsApp Piff Paff)
+// Suporta: R$ 15.000, R$ 15.000,00, 18 mil, 25k, 10x de 1.500, etc.
+// ==============================================================================
+function extractMonetaryValue(text) {
+  if (!text || typeof text !== 'string') return 0;
+  const clean = text.replace(/\s+/g, ' ');
+
+  // 1. Padrão Parcelado: ex "10x de 1.500", "12x de R$ 1.250", "10x 1800"
+  const parcelMatch = clean.match(/(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)/i);
+  if (parcelMatch) {
+    const qtdParcelas = parseInt(parcelMatch[1], 10);
+    const valorParcelaStr = parcelMatch[2].replace(/\./g, '').replace(',', '.');
+    const valorParcela = parseFloat(valorParcelaStr);
+    if (!isNaN(valorParcela) && qtdParcelas > 1 && qtdParcelas <= 24) {
+      const total = qtdParcelas * valorParcela;
+      if (total >= 500 && total <= 2000000) {
+        return Math.round(total * 100) / 100;
+      }
+    }
+  }
+
+  // 2. Padrão Abreviado com 'mil' ou 'k': ex "15 mil", "18,5 mil", "25k", "180 mil"
+  const milMatch = clean.match(/(\d+(?:[.,]\d+)?)\s*(?:mil|k)\b/i);
+  if (milMatch) {
+    const num = parseFloat(milMatch[1].replace(',', '.'));
+    if (!isNaN(num) && num > 0) {
+      const total = num * 1000;
+      if (total >= 500 && total <= 2000000) {
+        return Math.round(total * 100) / 100;
+      }
+    }
+  }
+
+  // 3. Padrão Direto em R$: ex "R$ 15.000,00", "R$ 15.000", "R$18500", "R$ 8.900"
+  const rsMatch = clean.match(/R\$\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)/i);
+  if (rsMatch) {
+    const numStr = rsMatch[1].replace(/\./g, '').replace(',', '.');
+    const total = parseFloat(numStr);
+    if (!isNaN(total) && total >= 500 && total <= 2000000) {
+      return Math.round(total * 100) / 100;
+    }
+  }
+
+  // 4. Padrão Contextual: ex "valor de 15000", "orçamento 25.000", "total de 18.000", "fecho por 14000"
+  const contextMatch = clean.match(/(?:valor|or[çc]amento|pre[çc]o|total|fecho por|fica em|fica por)\s*(?:de|em)?\s*(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d{4,6})/i);
+  if (contextMatch) {
+    const numStr = contextMatch[1].replace(/\./g, '').replace(',', '.');
+    const total = parseFloat(numStr);
+    if (!isNaN(total) && total >= 500 && total <= 2000000) {
+      return Math.round(total * 100) / 100;
+    }
+  }
+
+  return 0;
+}
+
+// ==============================================================================
+// RECONHECIMENTO AUTOMÁTICO DE PIPELINE & ETAPA KANBAN
+// Estágios: novos -> investigacao -> projetos -> proposta -> fechamento -> concluidas
+// ==============================================================================
+const STAGE_RANKS = {
+  novos: 1,
+  investigacao: 2,
+  projetos: 3,
+  proposta: 4,
+  fechamento: 5,
+  concluidas: 6
+};
+
+function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
+  const lower = (text || '').toLowerCase();
+  let candidate = null;
+
+  // 1. Fechamento
+  if (/pix|sinal|fechar|fechado|fechamos|contrato|comprovante|dados\s*banc[áa]rios|transfer[êe]ncia|endere[çc]o\s*para\s*entrega|cpf\s*(?:para|p\/)?\s*nota|entrada\s*de/i.test(lower)) {
+    candidate = {
+      stage: 'fechamento',
+      etapa_kanban: 'Fechamento',
+      temperature: 'quente',
+      commercial_moment: 'fechamento',
+      priority: 'MAXIMA',
+      advance_probability: 'alta',
+      desired_micro_advance: 'Envio do comprovante de sinal do Pix / emissão de pedido.',
+      next_best_action: 'Formalizar proposta comercial no WhatsApp com link de pagamento e prazo.'
+    };
+  }
+  // 2. Proposta (valores mencionados, orçamentos, condições comerciais)
+  else if (
+    detectedValue > 0 ||
+    /proposta|or[çc]amento|tabela|desconto|condi[çc][õo]es|parcela|parcelamento|\b\d{1,2}x\b|[àa]\s*vista|frete\s*(?:incluso|gr[áa]tis)|pre[çc]o|valor/i.test(lower)
+  ) {
+    candidate = {
+      stage: 'proposta',
+      etapa_kanban: 'Proposta',
+      temperature: 'quente',
+      commercial_moment: 'proposta',
+      priority: detectedValue >= 30000 ? 'MAXIMA' : 'ALTA',
+      advance_probability: 'alta',
+      desired_micro_advance: 'Definição da forma de pagamento e validação do orçamento.',
+      next_best_action: 'Apresentar condições comerciais consultivas e conduzir para o fechamento.'
+    };
+  }
+  // 3. Projetos / Investigação
+  else if (/planta|projeto|layout|medidas|arquiteto|decorador|amostra\s*de|corda\s*n[áa]utica|tecido|3d|ambientes|varanda|[áa]rea\s*externa/i.test(lower)) {
+    candidate = {
+      stage: 'projetos',
+      etapa_kanban: 'Projetos',
+      temperature: 'quente',
+      commercial_moment: 'decisao',
+      priority: 'ALTA',
+      advance_probability: 'media',
+      desired_micro_advance: 'Aprovação das medidas e escolha dos acabamentos.',
+      next_best_action: 'Validar projeto e medidas com o cliente/arquiteto.'
+    };
+  }
+
+  // Regra de Unidirecionalidade: se o lead já está em estágio superior, preserva o estágio atual
+  const currentRank = STAGE_RANKS[(currentStage || 'novos').toLowerCase()] || 1;
+  if (candidate) {
+    const candidateRank = STAGE_RANKS[candidate.stage] || 1;
+    if (candidateRank > currentRank) {
+      return candidate;
+    }
+  }
+
+  return null; // Mantém estágio atual
+}
+
 export default async function handler(req, res) {
   // Configuração Global de CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -299,12 +428,28 @@ export default async function handler(req, res) {
     let isDup = false;
     let logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
 
+    // =======================================================================
+    // 3.1 EXTRAÇÃO SEMÂNTICA DE VALORES E INFERÊNCIA DE PIPELINE
+    // =======================================================================
+    const textToAnalyze = `${extractedText} ${interactionSummary}`.trim();
+    const detectedValue = extractMonetaryValue(textToAnalyze);
+    const currentLeadStage = existingLead ? (existingLead.stage || existingLead.etapa_kanban || 'novos') : 'novos';
+    const pipelineInference = inferPipelineStage(textToAnalyze, currentLeadStage, detectedValue);
+
     if (!existingLead) {
       // =======================================================================
       // 4. INSERT COM ID DETERMINÍSTICO (PREVINE DUPLICATAS POR RACE CONDITION)
       // =======================================================================
       const newLeadId = `${seller.leadPrefix}-${phoneDigits}`;
       logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
+
+      const initialStage = pipelineInference ? pipelineInference.stage : 'novos';
+      const initialEtapa = pipelineInference ? pipelineInference.etapa_kanban : 'Novos';
+      const initialTemp = pipelineInference ? pipelineInference.temperature : 'morno';
+      const initialMoment = pipelineInference ? pipelineInference.commercial_moment : 'pesquisa';
+      const initialPrio = pipelineInference ? pipelineInference.priority : 'ALTA';
+      const initialAction = pipelineInference ? pipelineInference.next_best_action : 'Apresentar catálogo e validar necessidade atual.';
+      const initialAdvance = pipelineInference ? pipelineInference.desired_micro_advance : 'Identificar ambientes da casa e estilo desejado.';
 
       const newLeadPayload = {
         id: newLeadId,
@@ -314,28 +459,28 @@ export default async function handler(req, res) {
         email: null,
         city: 'Brasil',
         categoria: 1, // Regra: Categoria 1 = Banco Principal
-        stage: 'novos', // Estágio técnico do Kanban
-        etapa_kanban: 'Novos', // Estágio textual
+        stage: initialStage, // Estágio técnico do Kanban
+        etapa_kanban: initialEtapa, // Estágio textual
         origem: seller.origem,
         channel: 'whatsapp',
         pipeline: 'whatsapp',
         vendedor_id: seller.vendedor_id,
         user_id: seller.user_id,
-        value: 0,
-        temperature: 'morno',
-        commercial_moment: 'pesquisa',
+        value: detectedValue,
+        temperature: initialTemp,
+        commercial_moment: initialMoment,
         predominant_emotion: clientIntent,
         behavioral_profile: 'Consumidor Residencial Alto Padrão',
-        buying_signals: `Interação capturada via WhatsApp: ${interactionSummary}`,
+        buying_signals: `Interação capturada via WhatsApp: ${interactionSummary}${detectedValue > 0 ? ` (Valor negociado: R$ ${detectedValue.toLocaleString('pt-BR')})` : ''}`,
         main_objection: 'Definição de modelos e medidas',
         gabriel_percentage: seller.vendedor_id === 'gabriel' ? 100 : 0,
         jhennifer_percentage: 0,
-        strategic_reading: `Lead recente capturado via WhatsApp (${seller.name}). Responder com abordagem consultiva.`,
-        next_best_action: 'Apresentar catálogo e validar necessidade atual.',
-        desired_micro_advance: 'Identificar ambientes da casa e estilo desejado.',
+        strategic_reading: pipelineInference ? `Lead em momento de ${initialEtapa} (${seller.name}). Conduzir negociação comercial.` : `Lead recente capturado via WhatsApp (${seller.name}). Responder com abordagem consultiva.`,
+        next_best_action: initialAction,
+        desired_micro_advance: initialAdvance,
         what_not_to_do: 'Não enviar tabela de preços fria sem contextualizar o produto.',
-        advance_probability: 'media',
-        priority: 'ALTA',
+        advance_probability: pipelineInference ? pipelineInference.advance_probability : 'media',
+        priority: initialPrio,
         commercial_line: 'Linha Premium',
         notes: logNote,
         last_interaction: nowISO,
@@ -414,6 +559,27 @@ export default async function handler(req, res) {
         updated_at: nowISO
       };
 
+      // Atualização Inteligente de Valor Monetário Negociado
+      if (detectedValue > 0) {
+        const existingVal = parseFloat(existingLead.value) || 0;
+        if (existingVal === 0 || detectedValue > existingVal) {
+          updatePayload.value = detectedValue;
+        }
+      }
+
+      // Reconhecimento Automático de Avanço do Pipeline
+      if (pipelineInference) {
+        updatePayload.stage = pipelineInference.stage;
+        updatePayload.etapa_kanban = pipelineInference.etapa_kanban;
+        updatePayload.temperature = pipelineInference.temperature;
+        updatePayload.commercial_moment = pipelineInference.commercial_moment;
+        updatePayload.priority = pipelineInference.priority;
+        updatePayload.advance_probability = pipelineInference.advance_probability;
+        updatePayload.next_best_action = pipelineInference.next_best_action;
+        updatePayload.desired_micro_advance = pipelineInference.desired_micro_advance;
+        updatePayload.strategic_reading = `Negociação ativa em ${pipelineInference.etapa_kanban} (${seller.name}).`;
+      }
+
       // Atualiza intenção/emoção apenas se não for mensagem de saída do vendedor
       if (clientIntent && !isFromMe) {
         updatePayload.predominant_emotion = clientIntent;
@@ -441,6 +607,9 @@ export default async function handler(req, res) {
           last_interaction: nowISO,
           updated_at: nowISO
         };
+        if (updatePayload.value) safeUpdate.value = updatePayload.value;
+        if (updatePayload.stage) safeUpdate.stage = updatePayload.stage;
+        if (updatePayload.etapa_kanban) safeUpdate.etapa_kanban = updatePayload.etapa_kanban;
         await fetch(updateUrl, {
           method: 'PATCH',
           headers: supabaseHeaders,
