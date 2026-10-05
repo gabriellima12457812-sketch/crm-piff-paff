@@ -2489,7 +2489,7 @@
           </div>
           <div>
             <label class="block font-bold text-slate-300 uppercase mb-1">URL da Evolution API (Servidor WhatsApp):</label>
-            <input id="cfg-evolution-url" type="url" value="http://localhost:8080" placeholder="http://localhost:8080" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
+            <input id="cfg-evolution-url" type="url" value="https://piffpaff-evolution-api.onrender.com" placeholder="https://piffpaff-evolution-api.onrender.com" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-[#00D2D3]">
           </div>
         </div>
 
@@ -10849,7 +10849,12 @@
       let waCountdownSeconds = 25;
 
       function getEvolutionApiUrl() {
-        return (localStorage.getItem('piffpaff_evolution_url') || document.getElementById('cfg-evolution-url')?.value || 'http://localhost:8080').replace(/\/+$/, '');
+        const stored = localStorage.getItem('piffpaff_evolution_url');
+        if (!stored || stored.includes('localhost:8080')) {
+          localStorage.setItem('piffpaff_evolution_url', 'https://piffpaff-evolution-api.onrender.com');
+          return 'https://piffpaff-evolution-api.onrender.com';
+        }
+        return (stored || document.getElementById('cfg-evolution-url')?.value || 'https://piffpaff-evolution-api.onrender.com').replace(/\/+$/, '');
       }
 
       function getEvolutionApiKey() {
