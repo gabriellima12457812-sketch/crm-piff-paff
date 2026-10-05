@@ -93,12 +93,39 @@ function extractMonetaryValue(text) {
   if (!text || typeof text !== 'string') return 0;
   const clean = text.replace(/\s+/g, ' ');
 
+  const parseAmount = (numStr, suffix) => {
+    if (!numStr) return 0;
+    const cleaned = numStr.replace(/\./g, '').replace(',', '.');
+    let val = parseFloat(cleaned);
+    if (isNaN(val)) return 0;
+    if (suffix && /mil|k/i.test(suffix)) val = val * 1000;
+    return val;
+  };
+
+  // 0. Padrão "DE X POR Y" (Preço Promocional / Desconto Comercial - O valor REAL é a oferta final "POR Y")
+  // 0.1 De X por Nx de Y (parcelado no desconto, ex: "De 3.600 por 10x de 250")
+  const dePorParcel = clean.match(/(?:de|era|tabela(?:\s*de)?)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(?:mil|k)?.*?(?:por|sai\s*por|fa[çc]o\s*por|fecho\s*por|fica\s*por|consigo\s*(?:fazer\s*)?por|deixo\s*por)\s*(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
+  if (dePorParcel) {
+    const parcelas = parseInt(dePorParcel[2], 10);
+    const vParc = parseAmount(dePorParcel[3]);
+    if (parcelas > 1 && vParc > 0) {
+      const total = parcelas * vParc;
+      if (total >= 500 && total <= 2000000) return Math.round(total * 100) / 100;
+    }
+  }
+
+  // 0.2 De X por Y (direto à vista / proposta, ex: "De R$ 3.600,00 Por R$ 2.600,00", "de 3600 por 2500")
+  const dePorMatch = clean.match(/(?:de|era|tabela(?:\s*de)?)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?\s*(?:reais)?.*?(?:por|sai\s*por|fa[çc]o\s*por|fecho\s*por|fica\s*por|consigo\s*(?:fazer\s*)?por|deixo\s*por)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
+  if (dePorMatch) {
+    const finalVal = parseAmount(dePorMatch[3], dePorMatch[4]);
+    if (finalVal >= 500 && finalVal <= 2000000) return Math.round(finalVal * 100) / 100;
+  }
+
   // 1. Padrão Parcelado: ex "10x de 1.500", "12x de R$ 1.250", "10x 1800"
-  const parcelMatch = clean.match(/(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)/i);
+  const parcelMatch = clean.match(/(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
   if (parcelMatch) {
     const qtdParcelas = parseInt(parcelMatch[1], 10);
-    const valorParcelaStr = parcelMatch[2].replace(/\./g, '').replace(',', '.');
-    const valorParcela = parseFloat(valorParcelaStr);
+    const valorParcela = parseAmount(parcelMatch[2]);
     if (!isNaN(valorParcela) && qtdParcelas > 1 && qtdParcelas <= 24) {
       const total = qtdParcelas * valorParcela;
       if (total >= 500 && total <= 2000000) {
@@ -110,31 +137,26 @@ function extractMonetaryValue(text) {
   // 2. Padrão Abreviado com 'mil' ou 'k': ex "15 mil", "18,5 mil", "25k", "180 mil"
   const milMatch = clean.match(/(\d+(?:[.,]\d+)?)\s*(?:mil|k)\b/i);
   if (milMatch) {
-    const num = parseFloat(milMatch[1].replace(',', '.'));
-    if (!isNaN(num) && num > 0) {
-      const total = num * 1000;
-      if (total >= 500 && total <= 2000000) {
-        return Math.round(total * 100) / 100;
-      }
+    const total = parseAmount(milMatch[1], 'mil');
+    if (total >= 500 && total <= 2000000) {
+      return Math.round(total * 100) / 100;
     }
   }
 
   // 3. Padrão Direto em R$: ex "R$ 15.000,00", "R$ 15.000", "R$18500", "R$ 8.900"
-  const rsMatch = clean.match(/R\$\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)/i);
+  const rsMatch = clean.match(/R\$\s*(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
   if (rsMatch) {
-    const numStr = rsMatch[1].replace(/\./g, '').replace(',', '.');
-    const total = parseFloat(numStr);
-    if (!isNaN(total) && total >= 500 && total <= 2000000) {
+    const total = parseAmount(rsMatch[1]);
+    if (total >= 500 && total <= 2000000) {
       return Math.round(total * 100) / 100;
     }
   }
 
   // 4. Padrão Contextual: ex "valor de 15000", "orçamento 25.000", "total de 18.000", "fecho por 14000"
-  const contextMatch = clean.match(/(?:valor|or[çc]amento|pre[çc]o|total|fecho por|fica em|fica por)\s*(?:de|em)?\s*(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d{4,6})/i);
+  const contextMatch = clean.match(/(?:valor|or[çc]amento|pre[çc]o|total|fecho por|fica em|fica por)\s*(?:de|em)?\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d{4,6})/i);
   if (contextMatch) {
-    const numStr = contextMatch[1].replace(/\./g, '').replace(',', '.');
-    const total = parseFloat(numStr);
-    if (!isNaN(total) && total >= 500 && total <= 2000000) {
+    const total = parseAmount(contextMatch[1]);
+    if (total >= 500 && total <= 2000000) {
       return Math.round(total * 100) / 100;
     }
   }
@@ -562,7 +584,7 @@ export default async function handler(req, res) {
       // Atualização Inteligente de Valor Monetário Negociado
       if (detectedValue > 0) {
         const existingVal = parseFloat(existingLead.value) || 0;
-        if (existingVal === 0 || detectedValue > existingVal) {
+        if (existingVal === 0 || Math.abs(detectedValue - existingVal) > 0.01) {
           updatePayload.value = detectedValue;
         }
       }
