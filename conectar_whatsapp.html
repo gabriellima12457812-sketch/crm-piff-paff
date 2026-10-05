@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conectar WhatsApp — Piff Paff CRM (Nuvem)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#050B14] text-white min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-md w-full bg-[#0B1522] border border-white/10 rounded-2xl p-6 shadow-2xl text-center space-y-6">
+    <div class="space-y-1">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Servidor na Nuvem Ativo
+      </span>
+      <h1 class="text-xl font-bold text-white pt-2">Conectar WhatsApp Business</h1>
+      <p class="text-xs text-slate-400">Escaneie o código abaixo com o WhatsApp do vendedor</p>
+    </div>
+
+    <!-- Seletor de Vendedor -->
+    <div class="flex items-center justify-center gap-2">
+      <label class="text-xs text-slate-400 font-semibold uppercase">Vendedor:</label>
+      <select id="sel-seller" onchange="loadQrCode()" class="bg-[#121F30] border border-white/10 text-emerald-400 font-bold text-sm px-3 py-1.5 rounded-xl focus:outline-none">
+        <option value="gabriel" selected>Gabriel (47 99986-2448)</option>
+        <option value="rodrigo">Rodrigo</option>
+        <option value="mayara">Mayara</option>
+        <option value="felipe">Felipe</option>
+        <option value="eduardo">Eduardo</option>
+      </select>
+    </div>
+
+    <!-- Caixa do QR Code -->
+    <div class="relative bg-white p-4 rounded-2xl w-64 h-64 mx-auto flex items-center justify-center shadow-lg border-2 border-emerald-500/30">
+      <div id="loading" class="flex flex-col items-center gap-2 text-slate-700">
+        <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-xs font-semibold text-slate-500">Gerando QR Code ao vivo...</span>
+      </div>
+      <img id="qr-img" src="" alt="QR Code" class="w-full h-full object-contain hidden rounded-lg">
+      <div id="connected" class="hidden flex flex-col items-center gap-2 text-emerald-600">
+        <svg class="w-16 h-16 text-emerald-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span class="text-sm font-bold text-emerald-700">CONECTADO COM SUCESSO!</span>
+      </div>
+    </div>
+
+    <!-- Contador e Atualização -->
+    <div class="space-y-2">
+      <p id="timer-text" class="text-xs text-slate-400">
+        Atualiza automaticamente em: <span id="countdown" class="font-bold text-emerald-400 text-sm">25s</span>
+      </p>
+      <button onclick="loadQrCode()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-500/20 active:scale-95">
+        🔄 Gerar Novo QR Code Agora
+      </button>
+    </div>
+
+    <!-- Aviso Importante -->
+    <div class="text-left bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-200/90 space-y-1">
+      <p class="font-bold text-amber-300">⚠️ Dica importante para WhatsApp Business:</p>
+      <p>1. No celular, vá em <strong>Aparelhos Conectados</strong>.</p>
+      <p>2. Se houver sessões antigas listadas, <strong>desconecte-as</strong> primeiro.</p>
+      <p>3. Toque em <strong>Conectar um aparelho</strong> e aponte para o quadro branco acima!</p>
+    </div>
+  </div>
+
+  <script>
+    const EVO_URL = 'https://piffpaff-evolution-api.onrender.com';
+    const API_KEY = 'PiffPaffEvoSecretKey2026!';
+    let countdownVal = 25;
+    let timerInterval = null;
+
+    async function checkStatus() {
+      const seller = document.getElementById('sel-seller').value;
+      try {
+        const res = await fetch(`${EVO_URL}/instance/connectionState/${seller}`, {
+          headers: { 'apikey': API_KEY }
+        });
+        const data = await res.json();
+        if (data?.instance?.state === 'open') {
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('qr-img').classList.add('hidden');
+          document.getElementById('connected').classList.remove('hidden');
+          document.getElementById('timer-text').textContent = '✅ WhatsApp Conectado e Ativo na Nuvem!';
+          clearInterval(timerInterval);
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    async function loadQrCode() {
+      const seller = document.getElementById('sel-seller').value;
+      const loading = document.getElementById('loading');
+      const img = document.getElementById('qr-img');
+      const connected = document.getElementById('connected');
+
+      loading.classList.remove('hidden');
+      img.classList.add('hidden');
+      connected.classList.add('hidden');
+      countdownVal = 25;
+
+      const isConnected = await checkStatus();
+      if (isConnected) return;
+
+      try {
+        const res = await fetch(`${EVO_URL}/instance/connect/${seller}`, {
+          headers: { 'apikey': API_KEY }
+        });
+        const data = await res.json();
+
+        if (data.base64) {
+          img.src = data.base64;
+          loading.classList.add('hidden');
+          img.classList.remove('hidden');
+        } else if (data.code) {
+          img.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(data.code)}`;
+          loading.classList.add('hidden');
+          img.classList.remove('hidden');
+        } else {
+          await checkStatus();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(async () => {
+        countdownVal--;
+        document.getElementById('countdown').textContent = `${countdownVal}s`;
+        if (countdownVal <= 0) {
+          await loadQrCode();
+        } else if (countdownVal % 5 === 0) {
+          await checkStatus();
+        }
+      }, 1000);
+    }
+
+    loadQrCode();
+    startTimer();
+  </script>
+</body>
+</html>
