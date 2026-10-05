@@ -1,7 +1,13 @@
 # ==============================================================================
-# RENDER BLUEPRINT — EVOLUTION API v2 (100% NUVEM E GRATUITO)
+# RENDER BLUEPRINT — EVOLUTION API v2 + POSTGRESQL NATIVO (100% AUTOMÁTICO)
 # CRM PIFF-PAFF PRO AUTOMATION
 # ==============================================================================
+
+databases:
+  - name: piffpaff-postgres
+    plan: free
+    databaseName: evolution
+    user: evolution
 
 services:
   - type: web
@@ -10,7 +16,6 @@ services:
     image:
       url: evoapicloud/evolution-api:latest
     plan: free
-    region: oregon
     envVars:
       - key: SERVER_TYPE
         value: http
@@ -25,7 +30,9 @@ services:
       - key: DATABASE_PROVIDER
         value: postgresql
       - key: DATABASE_CONNECTION_URI
-        sync: false
+        fromDatabase:
+          name: piffpaff-postgres
+          property: connectionString
       - key: CACHE_REDIS_ENABLED
         value: "false"
       - key: CACHE_LOCAL_ENABLED
