@@ -1,0 +1,48 @@
+# ==============================================================================
+# RENDER BLUEPRINT — EVOLUTION API v2 (100% NUVEM E GRATUITO)
+# CRM PIFF-PAFF PRO AUTOMATION
+# ==============================================================================
+
+services:
+  - type: web
+    name: piffpaff-evolution-api
+    runtime: image
+    image:
+      url: evoapicloud/evolution-api:latest
+    plan: free
+    region: oregon
+    envVars:
+      - key: SERVER_TYPE
+        value: http
+      - key: SERVER_PORT
+        value: 8080
+      - key: AUTHENTICATION_API_KEY
+        value: PiffPaffEvoSecretKey2026!
+      - key: AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES
+        value: "true"
+      - key: DATABASE_ENABLED
+        value: "true"
+      - key: DATABASE_PROVIDER
+        value: postgresql
+      - key: DATABASE_CONNECTION_URI
+        sync: false
+      - key: CACHE_REDIS_ENABLED
+        value: "false"
+      - key: CACHE_LOCAL_ENABLED
+        value: "true"
+      - key: WEBHOOK_GLOBAL_ENABLED
+        value: "true"
+      - key: WEBHOOK_GLOBAL_URL
+        value: https://crm-piff-paff-v2.vercel.app/api/n8n-webhook
+      - key: WEBHOOK_EVENTS_MESSAGES_UPSERT
+        value: "true"
+      - key: QRCODE_LIMIT
+        value: "30"
+      - key: CONFIG_SESSION_PHONE_CLIENT
+        value: Chrome
+      - key: CONFIG_SESSION_PHONE_NAME
+        value: Windows
+      - key: DEL_INSTANCE
+        value: "false"
+      - key: LOG_LEVEL
+        value: "ERROR,WARN,INFO"
