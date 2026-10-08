@@ -2,6 +2,18 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/freelancer",
+      "destination": "/freelancer.html"
+    },
+    {
+      "source": "/freelancer-bc",
+      "destination": "/freelancer.html"
+    },
+    {
+      "source": "/api/sync",
+      "destination": "/api/freelancer-sync.js"
+    },
+    {
       "source": "/",
       "destination": "/index.html"
     },
@@ -66,7 +78,7 @@
       "destination": "/api/rodrigo.js?action=moveInstagramLeadToWhatsApp"
     },
     {
-      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos).*)",
+      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|freelancer|freelancer-bc).*)",
       "destination": "/index.html"
     }
   ],
