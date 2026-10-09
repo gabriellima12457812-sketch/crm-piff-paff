@@ -53,12 +53,38 @@ function normalizePhoneVariants(raw) {
   if (!digits) return [];
   const variants = new Set([digits]);
 
-  // Se tem DDI 55 e tem pelo menos 12 dígitos, cria variante sem 55
-  if (digits.startsWith('55') && digits.length >= 12) {
-    variants.add(digits.substring(2));
+  let core = digits;
+  // Se começar com 55 e tiver 12 ou 13 dígitos, extrai o DDD + número
+  if (core.startsWith('55') && (core.length === 12 || core.length === 13)) {
+    core = core.substring(2);
   }
-  // Se não tem DDI 55 e tem 10 ou 11 dígitos, cria variante com 55
-  if (!digits.startsWith('55') && (digits.length === 10 || digits.length === 11)) {
+
+  // Gera todas as permutações do 9º dígito móvel brasileiro
+  if (core.length === 10 || core.length === 11) {
+    const ddd = core.substring(0, 2);
+    const rest = core.substring(2);
+
+    if (rest.length === 8) {
+      // Formato antigo sem o 9 (ex: 47 9959-0571) -> cria com 9
+      const with9 = ddd + '9' + rest;
+      variants.add(core); // 4799590571
+      variants.add('55' + core); // 554799590571
+      variants.add(with9); // 47999590571
+      variants.add('55' + with9); // 5547999590571
+    } else if (rest.length === 9 && rest.startsWith('9')) {
+      // Formato moderno com 9 (ex: 47 99959-0571) -> cria sem 9
+      const without9 = ddd + rest.substring(1);
+      variants.add(core); // 47999590571
+      variants.add('55' + core); // 5547999590571
+      variants.add(without9); // 4799590571
+      variants.add('55' + without9); // 554799590571
+    }
+  }
+
+  // Variantes diretas com e sem DDI 55
+  if (digits.startsWith('55') && digits.length >= 10) {
+    variants.add(digits.substring(2));
+  } else if (!digits.startsWith('55') && digits.length >= 8) {
     variants.add('55' + digits);
   }
 
@@ -418,8 +444,14 @@ export default async function handler(req, res) {
     let existingLead = null;
 
     try {
-      const orFilter = phoneVariants.map(p => `phone.eq.${p}`).join(',');
-      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&user_id=eq.${encodeURIComponent(seller.user_id)}&select=*&limit=1`;
+      const orFilters = phoneVariants.map(p => `phone.eq.${p}`);
+      const last8 = phoneDigits.slice(-8);
+      if (last8 && last8.length === 8) {
+        orFilters.push(`phone.like.*${last8}`);
+      }
+      const orFilter = orFilters.join(',');
+
+      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&user_id=eq.${encodeURIComponent(seller.user_id)}&order=created_at.asc&select=*&limit=1`;
       const searchRes = await fetch(searchUrl, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const searchData = await searchRes.json();
@@ -430,7 +462,7 @@ export default async function handler(req, res) {
 
       // Se não encontrou vinculado a este vendedor, busca se já existe cadastrado na base geral
       if (!existingLead) {
-        const fallbackSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&select=*&limit=1`;
+        const fallbackSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&order=created_at.asc&select=*&limit=1`;
         const fbRes = await fetch(fallbackSearchUrl, { headers: supabaseHeaders });
         if (fbRes.ok) {
           const fbData = await fbRes.json();
