@@ -2,18 +2,6 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/freelancer",
-      "destination": "/freelancer.html"
-    },
-    {
-      "source": "/freelancer-bc",
-      "destination": "/freelancer.html"
-    },
-    {
-      "source": "/api/sync",
-      "destination": "/api/freelancer-sync.js"
-    },
-    {
       "source": "/",
       "destination": "/index.html"
     },
@@ -36,6 +24,18 @@
     {
       "source": "/qualificacao",
       "destination": "/atendimento.html"
+    },
+    {
+      "source": "/conectar",
+      "destination": "/conectar_whatsapp.html"
+    },
+    {
+      "source": "/conectar-whatsapp",
+      "destination": "/conectar_whatsapp.html"
+    },
+    {
+      "source": "/conectar_whatsapp",
+      "destination": "/conectar_whatsapp.html"
     },
     {
       "source": "/api/felipe/find-instagram",
@@ -78,7 +78,7 @@
       "destination": "/api/rodrigo.js?action=moveInstagramLeadToWhatsApp"
     },
     {
-      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|freelancer|freelancer-bc).*)",
+      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar).*)",
       "destination": "/index.html"
     }
   ],
