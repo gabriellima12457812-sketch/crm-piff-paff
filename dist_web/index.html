@@ -332,7 +332,7 @@
 
       <!-- Seletor Rápido de Vendedor (1 Clique sem logout) -->
       <div class="relative flex items-center">
-        <select id="header-seller-switcher" onchange="switchActiveSeller(this.value)" class="bg-[#101C27] hover:bg-[#142332] text-xs font-bold text-slate-200 border border-cyan-500/30 hover:border-cyan-400 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-cyan-400 cursor-pointer transition shadow-sm" title="Alternar perfil de vendedor instantaneamente">
+        <select id="header-seller-switcher" onchange="requestSwitchActiveSeller(this.value)" class="bg-[#101C27] hover:bg-[#142332] text-xs font-bold text-slate-200 border border-cyan-500/30 hover:border-cyan-400 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-cyan-400 cursor-pointer transition shadow-sm" title="Alternar perfil de vendedor instantaneamente">
           <option value="gabriel">👑 Gabriel Lima</option>
           <option value="mayara">🌸 Mayara</option>
           <option value="barbara">💎 Especialista Bárbara</option>
@@ -370,7 +370,7 @@
           </div>
           <nav class="space-y-1">
             <!-- 1. Leads Instagram (Prospecção) -->
-            <button id="nav-btn-instagram" data-view="instagram" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent">
+            <button id="nav-btn-instagram" data-view="instagram" class="nav-btn hidden w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent">
               <span class="flex items-center gap-2.5">
                 <i class="ph-bold ph-instagram-logo text-lg text-pink-400"></i>
                 <span>Leads Instagram</span>
@@ -515,7 +515,7 @@
               <span>Funis Comerciais</span>
               <span class="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-normal">3 Pilares</span>
             </div>
-            <button id="nav-btn-mobile-instagram" data-view="instagram" class="nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
+            <button id="nav-btn-mobile-instagram" data-view="instagram" class="nav-btn-mobile hidden w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
               <i class="ph-bold ph-instagram-logo text-xl text-pink-400"></i>
               <span>Leads Instagram</span>
             </button>
@@ -2364,6 +2364,10 @@
             <i class="ph-bold ph-database text-base text-cyan-400"></i>
             <span>Supabase & API</span>
           </button>
+          <button type="button" id="tab-btn-security" onclick="switchSettingsTab('security')" class="px-3 py-1.5 rounded-xl font-heading font-bold text-xs flex items-center gap-1.5 text-slate-400 hover:text-white border border-transparent hover:bg-white/5 transition">
+            <i class="ph-bold ph-key text-base text-amber-400"></i>
+            <span>Alterar Senha</span>
+          </button>
         </div>
         <button id="btn-close-settings" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition">
           <i class="ph-bold ph-x text-lg"></i>
@@ -2519,6 +2523,68 @@
             Salvar e Conectar
           </button>
         </div>
+      </div>
+
+      <!-- PAINEL 3: SEGURANÇA & ALTERAR SENHA DO VENDEDOR LOGADO -->
+      <div id="settings-tab-security-content" class="hidden space-y-4">
+        <div class="p-3.5 rounded-xl bg-[#0A1118] border border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div id="settings-security-avatar" class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 font-extrabold flex items-center justify-center text-lg shadow-md">
+              <i class="ph-bold ph-lock-key"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="settings-security-user-name" class="font-heading font-bold text-white text-sm">Vendedor Ativo</span>
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">SENHA PESSOAL</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Altere sua senha individual de acesso ao CRM.</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="form-change-password" onsubmit="handleChangePassword(event)" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Senha Atual:</label>
+            <div class="relative">
+              <input type="password" id="input-current-password" required placeholder="Digite sua senha atual" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono" />
+              <button type="button" onclick="togglePasswordVisibility('input-current-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                <i class="ph-bold ph-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Nova Senha:</label>
+            <div class="relative">
+              <input type="password" id="input-new-password" required minlength="6" placeholder="Mínimo 6 caracteres" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono" />
+              <button type="button" onclick="togglePasswordVisibility('input-new-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                <i class="ph-bold ph-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Confirmar Nova Senha:</label>
+            <div class="relative">
+              <input type="password" id="input-confirm-password" required minlength="6" placeholder="Repita a nova senha" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono" />
+              <button type="button" onclick="togglePasswordVisibility('input-confirm-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                <i class="ph-bold ph-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="change-pwd-error" class="hidden p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+            <i class="ph-bold ph-warning-circle text-rose-400 text-sm shrink-0"></i>
+            <span id="change-pwd-error-msg"></span>
+          </div>
+
+          <div class="pt-2 border-t border-white/10 flex justify-end">
+            <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-heading font-bold text-xs transition shadow-lg flex items-center gap-2">
+              <i class="ph-bold ph-check"></i>
+              Salvar Nova Senha
+            </button>
+          </div>
+        </form>
       </div>
 
     </div>
@@ -3135,19 +3201,202 @@
       document.getElementById('saas-login-screen')?.classList.add('hidden');
     }
 
-    function quickFillSeller(seller) {
-      if (typeof switchActiveSeller === 'function') {
-        switchActiveSeller(seller);
-        const sellerNames = {
-          gabriel: 'Gabriel Lima (Admin)',
-          felipe: 'Felipe',
-          mayara: 'Mayara',
-          eduardo: 'Eduardo',
-          rodrigo: 'Rodrigo (Especialista)'
-        };
-        showToast(`Conectado com sucesso como ${sellerNames[seller] || seller}!`, 'success');
+    
+    // ==========================================
+    // SISTEMA DE SEGURANÇA E PROTEÇÃO POR SENHA
+    // ==========================================
+    const DEFAULT_PASSWORDS = {
+      gabriel: 'Gabriel@2026',
+      barbara: 'Barbara@2026',
+      mayara: 'Mayara@2026',
+      felipe: 'Felipe@2026',
+      eduardo: 'Eduardo@2026',
+      rodrigo: 'Rodrigo@2026'
+    };
+
+    function getSellerPassword(sellerKey) {
+      const k = normalizeSellerKey(sellerKey);
+      return localStorage.getItem('piffpaff_pwd_' + k) || DEFAULT_PASSWORDS[k] || '123456';
+    }
+    window.getSellerPassword = getSellerPassword;
+
+    function setSellerPassword(sellerKey, newPassword) {
+      const k = normalizeSellerKey(sellerKey);
+      localStorage.setItem('piffpaff_pwd_' + k, newPassword);
+      try {
+        const client = getSupabaseClient();
+        if (client && authUser && normalizeSellerKey(authUser.email) === k) {
+          client.auth.updateUser({ password: newPassword }).catch(err => {
+            console.warn('Atualização no Supabase Auth fallback:', err);
+          });
+        }
+      } catch (e) {}
+    }
+    window.setSellerPassword = setSellerPassword;
+
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const icon = btn ? btn.querySelector('i') : null;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.className = 'ph-bold ph-eye-slash';
+      } else {
+        input.type = 'password';
+        if (icon) icon.className = 'ph-bold ph-eye';
+      }
+    }
+    window.togglePasswordVisibility = togglePasswordVisibility;
+
+    let pendingTargetSellerKey = null;
+
+    function requestSwitchActiveSeller(targetKey) {
+      const currentSeller = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+      const target = normalizeSellerKey(targetKey) || 'gabriel';
+
+      if (target === currentSeller) return;
+
+      // Gabriel Lima é o Admin Supremo: tem acesso total e irrestrito sem pedir senha
+      if (currentSeller === 'gabriel') {
+        switchActiveSeller(target);
         return;
       }
+
+      // Nenhum vendedor acessa a conta de outro sem digitar a senha
+      const switcher = document.getElementById('header-seller-switcher');
+      if (switcher) switcher.value = currentSeller; // Reverte seleção visualmente
+
+      openSellerAuthPrompt(target);
+    }
+    window.requestSwitchActiveSeller = requestSwitchActiveSeller;
+
+    function openSellerAuthPrompt(targetKey) {
+      pendingTargetSellerKey = targetKey;
+      const config = SELLER_REGISTRY[targetKey] || { name: targetKey, email: '' };
+
+      const modal = document.getElementById('modal-seller-auth-prompt');
+      const nameEl = document.getElementById('auth-prompt-target-name');
+      const emailEl = document.getElementById('auth-prompt-target-email');
+      const inputEl = document.getElementById('auth-prompt-password');
+      const errBox = document.getElementById('auth-prompt-error');
+
+      if (nameEl) nameEl.textContent = config.name;
+      if (emailEl) emailEl.textContent = config.email;
+      if (inputEl) {
+        inputEl.value = '';
+        inputEl.classList.remove('border-rose-500');
+      }
+      if (errBox) errBox.classList.add('hidden');
+
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => { if (inputEl) inputEl.focus(); }, 100);
+      }
+    }
+    window.openSellerAuthPrompt = openSellerAuthPrompt;
+
+    function closeSellerAuthPrompt() {
+      pendingTargetSellerKey = null;
+      const modal = document.getElementById('modal-seller-auth-prompt');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+    window.closeSellerAuthPrompt = closeSellerAuthPrompt;
+
+    function submitSellerAuthPrompt(e) {
+      if (e) e.preventDefault();
+      if (!pendingTargetSellerKey) return;
+
+      const inputEl = document.getElementById('auth-prompt-password');
+      const enteredPwd = (inputEl ? inputEl.value : '').trim();
+      const expectedPwd = getSellerPassword(pendingTargetSellerKey);
+      const errBox = document.getElementById('auth-prompt-error');
+      const errMsg = document.getElementById('auth-prompt-error-msg');
+
+      if (enteredPwd !== expectedPwd) {
+        if (errBox && errMsg) {
+          errMsg.textContent = 'Senha incorreta para ' + (SELLER_REGISTRY[pendingTargetSellerKey]?.name || pendingTargetSellerKey) + '.';
+          errBox.classList.remove('hidden');
+        }
+        if (inputEl) {
+          inputEl.classList.add('border-rose-500');
+          inputEl.focus();
+          inputEl.select();
+        }
+        return;
+      }
+
+      const target = pendingTargetSellerKey;
+      closeSellerAuthPrompt();
+      switchActiveSeller(target);
+      showToast(`Acesso concedido com sucesso a ${SELLER_REGISTRY[target]?.name || target}!`, 'success');
+    }
+    window.submitSellerAuthPrompt = submitSellerAuthPrompt;
+
+    function handleChangePassword(e) {
+      if (e) e.preventDefault();
+      const currentSellerKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+      const curPwd = (document.getElementById('input-current-password')?.value || '').trim();
+      const newPwd = (document.getElementById('input-new-password')?.value || '').trim();
+      const confPwd = (document.getElementById('input-confirm-password')?.value || '').trim();
+      const errBox = document.getElementById('change-pwd-error');
+      const errMsg = document.getElementById('change-pwd-error-msg');
+
+      if (errBox) errBox.classList.add('hidden');
+
+      const expectedPwd = getSellerPassword(currentSellerKey);
+      if (curPwd !== expectedPwd) {
+        if (errBox && errMsg) {
+          errMsg.textContent = 'A senha atual digitada está incorreta.';
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (newPwd.length < 6) {
+        if (errBox && errMsg) {
+          errMsg.textContent = 'A nova senha deve ter no mínimo 6 caracteres.';
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (newPwd !== confPwd) {
+        if (errBox && errMsg) {
+          errMsg.textContent = 'A confirmação não coincide com a nova senha digitada.';
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      setSellerPassword(currentSellerKey, newPwd);
+      showToast('Sua senha foi alterada com sucesso!', 'success');
+      const form = document.getElementById('form-change-password');
+      if (form) form.reset();
+      if (typeof closeSettingsModal === 'function') closeSettingsModal();
+    }
+    window.handleChangePassword = handleChangePassword;
+
+    function quickFillSeller(seller) {
+      const emailInput = document.getElementById('login-input-email');
+      const pwdInput = document.getElementById('login-input-password');
+      const errBox = document.getElementById('login-error-box');
+      if (errBox) errBox.classList.add('hidden');
+
+      const conf = SELLER_REGISTRY[seller];
+      if (conf && emailInput) {
+        emailInput.value = conf.email;
+      }
+      if (pwdInput) {
+        pwdInput.value = '';
+        pwdInput.placeholder = `Digite a senha de ${conf?.name || seller}`;
+        pwdInput.focus();
+      }
+      showToast(`Vendedor selecionado: ${conf?.name || seller}. Digite sua senha para entrar.`, 'info');
+      return;
       const emailInput = document.getElementById('login-input-email');
       const pwdInput = document.getElementById('login-input-password');
       const errBox = document.getElementById('login-error-box');
@@ -6909,24 +7158,22 @@
 
     function getDefaultArchitectsForCurrentSeller() {
       const seller = getSellerKey();
-      if (seller === 'mayara') return DEFAULT_ARCHITECTS_MAYARA;
-      if (seller === 'barbara') return DEFAULT_ARCHITECTS_BARBARA;
-      if (seller === 'felipe') return DEFAULT_ARCHITECTS_FELIPE;
-      return DEFAULT_ARCHITECTS_GABRIEL;
+      if (seller === 'gabriel') return DEFAULT_ARCHITECTS_GABRIEL;
+      return [];
     }
 
     function initArchitectsStorage() {
       const key = getArchitectsStorageKey();
-      const defaultList = getDefaultArchitectsForCurrentSeller();
       const seller = getSellerKey();
 
-      // Reset total para Mayara iniciar carteira de arquitetos do zero absoluto:
-      if (seller === 'mayara') {
-        const resetKey = 'PIFF_ARCHITECTS_ZEROED_MAYARA_FINAL_V1';
+      // Reset total para todos os vendedores exceto Gabriel começarem do ZERO absoluto
+      if (seller !== 'gabriel') {
+        const resetKey = 'PIFF_ARCHITECTS_ZEROED_ALL_V5_' + seller;
         if (!localStorage.getItem(resetKey)) {
-          localStorage.removeItem('PIFF_ARCHITECTS_B2B_mayara');
+          localStorage.removeItem(key);
+          localStorage.removeItem('PIFF_ARCHITECTS_B2B_' + seller);
           localStorage.removeItem('PIFF_ARCHITECTS_B2B');
-          localStorage.setItem('PIFF_ARCHITECTS_B2B_mayara', '[]');
+          localStorage.setItem(key, '[]');
           localStorage.setItem(resetKey, 'true');
           architectsList = [];
           saveArchitectsStorage();
@@ -6940,8 +7187,8 @@
         if (stored) {
           let parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Isolamento rigoroso: se vendedor for Mayara ou Barbara, purga qualquer arquiteto do Gabriel
-            if (seller === 'mayara' || seller === 'barbara') {
+            // Isolamento estrito: purga qualquer resíduo de arquitetos da base padrão do Gabriel
+            if (seller !== 'gabriel') {
               const gabrielPhones = new Set(DEFAULT_ARCHITECTS_GABRIEL.map(g => (g.phone || '').replace(/\D/g, '')));
               const gabrielIds = new Set(DEFAULT_ARCHITECTS_GABRIEL.map(g => g.id));
               const gabrielNames = ['charão', 'dayana tavares', 'aline granja', 'aline horne', 'márcia portela', 'marcia portela', 'luciana soares', 'magda'];
@@ -6989,7 +7236,7 @@
     function syncArchitectsFromCRM() {
       if (!Array.isArray(leads) || leads.length === 0) return;
       const seller = getSellerKey();
-      if (seller === 'mayara') return; // Mayara começa do zero absoluto, sem injeção automática de arquitetos antigos
+      if (seller !== 'gabriel') return; // Apenas Gabriel possui arquitetos pré-cadastrados ou auto-injetados // Mayara começa do zero absoluto, sem injeção automática de arquitetos antigos
 
       let added = 0;
       leads.forEach(l => {
@@ -9886,17 +10133,20 @@
     // 7. BASE DE CLIENTES (TABELA & EXPORTAÇÃO CSV)
     // ==========================================
     function getAllCurrentSellerLeads() {
+      const isGabrielUser = (typeof getSellerKey === 'function') ? (getSellerKey(authUser) === 'gabriel') : false;
       const map = new Map();
       (leads || []).forEach(l => {
         if (l && l.id) {
           map.set(l.id, { ...l, pipeline: l.pipeline || 'whatsapp', channel: l.channel || 'whatsapp' });
         }
       });
-      (instagramLeads || []).forEach(l => {
-        if (l && l.id && !map.has(l.id)) {
-          map.set(l.id, { ...l, pipeline: l.pipeline || 'instagram', channel: l.channel || 'instagram' });
-        }
-      });
+      if (isGabrielUser) {
+        (instagramLeads || []).forEach(l => {
+          if (l && l.id && !map.has(l.id)) {
+            map.set(l.id, { ...l, pipeline: l.pipeline || 'instagram', channel: l.channel || 'instagram' });
+          }
+        });
+      }
       return Array.from(map.values());
     }
     window.getAllCurrentSellerLeads = getAllCurrentSellerLeads;
@@ -10351,7 +10601,10 @@
 
             if (error) {
               // Resilient Fallback: Permite login imediato Plug & Play para Felipe mesmo antes do script SQL
-              if (email.toLowerCase() === 'felipe@piffpaff.com.br' && password === 'Felipe@2026') {
+              const expectedSellerKey = normalizeSellerKey(email);
+              const validSellerPassword = getSellerPassword(expectedSellerKey);
+
+              if (email.toLowerCase() === 'felipe@piffpaff.com.br' && password === validSellerPassword) {
                 console.info('Ativando sessão Plug & Play para Felipe...');
                 const fallbackSession = {
                   access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
@@ -10380,7 +10633,7 @@
                 return;
               }
 
-              if (email.toLowerCase() === 'eduardo@piffpaff.com.br' && password === 'Eduardo@2026') {
+              if (email.toLowerCase() === 'eduardo@piffpaff.com.br' && password === getSellerPassword('eduardo')) {
                 console.info('Ativando sessão Plug & Play para Eduardo...');
                 const fallbackSession = {
                   access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
@@ -10409,7 +10662,7 @@
                 return;
               }
 
-              if (email.toLowerCase() === 'mayara@piffpaff.com.br' && password === 'Mayara@2026') {
+              if (email.toLowerCase() === 'mayara@piffpaff.com.br' && password === getSellerPassword('mayara')) {
                 console.info('Ativando sessão Plug & Play para Mayara...');
                 const fallbackSession = {
                   access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
@@ -10438,7 +10691,7 @@
                 return;
               }
 
-              if (email.toLowerCase() === 'barbara@piffpaff.com.br' && password === 'Barbara@2026') {
+              if (email.toLowerCase() === 'barbara@piffpaff.com.br' && password === getSellerPassword('barbara')) {
                 console.info('Ativando sessão Plug & Play para Bárbara...');
                 const fallbackSession = {
                   access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
@@ -10467,7 +10720,7 @@
                 return;
               }
 
-              if (email.toLowerCase() === 'rodrigo@piffpaff.com.br' && password === 'Rodrigo@2026') {
+              if (email.toLowerCase() === 'rodrigo@piffpaff.com.br' && password === getSellerPassword('rodrigo')) {
                 console.info('Ativando sessão Plug & Play para Rodrigo...');
                 const fallbackSession = {
                   access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
@@ -10602,6 +10855,19 @@
             b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5';
           }
         });
+
+        // Bloqueio rigoroso permanente: botões de Instagram NUNCA podem aparecer para quem não for Gabriel
+        const isGabrielActive = (typeof getSellerKey === 'function') ? (getSellerKey(authUser) === 'gabriel') : false;
+        const bInsta = document.getElementById('nav-btn-instagram');
+        const bInstaMob = document.getElementById('nav-btn-mobile-instagram');
+        if (bInsta) {
+          if (isGabrielActive) bInsta.classList.remove('hidden');
+          else bInsta.classList.add('hidden');
+        }
+        if (bInstaMob) {
+          if (isGabrielActive) bInstaMob.classList.remove('hidden');
+          else bInstaMob.classList.add('hidden');
+        }
 
         if (viewName === 'kanban') {
           renderKanban();
@@ -11010,28 +11276,44 @@
       function switchSettingsTab(tab) {
         const btnWa = document.getElementById('tab-btn-whatsapp');
         const btnSb = document.getElementById('tab-btn-supabase');
+        const btnSec = document.getElementById('tab-btn-security');
         const contentWa = document.getElementById('settings-tab-whatsapp-content');
         const contentSb = document.getElementById('settings-tab-supabase-content');
+        const contentSec = document.getElementById('settings-tab-security-content');
+
+        [btnWa, btnSb, btnSec].forEach(b => {
+          b?.classList.remove('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
+          b?.classList.add('text-slate-400', 'border-transparent');
+        });
+        [contentWa, contentSb, contentSec].forEach(c => c?.classList.add('hidden'));
 
         if (tab === 'whatsapp') {
           btnWa?.classList.add('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
           btnWa?.classList.remove('text-slate-400', 'border-transparent');
-          btnSb?.classList.remove('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
-          btnSb?.classList.add('text-slate-400', 'border-transparent');
           contentWa?.classList.remove('hidden');
-          contentSb?.classList.add('hidden');
           syncSellerInfoInModal();
           checkCurrentSellerWhatsAppStatus();
           startWhatsAppPolling();
-        } else {
+        } else if (tab === 'supabase') {
           btnSb?.classList.add('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
           btnSb?.classList.remove('text-slate-400', 'border-transparent');
-          btnWa?.classList.remove('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
-          btnWa?.classList.add('text-slate-400', 'border-transparent');
           contentSb?.classList.remove('hidden');
-          contentWa?.classList.add('hidden');
           stopWhatsAppPolling();
           stopQrCountdown();
+        } else if (tab === 'security') {
+          btnSec?.classList.add('bg-[#00D2D3]/15', 'text-[#00D2D3]', 'border-[#00D2D3]/30');
+          btnSec?.classList.remove('text-slate-400', 'border-transparent');
+          contentSec?.classList.remove('hidden');
+          stopWhatsAppPolling();
+          stopQrCountdown();
+
+          const curName = (typeof getSellerName === 'function') ? getSellerName(authUser) : 'Vendedor Ativo';
+          const nameEl = document.getElementById('settings-security-user-name');
+          if (nameEl) nameEl.textContent = curName;
+          const form = document.getElementById('form-change-password');
+          if (form) form.reset();
+          const errBox = document.getElementById('change-pwd-error');
+          if (errBox) errBox.classList.add('hidden');
         }
       }
       window.switchSettingsTab = switchSettingsTab;
@@ -11414,6 +11696,67 @@
       });
     });
   </script>
+  <!-- ======================================================== -->
+  <!-- MODAL: AUTENTICAÇÃO PARA TROCA DE VENDEDOR                 -->
+  <!-- ======================================================== -->
+  <div id="modal-seller-auth-prompt" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-[#101C27] border border-cyan-500/30 rounded-2xl shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-[#00D2D3] flex items-center justify-center text-lg border border-cyan-500/30">
+            <i class="ph-bold ph-lock-key"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-bold text-white text-base">Acesso Protegido</h3>
+            <p class="text-[11px] text-slate-400">Confirmação de identidade</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeSellerAuthPrompt()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-3 rounded-xl bg-[#0A1118] border border-white/10">
+        <p class="text-xs text-slate-300">
+          Para acessar a carteira de <strong id="auth-prompt-target-name" class="text-[#00D2D3]">Vendedor</strong>, digite a senha correspondente:
+        </p>
+        <p id="auth-prompt-target-email" class="text-[11px] text-slate-400 font-mono mt-0.5"></p>
+      </div>
+
+      <form id="form-seller-auth-prompt" onsubmit="submitSellerAuthPrompt(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase mb-1.5">Senha de Acesso:</label>
+          <div class="relative">
+            <input
+              type="password"
+              id="auth-prompt-password"
+              required
+              placeholder="Digite a senha"
+              class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#00D2D3] font-mono"
+            />
+            <button type="button" onclick="togglePasswordVisibility('auth-prompt-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+              <i class="ph-bold ph-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="auth-prompt-error" class="hidden p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+          <i class="ph-bold ph-warning-circle text-rose-400 text-sm shrink-0"></i>
+          <span id="auth-prompt-error-msg">Senha incorreta.</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+          <button type="button" onclick="closeSellerAuthPrompt()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-[#00D2D3] hover:bg-[#00D2D3]/80 text-black font-heading font-bold text-xs transition shadow-lg flex items-center gap-1.5">
+            <i class="ph-bold ph-check"></i>
+            <span>Confirmar e Entrar</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
 
