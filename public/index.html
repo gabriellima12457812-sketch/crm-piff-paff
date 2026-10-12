@@ -370,7 +370,7 @@
           </div>
           <nav class="space-y-1">
             <!-- 1. Leads Instagram (Prospecção) -->
-            <button data-view="instagram" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent">
+            <button id="nav-btn-instagram" data-view="instagram" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent">
               <span class="flex items-center gap-2.5">
                 <i class="ph-bold ph-instagram-logo text-lg text-pink-400"></i>
                 <span>Leads Instagram</span>
@@ -515,7 +515,7 @@
               <span>Funis Comerciais</span>
               <span class="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-normal">3 Pilares</span>
             </div>
-            <button data-view="instagram" class="nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
+            <button id="nav-btn-mobile-instagram" data-view="instagram" class="nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
               <i class="ph-bold ph-instagram-logo text-xl text-pink-400"></i>
               <span>Leads Instagram</span>
             </button>
@@ -3047,32 +3047,33 @@
       const deletedIds = new Set(getDeletedLeadIds());
       const storageKey = getStorageKey();
       const stored = localStorage.getItem(storageKey);
-      const isGabriel = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
+      const sellerKey = getSellerKey(authUser);
+      const isGabriel = sellerKey === 'gabriel';
 
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          // Se for Gabriel e o cache tiver menos de 10 leads, significa que foi zerado por sync anterior -> recarrega base completa
           const minExpected = isGabriel ? 10 : 1;
           if (Array.isArray(parsed) && parsed.length >= minExpected) {
-            leads = parsed.filter(l => !deletedIds.has(l.id));
-            return;
+            // Filtra estritamente apenas os leads deste vendedor ativo
+            leads = parsed.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, sellerKey));
+            if (leads.length > 0) return;
           }
         } catch (e) {
           console.warn('Erro ao carregar do localStorage:', e);
         }
       }
 
-      // Se não for Gabriel (ex: Felipe ou Mayara): aguarda sync da nuvem com isolamento
+      // Se não for Gabriel (ex: Bárbara, Mayara, Felipe, etc.): inicia limpo aguardando sync da nuvem
       if (!isGabriel) {
         leads = [];
         return;
       }
 
-      // Para Gabriel Lima (Admin) ou visualização inicial: carrega a base oficial consolidada (618 leads)
+      // Para Gabriel Lima (Admin): carrega a base consolidada oficial
       const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
       if (baseLeads && baseLeads.length > 0) {
-        leads = baseLeads.filter(l => !deletedIds.has(l.id));
+        leads = baseLeads.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'));
         saveStorage();
         return;
       }
@@ -3210,24 +3211,82 @@
       return user.email.split('@')[0];
     }
 
-    function getSellerKey(user) {
+    // ==========================================
+    // SISTEMA UNIFICADO DE ISOLAMENTO RIGOROSO MULTI-TENANT
+    // ==========================================
+    const SELLER_REGISTRY = {
+      gabriel: { id: 'a1111111-1111-1111-1111-111111111111', email: 'gabriel@piffpaff.com.br', name: 'Gabriel Lima', prefix: 'CRM-GAB-', role: 'admin' },
+      mayara:  { id: 'b2222222-2222-2222-2222-222222222222', email: 'mayara@piffpaff.com.br',  name: 'Mayara',       prefix: 'CRM-MAY-', role: 'vendedor' },
+      barbara: { id: 'f6666666-6666-6666-6666-666666666666', email: 'barbara@piffpaff.com.br', name: 'Especialista Bárbara', prefix: 'CRM-BAR-', role: 'vendedor' },
+      felipe:  { id: 'c3333333-3333-3333-3333-333333333333', email: 'felipe@piffpaff.com.br',  name: 'Felipe',       prefix: 'CRM-FEL-', role: 'vendedor' },
+      eduardo: { id: 'd4444444-4444-4444-4444-444444444444', email: 'eduardo@piffpaff.com.br', name: 'Eduardo',      prefix: 'CRM-EDU-', role: 'vendedor' },
+      rodrigo: { id: 'e5555555-5555-5555-5555-555555555555', email: 'rodrigo@piffpaff.com.br', name: 'Especialista Rodrigo', prefix: 'CRM-ROD-', role: 'vendedor' }
+    };
+
+    function normalizeSellerKey(raw) {
+      if (!raw) return '';
+      const s = String(raw).toLowerCase().trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (s.includes('barbara')) return 'barbara';
+      if (s.includes('mayara')) return 'mayara';
+      if (s.includes('felipe')) return 'felipe';
+      if (s.includes('eduardo')) return 'eduardo';
+      if (s.includes('rodrigo')) return 'rodrigo';
+      if (s.includes('gabriel')) return 'gabriel';
+      return '';
+    }
+    window.normalizeSellerKey = normalizeSellerKey;
+
+    function isLeadOfSeller(lead, targetSellerKey) {
+      if (!lead) return false;
+      const sellerKey = normalizeSellerKey(targetSellerKey);
+      if (!sellerKey) return false;
+
+      const leadUserId = lead.user_id ? String(lead.user_id).toLowerCase().trim() : '';
+      const leadVendedor = normalizeSellerKey(lead.vendedor_id || lead.origem || '');
+      const leadId = String(lead.id || '').toUpperCase();
+
+      // 1. Se pertencer explicitamente a outro vendedor, REJEITA IMEDIATAMENTE
+      for (const [otherKey, otherConf] of Object.entries(SELLER_REGISTRY)) {
+        if (otherKey !== sellerKey) {
+          if (leadUserId && leadUserId === otherConf.id) return false;
+          if (leadVendedor && leadVendedor === otherKey) return false;
+          if (leadId.includes(otherConf.prefix)) return false;
+          if (leadId.includes(`-${otherKey.toUpperCase().substring(0,3)}-`)) return false;
+        }
+      }
+
+      // 2. Pertence explicitamente a este vendedor?
+      const myConf = SELLER_REGISTRY[sellerKey];
+      if (myConf) {
+        if (leadUserId && leadUserId === myConf.id) return true;
+        if (leadVendedor && leadVendedor === sellerKey) return true;
+        if (leadId.includes(myConf.prefix)) return true;
+        if (leadId.includes(`-${sellerKey.toUpperCase().substring(0,3)}-`)) return true;
+      }
+
+      // 3. Gabriel Lima (Admin) e o unico dono da base historica legada (sem user_id e sem vendedor_id)
+      if (sellerKey === 'gabriel') {
+        if (!leadUserId && !leadVendedor) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+    window.isLeadOfSeller = isLeadOfSeller;
+
+    function getSellerKey(user = null) {
       const u = user || authUser;
       if (!u || !u.email) {
+        const querySeller = normalizeSellerKey(new URLSearchParams(window.location.search).get('vendedor') || new URLSearchParams(window.location.search).get('seller'));
+        if (querySeller) return querySeller;
+        const curSeller = normalizeSellerKey(localStorage.getItem('piffpaff_current_seller'));
+        if (curSeller) return curSeller;
         const saved = localStorage.getItem('piffpaff_active_seller_email') || '';
-        if (saved.toLowerCase().includes('barbara')) return 'barbara';
-        if (saved.toLowerCase().includes('rodrigo')) return 'rodrigo';
-        if (saved.toLowerCase().includes('eduardo')) return 'eduardo';
-        if (saved.toLowerCase().includes('mayara')) return 'mayara';
-        if (saved.toLowerCase().includes('felipe')) return 'felipe';
-        return 'gabriel';
+        return normalizeSellerKey(saved) || 'gabriel';
       }
-      const email = (u.email || '').toLowerCase();
-      if (email.includes('barbara')) return 'barbara';
-      if (email.includes('rodrigo')) return 'rodrigo';
-      if (email.includes('eduardo')) return 'eduardo';
-      if (email.includes('mayara')) return 'mayara';
-      if (email.includes('felipe')) return 'felipe';
-      return 'gabriel';
+      return normalizeSellerKey(u.email) || 'gabriel';
     }
     window.getSellerKey = getSellerKey;
 
@@ -3278,6 +3337,19 @@
           } else {
             navAdmin?.classList.add('hidden');
             navAdminMobile?.classList.add('hidden');
+          }
+
+          // Isolamento Exclusivo: O canal Instagram pertence UNICA E EXCLUSIVAMENTE ao Gabriel Lima
+          const isGabrielUser = getSellerKey(user) === 'gabriel';
+          const btnInsta = document.getElementById('nav-btn-instagram');
+          const btnInstaMobile = document.getElementById('nav-btn-mobile-instagram');
+          if (btnInsta) {
+            if (isGabrielUser) btnInsta.classList.remove('hidden');
+            else btnInsta.classList.add('hidden');
+          }
+          if (btnInstaMobile) {
+            if (isGabrielUser) btnInstaMobile.classList.remove('hidden');
+            else btnInstaMobile.classList.add('hidden');
           }
 
           if (adminFilter) {
@@ -3365,16 +3437,25 @@
     }
 
     async function checkAuthSession() {
-      // 0. Detecção prioritária de vendedor via URL query param (?seller=mayara ou ?vendedor=mayara ou #mayara)
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const querySeller = (urlParams.get('seller') || urlParams.get('vendedor') || urlParams.get('user') || window.location.hash.replace('#', '') || '').toLowerCase().trim();
-        if (querySeller && ['mayara', 'barbara', 'gabriel', 'felipe', 'eduardo', 'rodrigo'].includes(querySeller)) {
-          console.info(`[Auth] Vendedor detectado via URL: ${querySeller}`);
-          switchActiveSeller(querySeller);
-          return true;
-        }
-      } catch (e) {}
+      // 1. Prioridade MÁXIMA: Vendedor via URL query param (?vendedor=barbara ou ?seller=barbara ou #barbara)
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryParam = urlParams.get('vendedor') || urlParams.get('seller') || urlParams.get('user') || window.location.hash.replace('#', '');
+      const querySeller = normalizeSellerKey(queryParam);
+
+      // 2. Segunda prioridade: LocalStorage do vendedor ativo explicitamente persistido
+      const savedSeller = normalizeSellerKey(localStorage.getItem('piffpaff_current_seller'));
+      const savedEmail = (localStorage.getItem('piffpaff_active_seller_email') || '').toLowerCase();
+      const emailSeller = normalizeSellerKey(savedEmail);
+
+      const targetSeller = querySeller || savedSeller || emailSeller || 'gabriel';
+
+      // Se o vendedor persistido for DIFERENTE de Gabriel (ex: Bárbara ou Mayara),
+      // NUNCA permite que client.auth.getSession() reverta para o Gabriel no F5!
+      if (targetSeller && targetSeller !== 'gabriel') {
+        console.info(`[Auth F5] Carregando perfil persistido do vendedor: ${targetSeller}`);
+        switchActiveSeller(targetSeller);
+        return true;
+      }
 
       // Aguarda supabase client carregar caso o CDN esteja finalizando
       let retries = 0;
@@ -3385,62 +3466,43 @@
 
       const client = getSupabaseClient();
       if (!client) {
-        updateSellerBadge(null);
-        openLoginScreen();
-        return false;
+        switchActiveSeller('gabriel');
+        return true;
       }
 
       try {
         const { data: { session }, error } = await client.auth.getSession();
-        if (session && session.user) {
-          currentSession = session;
-          authUser = session.user;
-          try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
-          closeLoginScreen();
-          updateSellerBadge(session.user);
-          initStorage();
-          initInstagramStorage();
-          initArchitectsStorage();
-          if (getSellerRole(authUser) === 'admin' && typeof initQuarantineStorage === 'function') {
-            initQuarantineStorage();
-          }
-          renderKanban();
-          renderInstagramBoard();
-          renderFollowupCenter();
-          renderClientsTable();
-          updateMetrics();
-          setupDragAndDrop();
-          if (typeof setupSupabaseRealtime === 'function') {
-            setupSupabaseRealtime(session.user.id);
-          }
-          if (typeof syncFromSupabase === 'function') {
-            syncFromSupabase(true);
-          }
+        if (session && session.user && normalizeSellerKey(session.user.email) === 'gabriel') {
+          switchActiveSeller('gabriel');
           return true;
         } else {
-          // Checa fallback salvo localmente para qualquer vendedor Plug & Play (Default: Gabriel Lima Admin)
-          const savedEmail = (localStorage.getItem('piffpaff_active_seller_email') || 'gabriel@piffpaff.com.br').toLowerCase();
-          const targetKey = savedEmail.includes('barbara') ? 'barbara' : (savedEmail.includes('rodrigo') ? 'rodrigo' : (savedEmail.includes('eduardo') ? 'eduardo' : (savedEmail.includes('mayara') ? 'mayara' : (savedEmail.includes('felipe') ? 'felipe' : 'gabriel'))));
-          switchActiveSeller(targetKey);
+          switchActiveSeller(targetSeller);
           return true;
         }
       } catch (e) {
         console.warn('Erro ao verificar sessão Supabase Auth:', e);
-        switchActiveSeller('gabriel');
+        switchActiveSeller(targetSeller || 'gabriel');
         return true;
       }
     }
 
     function switchActiveSeller(sellerKey) {
-      const sellerConfigs = {
-        gabriel: { id: 'a1111111-1111-1111-1111-111111111111', email: 'gabriel@piffpaff.com.br' },
-        felipe: { id: 'c3333333-3333-3333-3333-333333333333', email: 'felipe@piffpaff.com.br' },
-        mayara: { id: 'b2222222-2222-2222-2222-222222222222', email: 'mayara@piffpaff.com.br' },
-        barbara: { id: 'f6666666-6666-6666-6666-666666666666', email: 'barbara@piffpaff.com.br' },
-        eduardo: { id: 'd4444444-4444-4444-4444-444444444444', email: 'eduardo@piffpaff.com.br' },
-        rodrigo: { id: 'e5555555-5555-5555-5555-555555555555', email: 'rodrigo@piffpaff.com.br' }
-      };
-      const config = sellerConfigs[sellerKey] || sellerConfigs.gabriel;
+      const normalizedKey = normalizeSellerKey(sellerKey) || 'gabriel';
+      const config = SELLER_REGISTRY[normalizedKey] || SELLER_REGISTRY.gabriel;
+
+      // 1. Persistencia estrita no LocalStorage para sobreviver ao F5
+      try {
+        localStorage.setItem('piffpaff_current_seller', normalizedKey);
+        localStorage.setItem('piffpaff_active_seller_email', config.email);
+      } catch (e) {}
+
+      // 2. Persistencia na URL (?vendedor=...) sem causar reload na tela
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('vendedor', normalizedKey);
+        window.history.replaceState({ seller: normalizedKey }, '', url.toString());
+      } catch (e) {}
+
       const fallbackSession = {
         access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
         user: {
@@ -3451,7 +3513,10 @@
       };
       currentSession = fallbackSession;
       authUser = fallbackSession.user;
-      try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
+
+      // Sincroniza seletor dropdown do topo
+      const switcher = document.getElementById('header-seller-switcher');
+      if (switcher) switcher.value = normalizedKey;
 
       // Limpa dados em memória para transição limpa sem mistura de vendedor
       lastSyncedWaJson = '';
@@ -3461,6 +3526,16 @@
 
       closeLoginScreen();
       updateSellerBadge(authUser);
+
+      // Se o vendedor atual nao for Gabriel, e estiver na tela de Instagram, redireciona para kanban
+      const isGabriel = normalizedKey === 'gabriel';
+      if (!isGabriel) {
+        const viewInsta = document.getElementById('view-instagram');
+        if (viewInsta && !viewInsta.classList.contains('hidden')) {
+          if (typeof switchView === 'function') switchView('kanban');
+        }
+      }
+
       initStorage();
       initInstagramStorage();
       initArchitectsStorage();
@@ -3642,29 +3717,7 @@
           // FILTRO ESTRITO DE ISOLAMENTO: cada vendedor visualiza exclusivamente seus prÃ³prios leads
           const userCloudLeads = cloudLeads.filter(l => {
             if (deletedIds.has(l.id)) return false;
-            if (sellerKey === 'gabriel') {
-              return !l.user_id || l.user_id === 'a1111111-1111-1111-1111-111111111111' || l.vendedor_id === 'gabriel' || (!l.vendedor_id && !l.user_id);
-            }
-            if (sellerKey === 'felipe') {
-              return l.user_id === 'c3333333-3333-3333-3333-333333333333' || l.vendedor_id === 'felipe' || (l.id && l.id.toLowerCase().includes('-fel-'));
-            }
-            if (sellerKey === 'mayara') {
-              const isExplicitOther = (l.user_id && l.user_id === 'a1111111-1111-1111-1111-111111111111') || (l.vendedor_id && l.vendedor_id === 'gabriel') || (l.id && (l.id.includes('-GAB-') || l.id.includes('-FEL-') || l.id.includes('-EDU-') || l.id.includes('-ROD-')));
-              if (isExplicitOther) return false;
-              return l.user_id === 'b2222222-2222-2222-2222-222222222222' || l.vendedor_id === 'mayara' || (l.id && l.id.toLowerCase().includes('-may-')) || (!l.vendedor_id && !l.user_id) || (l.id && l.id.startsWith('lead-'));
-            }
-            if (sellerKey === 'barbara') {
-              const isExplicitOther = (l.user_id && l.user_id !== 'f6666666-6666-6666-6666-666666666666') || (l.vendedor_id && l.vendedor_id !== 'barbara') || (l.id && (l.id.includes('-GAB-') || l.id.includes('-MAY-') || l.id.includes('-FEL-') || l.id.includes('-EDU-') || l.id.includes('-ROD-')));
-              if (isExplicitOther) return false;
-              return l.user_id === 'f6666666-6666-6666-6666-666666666666' || l.vendedor_id === 'barbara' || (l.id && l.id.toLowerCase().includes('-bar-'));
-            }
-            if (sellerKey === 'eduardo') {
-              return l.user_id === 'd4444444-4444-4444-4444-444444444444' || l.vendedor_id === 'eduardo' || (l.id && l.id.toLowerCase().includes('-edu-'));
-            }
-            if (sellerKey === 'rodrigo') {
-              return l.user_id === 'e5555555-5555-5555-5555-555555555555' || l.vendedor_id === 'rodrigo' || (l.id && l.id.toLowerCase().includes('-rod-'));
-            }
-            return true;
+            return isLeadOfSeller(l, sellerKey);
           });
 
           const cloudInsta = [];
@@ -3697,14 +3750,18 @@
             }
           });
 
-          // Preserva e mescla leads padrão do vendedor caso ainda não estejam gravados no Supabase
-          const defaultInsta = (typeof getDefaultInstagramLeads === 'function') ? getDefaultInstagramLeads() : [];
-          const existingInstaIds = new Set(cloudInsta.map(i => i.id));
-          defaultInsta.forEach(defL => {
-            if (!existingInstaIds.has(defL.id)) {
-              cloudInsta.push(defL);
-            }
-          });
+          // Canal Instagram EXCLUSIVO do Gabriel Lima:
+          if (sellerKey === 'gabriel') {
+            const defaultInsta = (typeof getDefaultInstagramLeads === 'function') ? getDefaultInstagramLeads() : [];
+            const existingInstaIds = new Set(cloudInsta.map(i => i.id));
+            defaultInsta.forEach(defL => {
+              if (!existingInstaIds.has(defL.id)) {
+                cloudInsta.push(defL);
+              }
+            });
+          } else {
+            cloudInsta.length = 0; // Vendedores não-Gabriel nunca possuem Instagram
+          }
 
           // PRESERVAÇÃO CRÍTICA DE WHATSAPP / BASE HISTÓRICA DO GABRIEL:
           // Se a nuvem não retornou leads de WhatsApp para o Gabriel, NUNCA zerar os leads locais!
@@ -3730,9 +3787,13 @@
             lastSyncedWaJson = currentWaJson;
             lastSyncedInstaJson = currentInstaJson;
             leads = cloudWa;
-            instagramLeads = cloudInsta;
+            instagramLeads = (sellerKey === 'gabriel') ? cloudInsta : [];
             saveStorage();
-            saveInstagramStorage();
+            if (sellerKey === 'gabriel') {
+              saveInstagramStorage();
+            } else {
+              localStorage.removeItem(getInstagramStorageKey());
+            }
 
             renderKanban();
             renderInstagramBoard();
@@ -3901,22 +3962,10 @@
       if (!payload || !payload.eventType) return;
       const { eventType, new: newRow, old: oldRow } = payload;
 
-      // Isolamento de vendedor: se Gabriel estiver ativo, garante recebimento imediato dos leads dele
-      const isGabriel = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel') || authUser.id === 'a1111111-1111-1111-1111-111111111111';
-      const isMayara = authUser && (authUser.email?.toLowerCase().includes('mayara') || authUser.id === 'b2222222-2222-2222-2222-222222222222');
-      const isBarbara = authUser && (authUser.email?.toLowerCase().includes('barbara') || authUser.id === 'f6666666-6666-6666-6666-666666666666');
-      const isGabrielRecord = !newRow || !newRow.user_id || newRow.user_id === 'a1111111-1111-1111-1111-111111111111' || newRow.vendedor_id === 'gabriel';
-      const isMayaraRecord = newRow && (newRow.user_id === 'b2222222-2222-2222-2222-222222222222' || newRow.vendedor_id === 'mayara' || (newRow.id && newRow.id.toLowerCase().includes('-may-')));
-      const isBarbaraRecord = newRow && (newRow.user_id === 'f6666666-6666-6666-6666-666666666666' || newRow.vendedor_id === 'barbara' || (newRow.id && newRow.id.toLowerCase().includes('-bar-')));
-
-      if (isGabriel) {
-        if (newRow && !isGabrielRecord) return; // Se pertencer explicitamente a outro vendedor, ignora
-      } else if (isMayara) {
-        if (newRow && !isMayaraRecord) return; // Se pertencer explicitamente a outro vendedor, ignora
-      } else if (isBarbara) {
-        if (newRow && !isBarbaraRecord) return; // Se pertencer explicitamente a outro vendedor, ignora
-      } else if (authUser && newRow && newRow.user_id && newRow.user_id !== authUser.id) {
-        return;
+      const curSellerKey = getSellerKey(authUser);
+      // Isolamento estrito de vendedor em tempo real
+      if (newRow && !isLeadOfSeller(newRow, curSellerKey)) {
+        return; // Pertence a outro vendedor -> ignora
       }
 
       if (eventType === 'INSERT') {
@@ -4137,17 +4186,13 @@
         handleRealtimeUpdate(event.lead);
       } else if ((event.type === 'lead_whatsapp_incoming' || event.type === 'lead_whatsapp_interaction') && event.lead) {
         const currentSellerKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
-        const targetSellerKey = event.seller || (event.lead.vendedor_id) || 'gabriel';
-        const currentUserId = authUser ? authUser.id : 'a1111111-1111-1111-1111-111111111111';
-        const targetUserId = event.sellerUserId || event.lead.user_id;
-
-        const isSameSeller = (currentSellerKey === targetSellerKey) || (targetUserId && currentUserId === targetUserId) || (!authUser);
-        if (isSameSeller) {
-          if (event.action === 'inserted') {
-            handleRealtimeInsert(event.lead);
-          } else {
-            handleRealtimeUpdate(event.lead);
-          }
+        if (!isLeadOfSeller(event.lead, currentSellerKey)) {
+          return; // Isolamento estrito: ignora lead de outro vendedor
+        }
+        if (event.action === 'inserted') {
+          handleRealtimeInsert(event.lead);
+        } else {
+          handleRealtimeUpdate(event.lead);
         }
       }
     }
@@ -8431,38 +8476,25 @@
 
     function getDefaultInstagramLeads() {
       const seller = getSellerKey();
-      if (seller === 'rodrigo') return DEFAULT_INSTAGRAM_LEADS_RODRIGO;
-      if (seller === 'mayara') return DEFAULT_INSTAGRAM_LEADS_MAYARA;
-      if (seller === 'felipe') return DEFAULT_INSTAGRAM_LEADS_FELIPE;
-      if (seller === 'eduardo') return DEFAULT_INSTAGRAM_LEADS_EDUARDO;
-      return DEFAULT_INSTAGRAM_LEADS_GABRIEL;
+      if (seller === 'gabriel') return DEFAULT_INSTAGRAM_LEADS_GABRIEL;
+      return [];
     }
 
     function initInstagramStorage() {
       const key = getInstagramStorageKey();
-      const defaultLeads = getDefaultInstagramLeads();
       const currentSeller = getSellerKey();
+      if (currentSeller !== 'gabriel') {
+        instagramLeads = [];
+        renderInstagramBoard();
+        return;
+      }
+      const defaultLeads = getDefaultInstagramLeads();
       try {
         const stored = localStorage.getItem(key);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            let cleanedParsed = parsed;
-            // Purga leads residuais herdados indevidamente entre vendedores
-            if (currentSeller === 'eduardo') {
-              cleanedParsed = parsed.filter(l => l.id && (l.id.startsWith('CRM-EDU-') || l.id.startsWith('insta-edu-') || l.user_id === 'd4444444-4444-4444-4444-444444444444' || l.vendedor_id === 'eduardo'));
-              if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
-            } else if (currentSeller === 'felipe') {
-              cleanedParsed = parsed.filter(l => l.id && (l.id.startsWith('CRM-FEL-') || l.id.startsWith('insta-fel-') || l.user_id === 'c3333333-3333-3333-3333-333333333333' || l.vendedor_id === 'felipe'));
-              if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
-            } else if (currentSeller === 'mayara') {
-              cleanedParsed = parsed.filter(l => l.id && (l.id.startsWith('insta-may-') || l.id.startsWith('CRM-MAY-') || l.user_id === 'b2222222-2222-2222-2222-222222222222' || l.vendedor_id === 'mayara'));
-              if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
-            } else if (currentSeller === 'rodrigo') {
-              cleanedParsed = parsed.filter(l => l.id && (l.id.startsWith('CRM-ROD-') || l.id.startsWith('insta-rod-') || l.user_id === 'e5555555-5555-5555-5555-555555555555' || l.vendedor_id === 'rodrigo'));
-              if (cleanedParsed.length === 0) cleanedParsed = [...defaultLeads];
-            }
-            instagramLeads = cleanedParsed.filter(l => !l.phone || String(l.phone).replace(/\D/g, '').length < 8);
+            instagramLeads = parsed.filter(l => isLeadOfSeller(l, 'gabriel'));
           } else {
             instagramLeads = [...defaultLeads];
             saveInstagramStorage();
@@ -10517,6 +10549,15 @@
       });
 
       function switchView(viewName) {
+        if (viewName === 'instagram') {
+          const curSeller = getSellerKey(authUser);
+          if (curSeller !== 'gabriel') {
+            showToast('O funil do Instagram é exclusivo do Gabriel Lima.', 'info');
+            switchView('kanban');
+            return;
+          }
+        }
+
         if (viewName === 'resgate') {
           const role = getSellerRole(authUser);
           if (role !== 'admin') {
