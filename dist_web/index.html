@@ -3527,6 +3527,20 @@
     }
     window.isInstagramLead = isInstagramLead;
 
+    // Normalizador e Comparador Robusto de Telefones Brasileiros (DDD, DDI 55 e 9º Dígito)
+    function isMatchingPhone(phoneA, phoneB) {
+      if (!phoneA || !phoneB) return false;
+      const cleanA = String(phoneA).replace(/\D/g, '');
+      const cleanB = String(phoneB).replace(/\D/g, '');
+      if (!cleanA || !cleanB) return false;
+      if (cleanA === cleanB) return true;
+      if (cleanA.length >= 8 && cleanB.length >= 8) {
+        return cleanA.slice(-8) === cleanB.slice(-8);
+      }
+      return false;
+    }
+    window.isMatchingPhone = isMatchingPhone;
+
     // ==========================================
     // 2.1 SINCRONIZAÇÃO EM NUVEM (API SAAS / SUPABASE COM ISOLAMENTO STRICT)
     // ==========================================
@@ -3641,14 +3655,11 @@
           const isGabrielSync = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
           if (isGabrielSync) {
             const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : [];
-            const existingWaIds = new Set(cloudWa.map(l => l.id));
-            const existingPhones = new Set(cloudWa.filter(l => l.phone).map(l => String(l.phone).replace(/\D/g, '')));
-
             const sourcePool = (Array.isArray(leads) && leads.length >= 10) ? leads : baseLeads;
             sourcePool.forEach(l => {
-              const cleanPhone = l.phone ? String(l.phone).replace(/\D/g, '') : null;
-              const hasPhoneMatch = cleanPhone && existingPhones.has(cleanPhone);
-              if (!existingWaIds.has(l.id) && !hasPhoneMatch) {
+              const hasIdMatch = cloudWa.some(existing => existing.id === l.id);
+              const hasPhoneMatch = l.phone && cloudWa.some(existing => isMatchingPhone(existing.phone, l.phone));
+              if (!hasIdMatch && !hasPhoneMatch) {
                 cloudWa.push(l);
               }
             });
@@ -3659,6 +3670,7 @@
           const hasDataChanged = (currentWaJson !== lastSyncedWaJson) || (currentInstaJson !== lastSyncedInstaJson);
 
           if (hasDataChanged && (cloudInsta.length > 0 || cloudWa.length > 0)) {
+            const isInitialLoad = !lastSyncedWaJson && !lastSyncedInstaJson;
             lastSyncedWaJson = currentWaJson;
             lastSyncedInstaJson = currentInstaJson;
             leads = cloudWa;
@@ -3675,7 +3687,12 @@
               initQuarantineStorage();
             }
             updateMetrics();
-            if (!silent) showToast(`Sua carteira sincronizada! (${instagramLeads.length} Instagram | ${leads.length} WhatsApp)`, 'success');
+            if (!silent) {
+              showToast(`Sua carteira sincronizada! (${instagramLeads.length} Instagram | ${leads.length} WhatsApp)`, 'success');
+            } else if (!isInitialLoad) {
+              playNotificationSound();
+              showToast('⚡ O CRM foi atualizado com novas mensagens em tempo real!', 'info');
+            }
           }
 
           const pill = document.getElementById('status-supabase-text');
@@ -3849,9 +3866,9 @@
 
     function handleRealtimeInsert(row) {
       if (!row || !row.id) return;
-      // Evita duplicidade se já carregado localmente
-      const existsWa = leads.some(l => l.id === row.id);
-      const existsInsta = (typeof instagramLeads !== 'undefined') && instagramLeads.some(l => l.id === row.id);
+      // Evita duplicidade se já carregado localmente (por ID ou Telefone normalizado com/sem 9 e DDI 55)
+      const existsWa = leads.some(l => l.id === row.id || isMatchingPhone(l.phone, row.phone));
+      const existsInsta = (typeof instagramLeads !== 'undefined') && instagramLeads.some(l => l.id === row.id || isMatchingPhone(l.phone, row.phone));
       if (existsWa || existsInsta) {
         // Se já existe, atualiza os dados em tempo real
         handleRealtimeUpdate(row);
@@ -3902,7 +3919,7 @@
         renderClientsTable();
         renderFollowupCenter();
         playNotificationSound();
-        showToast(`⚡ [WhatsApp API] Novo Lead no Kanban do Gabriel: ${leadItem.name || 'Sem nome'}`, 'success');
+        showToast(`⚡ [WhatsApp API] Novo Lead no Kanban: ${leadItem.name || 'Sem nome'}`, 'success');
       }
 
       updateMetrics();
@@ -3912,14 +3929,7 @@
     function handleRealtimeUpdate(row) {
       if (!row || !row.id) return;
 
-      let idxWa = leads.findIndex(l => l.id === row.id);
-      // Se não encontrou por ID exato, busca por telefone normalizado
-      if (idxWa < 0 && row.phone) {
-        const cleanP = String(row.phone).replace(/\D/g, '');
-        if (cleanP.length >= 8) {
-          idxWa = leads.findIndex(l => l.phone && String(l.phone).replace(/\D/g, '') === cleanP);
-        }
-      }
+      let idxWa = leads.findIndex(l => l.id === row.id || isMatchingPhone(l.phone, row.phone));
 
       const idxInsta = (typeof instagramLeads !== 'undefined') ? instagramLeads.findIndex(l => l.id === row.id) : -1;
       const targetIsInsta = isInstagramLead(row);
@@ -10160,19 +10170,46 @@
         }
       });
 
-      // Sincronização periódica inteligente a cada 45 segundos e ao retomar foco da aba
+      // ==========================================
+      // MOTOR DE AUTO-SINCRONIZAÇÃO E KEEP-ALIVE (ZERO F5 & 24/7 NUVEM)
+      // ==========================================
+      // 1. Checagem inicial do status da conexão do WhatsApp
+      setTimeout(() => {
+        if (typeof checkCurrentSellerWhatsAppStatus === 'function') {
+          checkCurrentSellerWhatsAppStatus(false);
+        }
+      }, 2000);
+
+      // 2. Polling Contínuo a cada 10 segundos para o CRM atualizar sozinho
       setInterval(() => {
-        if (authUser && !document.hidden) {
+        if (!document.hidden && typeof syncFromSupabase === 'function') {
           syncFromSupabase(true);
         }
-      }, 45000);
+      }, 10000);
 
+      // 3. Monitoramento contínuo do WhatsApp (online/offline) a cada 20 segundos
+      setInterval(() => {
+        if (!document.hidden && typeof checkCurrentSellerWhatsAppStatus === 'function') {
+          checkCurrentSellerWhatsAppStatus(false);
+        }
+      }, 20000);
+
+      // 4. Ping Keep-Alive 24/7 para o servidor Render não hibernar (a cada 3 minutos)
+      setInterval(() => {
+        try {
+          fetch('https://piffpaff-evolution-api.onrender.com/', { method: 'GET', mode: 'no-cors' });
+        } catch (e) {}
+      }, 180000);
+
+      // 5. Atualização instantânea ao retomar o foco da aba
       window.addEventListener('focus', () => {
-        if (authUser) syncFromSupabase(true);
+        if (typeof syncFromSupabase === 'function') syncFromSupabase(true);
+        if (typeof checkCurrentSellerWhatsAppStatus === 'function') checkCurrentSellerWhatsAppStatus(false);
       });
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && authUser) {
-          syncFromSupabase(true);
+        if (document.visibilityState === 'visible') {
+          if (typeof syncFromSupabase === 'function') syncFromSupabase(true);
+          if (typeof checkCurrentSellerWhatsAppStatus === 'function') checkCurrentSellerWhatsAppStatus(false);
         }
       });
 
@@ -10955,10 +10992,10 @@
           text.className = 'text-amber-300 font-medium';
           pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium cursor-pointer transition select-none active:scale-95';
         } else {
-          dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-          text.textContent = 'Conectar WhatsApp';
-          text.className = 'text-slate-300 font-medium';
-          pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-xs font-medium cursor-pointer transition select-none active:scale-95';
+          dot.className = 'w-2 h-2 rounded-full bg-rose-400';
+          text.textContent = 'WhatsApp Desconectado';
+          text.className = 'text-rose-300 font-semibold';
+          pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-medium cursor-pointer transition select-none active:scale-95';
         }
       }
 
