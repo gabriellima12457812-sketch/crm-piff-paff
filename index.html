@@ -6829,107 +6829,7 @@
       }
     ];
 
-    const DEFAULT_ARCHITECTS_MAYARA = [
-      {
-        id: 'lead-1788980108953-e93yu',
-        name: 'Bruna Arquiteta',
-        office: 'Bruna Arquitetura & Interiores',
-        phone: '557199192510',
-        city: 'Salvador - BA',
-        status: 'Em Conversa',
-        lastInteraction: 'Atendimento inicial para especificação de área externa'
-      },
-      {
-        id: 'lead-1788980181565-2tlk1',
-        name: 'Giovana Design Interiores',
-        office: 'Giovana Design',
-        phone: '555481149981',
-        city: 'Caxias do Sul - RS',
-        status: 'Em Conversa',
-        lastInteraction: 'Catálogo de poltronas e chaises apresentado'
-      },
-      {
-        id: 'lead-1788981454352-9j29f',
-        name: 'Ucha Design',
-        office: 'Ucha Design de Interiores',
-        phone: '5511973000073',
-        city: 'São Paulo - SP',
-        status: 'Reunião Agendada',
-        lastInteraction: 'Especificação técnica para residência de alto padrão'
-      },
-      {
-        id: 'lead-1788982274117-5snzh',
-        name: 'Raquel Arquiteta',
-        office: 'Raquel Arquitetura',
-        phone: '558299977222',
-        city: 'Maceió - AL',
-        status: 'A Contatar',
-        lastInteraction: 'Contato via anúncio Instagram'
-      },
-      {
-        id: 'lead-1788982277497-q46my',
-        name: 'Gisele Ribeiro Arquiteta',
-        office: 'Gisele Ribeiro Interiores',
-        phone: '5522999886553',
-        city: 'Cabo Frio - RJ',
-        status: 'Parceiro Ativo',
-        lastInteraction: 'Projeto de área de piscina e varanda gourmet'
-      },
-      {
-        id: 'lead-1788982285237-cj3eu',
-        name: 'Arquiteta Maiara E Marcio',
-        office: 'Maiara & Marcio Arquitetura',
-        phone: '554784280110',
-        city: 'Balneário Camboriú - SC',
-        status: 'Em Conversa',
-        lastInteraction: 'Envio de referências de cordas náuticas e acabamentos'
-      },
-      {
-        id: 'lead-1788982288825-nv8dt',
-        name: 'Claudia Arquiteta',
-        office: 'Claudia Arquitetura',
-        phone: '554199773290',
-        city: 'Curitiba - PR',
-        status: 'Reunião Agendada',
-        lastInteraction: 'Reunião de alinhamento para condomínio fechado'
-      },
-      {
-        id: 'lead-1788982293797-53opg',
-        name: 'Letícia Vidal (Juliana Martins Arq)',
-        office: 'Juliana Martins Arquitetura',
-        phone: '551934754632',
-        city: 'Americana - SP',
-        status: 'Parceiro Ativo',
-        lastInteraction: 'Comercial e compras para projetos corporativos'
-      },
-      {
-        id: 'lead-1788982302558-gd82s',
-        name: 'Lilia Aragão Arquitetura',
-        office: 'Lilia Aragão Arquitetura',
-        phone: '554899611240',
-        city: 'Florianópolis - SC',
-        status: 'Em Conversa',
-        lastInteraction: 'Projeto náutico residencial'
-      },
-      {
-        id: 'lead-1788982306609-vnz67',
-        name: 'Veronica Arquiteta Condomínio',
-        office: 'Veronica Arquitetura de Condomínios',
-        phone: '554796393172',
-        city: 'Joinville - SC',
-        status: 'A Contatar',
-        lastInteraction: 'Especificação para áreas comuns e pergolados'
-      },
-      {
-        id: 'lead-1788971937813-i9z4x',
-        name: 'Danyella Britto Arquitetura',
-        office: 'Danyella Britto Arquitetura',
-        phone: '5521971322254',
-        city: 'Rio de Janeiro - RJ',
-        status: 'Parceiro Ativo',
-        lastInteraction: 'Projetos de alto padrão residencial'
-      }
-    ];
+    const DEFAULT_ARCHITECTS_MAYARA = [];
 
     const DEFAULT_ARCHITECTS_FELIPE = [
       {
@@ -6974,6 +6874,21 @@
       const key = getArchitectsStorageKey();
       const defaultList = getDefaultArchitectsForCurrentSeller();
       const seller = getSellerKey();
+
+      // Reset total para Mayara iniciar carteira de arquitetos do zero absoluto:
+      if (seller === 'mayara') {
+        const resetKey = 'PIFF_ARCHITECTS_ZEROED_MAYARA_FINAL_V1';
+        if (!localStorage.getItem(resetKey)) {
+          localStorage.removeItem('PIFF_ARCHITECTS_B2B_mayara');
+          localStorage.removeItem('PIFF_ARCHITECTS_B2B');
+          localStorage.setItem('PIFF_ARCHITECTS_B2B_mayara', '[]');
+          localStorage.setItem(resetKey, 'true');
+          architectsList = [];
+          saveArchitectsStorage();
+          renderArchitectsTable();
+          return;
+        }
+      }
 
       try {
         const stored = localStorage.getItem(key);
@@ -7029,6 +6944,8 @@
     function syncArchitectsFromCRM() {
       if (!Array.isArray(leads) || leads.length === 0) return;
       const seller = getSellerKey();
+      if (seller === 'mayara') return; // Mayara começa do zero absoluto, sem injeção automática de arquitetos antigos
+
       let added = 0;
       leads.forEach(l => {
         // Bloqueio rigoroso de contaminação cruzada:
