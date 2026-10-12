@@ -3772,6 +3772,9 @@
       lastSyncedInstaJson = '';
       leads = [];
       instagramLeads = [];
+      if (normalizedKey !== 'gabriel') {
+        architectsList = [];
+      }
 
       closeLoginScreen();
       updateSellerBadge(authUser);
@@ -7157,80 +7160,64 @@
     }
 
     function getDefaultArchitectsForCurrentSeller() {
-      const seller = getSellerKey();
+      const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
       if (seller === 'gabriel') return DEFAULT_ARCHITECTS_GABRIEL;
       return [];
     }
 
     function initArchitectsStorage() {
+      const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
       const key = getArchitectsStorageKey();
-      const seller = getSellerKey();
 
-      // Reset total para todos os vendedores exceto Gabriel começarem do ZERO absoluto
+      // Regra Absoluta: Qualquer vendedor diferente de Gabriel SEMPRE possui 0 arquitetos
       if (seller !== 'gabriel') {
-        const resetKey = 'PIFF_ARCHITECTS_ZEROED_ALL_V5_' + seller;
-        if (!localStorage.getItem(resetKey)) {
-          localStorage.removeItem(key);
-          localStorage.removeItem('PIFF_ARCHITECTS_B2B_' + seller);
+        try {
           localStorage.removeItem('PIFF_ARCHITECTS_B2B');
+          localStorage.removeItem('PIFF_ARCHITECTS_B2B_' + seller);
           localStorage.setItem(key, '[]');
-          localStorage.setItem(resetKey, 'true');
-          architectsList = [];
-          saveArchitectsStorage();
-          renderArchitectsTable();
-          return;
-        }
+        } catch (e) {}
+        architectsList = [];
+        saveArchitectsStorage();
+        renderArchitectsTable();
+        return;
       }
 
+      // Somente o Gabriel carrega a carteira oficial de arquitetos
       try {
         const stored = localStorage.getItem(key);
         if (stored) {
-          let parsed = JSON.parse(stored);
+          const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Isolamento estrito: purga qualquer resíduo de arquitetos da base padrão do Gabriel
-            if (seller !== 'gabriel') {
-              const gabrielPhones = new Set(DEFAULT_ARCHITECTS_GABRIEL.map(g => (g.phone || '').replace(/\D/g, '')));
-              const gabrielIds = new Set(DEFAULT_ARCHITECTS_GABRIEL.map(g => g.id));
-              const gabrielNames = ['charão', 'dayana tavares', 'aline granja', 'aline horne', 'márcia portela', 'marcia portela', 'luciana soares', 'magda'];
-
-              parsed = parsed.filter(a => {
-                const aP = (a.phone || '').replace(/\D/g, '');
-                const aName = (a.name || '').toLowerCase();
-                if (gabrielIds.has(a.id)) return false;
-                if (a.id && a.id.includes('-GAB-')) return false;
-                if (aP && gabrielPhones.has(aP)) return false;
-                if (gabrielNames.some(gn => aName.includes(gn))) return false;
-                return true;
-              });
-            }
-
-            // Purga números fictícios de teste anteriores (ex: 47999998888, Juliana Mendes)
-            parsed = parsed.filter(a => a.phone !== '47999998888' && a.name !== 'Juliana Mendes' && a.phone !== '47988887777');
-
-            // Garante que todos os arquitetos oficiais deste vendedor estejam na lista
-            defaultList.forEach(defA => {
-              const defCleanP = (defA.phone || '').replace(/\D/g, '');
-              const exists = parsed.some(p => p.id === defA.id || ((p.phone || '').replace(/\D/g, '') === defCleanP));
-              if (!exists) parsed.push(defA);
-            });
-
             architectsList = parsed;
-            saveArchitectsStorage();
           } else {
-            architectsList = [...defaultList];
+            architectsList = [...DEFAULT_ARCHITECTS_GABRIEL];
             saveArchitectsStorage();
           }
         } else {
-          architectsList = [...defaultList];
+          architectsList = [...DEFAULT_ARCHITECTS_GABRIEL];
           saveArchitectsStorage();
         }
       } catch (e) {
-        architectsList = [...defaultList];
+        architectsList = [...DEFAULT_ARCHITECTS_GABRIEL];
       }
 
-      // Sincroniza automaticamente qualquer arquiteto adicional da base do CRM desse vendedor
       syncArchitectsFromCRM();
       renderArchitectsTable();
+    }
+    window.initArchitectsStorage = initArchitectsStorage;
+
+    function saveArchitectsStorage() {
+      try {
+        const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
+        const key = getArchitectsStorageKey();
+        if (seller !== 'gabriel') {
+          localStorage.setItem(key, '[]');
+        } else {
+          localStorage.setItem(key, JSON.stringify(architectsList || []));
+        }
+      } catch (e) {
+        console.warn('Erro ao salvar arquitetos:', e);
+      }
     }
 
     function syncArchitectsFromCRM() {
@@ -7289,6 +7276,12 @@
       const tbody = document.getElementById('table-architects-body');
       if (!tbody) return;
       tbody.innerHTML = '';
+
+      const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
+      // Bloqueio rigoroso em tempo de render: quem não for Gabriel NUNCA visualiza arquitetos do Gabriel
+      if (seller !== 'gabriel') {
+        architectsList = [];
+      }
 
       const total = architectsList.length;
       const countContatar = architectsList.filter(a => a.status === 'A Contatar').length;
@@ -10880,6 +10873,7 @@
         } else if (viewName === 'clients') {
           resetClientsFilters();
         } else if (viewName === 'architects') {
+          initArchitectsStorage();
           renderArchitectsTable();
         } else if (viewName === 'dashboard') {
           renderDashboardCharts();
