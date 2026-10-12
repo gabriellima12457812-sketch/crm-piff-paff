@@ -9,6 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <!-- Supabase JS Client v2 (Realtime Broadcast) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Rascunho local de apoio -->
   <script src="draft.js"></script>
 
@@ -759,7 +760,8 @@
         <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
           <div class="form-group">
             <label>Data do Pedido <span class="required">*</span></label>
-            <input type="date" id="orderDate" required readonly />
+            <input type="date" id="orderDate" required />
+            <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:2px;">🔒 Permite data de hoje ou datas futuras (bloqueado para o passado)</small>
           </div>
           
           <!-- CAMPO DE PRAZO - NÃO APARECE NA IMPRESSÃO -->
@@ -925,11 +927,8 @@
           </div>
 
           <div class="form-group full-width">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-              <label style="margin:0;">Observações / Condições de Pagamento</label>
-              <button type="button" id="formatObsBtn" style="background:#e6f4ea; border:1px solid #137333; color:#137333; border-radius:4px; font-size:11px; padding:3px 10px; cursor:pointer; font-weight:600;" title="Escrever valores por extenso entre parênteses no padrão contratual">⚖️ Formatar Padrão Contrato (Extenso)</button>
-            </div>
-            <textarea id="observations" rows="3" placeholder="Ex: Entrada de R$ 5.000,00 via PIX e saldo de R$ 10.000,00 na entrega em 3x no cartão..."></textarea>
+            <label>Observações Gerais</label>
+            <textarea id="observations" rows="3" placeholder="Informações adicionais sobre o pedido..."></textarea>
           </div>
         </div>
 
@@ -1054,6 +1053,14 @@
         if (!isoDate) return '-';
         const [year, month, day] = isoDate.split('-');
         return `${day}/${month}/${year}`;
+      };
+
+      const getTodayDateStr = () => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
       };
 
       const onlyNumbers = (str) => (str || '').toString().replace(/\D/g, '');
@@ -1232,7 +1239,6 @@
         totalAmount: $('#totalAmount'),
         paymentMethod: $('#paymentMethod'),
         observations: $('#observations'),
-        formatObsBtn: $('#formatObsBtn'),
         pdfBtn: $('#pdfBtn'),
         contractBtn: $('#contractBtn'),
         syncCloudBtn: $('#syncCloudBtn'),
@@ -1666,9 +1672,14 @@
         const complemento = elements.complemento.value.trim();
         const fullAddress = complemento ? `${addressParts} - ${complemento}` : addressParts;
         
+        const todayStr = getTodayDateStr();
+        const orderDateVal = (!state.editingOrderNumber && elements.orderDate.value < todayStr)
+          ? todayStr
+          : (elements.orderDate.value || todayStr);
+
         return {
           number: Number(elements.orderNumber.value),
-          date: elements.orderDate.value,
+          date: orderDateVal,
           prazoDias: elements.prazoDias.value,   // MUDANÇA 1
           deliveryDate: elements.deliveryDate.value,
           sellerName: elements.sellerName.value.trim(),
@@ -1697,9 +1708,11 @@
         elements.form.reset();
         state.editingOrderNumber = null;
         
-        const today = new Date();
-        elements.orderDate.value = today.toISOString().split('T')[0];
-        elements.deliveryDate.valueAsDate = addBusinessDays(today, 5);
+        const todayStr = getTodayDateStr();
+        elements.orderDate.min = todayStr;
+        elements.orderDate.value = todayStr;
+        elements.deliveryDate.min = todayStr;
+        elements.deliveryDate.valueAsDate = addBusinessDays(new Date(), 5);
         elements.prazoDias.value = '';
         elements.discountValue.value = '';
         
@@ -1718,6 +1731,7 @@
         state.editingOrderNumber = order.number;
         
         elements.orderNumber.value = order.number;
+        elements.orderDate.removeAttribute('min');
         elements.orderDate.value = order.date;
         elements.prazoDias.value = order.prazoDias || '';
         elements.deliveryDate.value = order.deliveryDate;
@@ -1840,15 +1854,26 @@
         const estado = draft.estado || parsedAddr.estado || (draft.endereco && draft.endereco.estado) || '';
         if (estado) elements.estado.value = estado.toUpperCase();
 
-        const date = parsedFromBlob.date || draft.date || draft.data || '';
-        if (date) {
-          if (date.includes('/')) {
-            const dp = date.split('/');
-            elements.orderDate.value = `${dp[2]}-${dp[1].padStart(2, '0')}-${dp[0].padStart(2, '0')}`;
+        const rawDraftDate = parsedFromBlob.date || draft.date || draft.data || '';
+        let draftDateIso = '';
+        if (rawDraftDate) {
+          if (rawDraftDate.includes('/')) {
+            const dp = rawDraftDate.split('/');
+            draftDateIso = `${dp[2]}-${dp[1].padStart(2, '0')}-${dp[0].padStart(2, '0')}`;
           } else {
-            elements.orderDate.value = date;
+            draftDateIso = rawDraftDate;
           }
         }
+
+        const todayStr = getTodayDateStr();
+        elements.orderDate.min = todayStr;
+        // Permite data de hoje ou datas futuras; impede datas retroativas
+        if (draftDateIso && draftDateIso >= todayStr) {
+          elements.orderDate.value = draftDateIso;
+        } else {
+          elements.orderDate.value = todayStr;
+        }
+        elements.deliveryDate.min = elements.orderDate.value;
 
         const prazo = draft.prazoDias || draft.prazo || '';
         if (prazo) {
@@ -2003,8 +2028,9 @@
         }
       }
 
+      
       // ==========================================
-      // SINCRONIZAÇÃO EM TEMPO REAL COM O CRM (BROADCAST & NUVEM)
+      // SINCRONIZACAO EM TEMPO REAL COM O CRM (BROADCAST & NUVEM)
       // ==========================================
       function getSupabaseClient() {
         const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
@@ -2019,7 +2045,7 @@
       function broadcastOrderToCrm(order) {
         if (!order) return;
 
-        // 1. Broadcast local instantâneo entre abas abertas (0ms)
+        // 1. Broadcast local instantaneo entre abas abertas (0ms)
         try {
           if (typeof BroadcastChannel !== 'undefined') {
             const bus = new BroadcastChannel('piffpaff_crm_realtime_bus');
@@ -2074,15 +2100,17 @@
                   },
                   body: JSON.stringify({
                     stage: 'concluidas',
-                    value: Number(totalVal) || targetLead.value,
+                    value: totalVal,
                     notes: updatedNotes,
                     last_interaction: new Date().toISOString()
                   })
-                });
+                }).catch(e => console.warn('Erro ao atualizar lead apos pedido:', e));
               }
-            }).catch(() => {});
+            }).catch(e => console.warn('Erro ao buscar lead por telefone:', e));
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Erro no sync de pedido para Supabase:', e);
+        }
       }
 
       function valorPorExtenso(valor) {
@@ -2141,86 +2169,6 @@
         return textoReais;
       }
 
-      function formatarObservacoesContrato(obs) {
-        if (!obs || !obs.trim()) {
-          return '• Conforme condições comerciais acertadas entre as partes.';
-        }
-
-        function converterValor(numStr) {
-          const val = parseMoney(numStr);
-          if (!val || val <= 0) return null;
-          const formatado = formatMoney(val);
-          const extenso = valorPorExtenso(val);
-          return `${formatado} (${extenso})`;
-        }
-
-        const linhas = obs.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-
-        const linhasProcessadas = linhas.map(linha => {
-          let texto = linha;
-
-          // 1. Valores explicitamente precedidos por R$ (ex: R$4800, R$ 4800, R$4800,00, R$ 4.800,00, R$ 4.800, R$ 400)
-          // O lookahead (?![0-9%]) assegura que capturamos o número completo sem bloquear palavras a seguir (como 'pix')
-          texto = texto.replace(/(?:R\$\s*)([0-9]{1,3}(?:\.[0-9]{3})+(?:,[0-9]{1,2})?|[0-9]+(?:,[0-9]{1,2})?)(?![0-9%])(\s*\([^)]*(?:reais|real)[^)]*\))?/gi, (match, numStr, ext) => {
-            if (ext && ext.trim()) return match;
-            const conv = converterValor(numStr);
-            return conv ? conv : match;
-          });
-
-          // 2. Valores formatados com ponto de milhar (ex: 4.000,00 ou 4.000 ou 15.000,00) sem R$
-          texto = texto.replace(/\b([0-9]{1,3}(?:\.[0-9]{3})+(?:,[0-9]{2})?)\b(?!\s*[%/])(\s*\([^)]*(?:reais|real)[^)]*\))?/gi, (match, numStr, ext) => {
-            if (ext && ext.trim()) return match;
-            const conv = converterValor(numStr);
-            return conv ? conv : match;
-          });
-
-          // 3. Valores com vírgula de centavos sem ponto de milhar (ex: 4000,00 ou 4800,00 ou 500,00) sem R$
-          texto = texto.replace(/\b([0-9]{3,},[0-9]{2})\b(?!\s*[%/])(\s*\([^)]*(?:reais|real)[^)]*\))?/gi, (match, numStr, ext) => {
-            if (ext && ext.trim()) return match;
-            const conv = converterValor(numStr);
-            return conv ? conv : match;
-          });
-
-          // 4. Valores inteiros (ex: 4800, 4000, 10000) precedidos por termos comerciais ou conectivos
-          // ex: "entrada de 4800", "saldo de 4800", "3x de 1600", "pix de 4800", "sinal 4800"
-          texto = texto.replace(/\b(entrada(?:\s+de)?|sinal(?:\s+de)?|saldo(?:\s+de)?|restante(?:\s+de)?|valor(?:\s+de)?|parcela(?:\s+de)?|parcelas(?:\s+de)?|pix(?:\s+de)?|ato(?:\s+de)?|entrega(?:\s+de)?|\bx\s+de)\s*:?\s*([0-9]{3,})\b(?!\s*[%/])(\s*\([^)]*(?:reais|real)[^)]*\))?/gi, (match, termo, numStr, ext) => {
-            if (ext && ext.trim()) return match;
-            const numVal = parseInt(numStr, 10);
-            if (numVal >= 2020 && numVal <= 2035 && /^(?:de)$/i.test(termo.trim())) {
-              return match;
-            }
-            const conv = converterValor(numStr);
-            return conv ? `${termo} ${conv}` : match;
-          });
-
-          // 5. Valores inteiros (ex: 4800, 4000) seguidos de contexto de pagamento (ex: "4800 pix", "4000 no pix", "4000 na entrega", "4000 no ato", "4000 no cartão")
-          texto = texto.replace(/\b([0-9]{3,})\b(?=\s+(?:pix|no\s+pix|na\s+entrega|no\s+ato|no\s+cart[ãa]o|em\s+dinheiro|à\s+vista|a\s+vista|no\s+boleto|entrada|saldo|entrega))/gi, (match, numStr) => {
-            const conv = converterValor(numStr);
-            return conv ? conv : match;
-          });
-
-          // 6. Se a linha contiver apenas o número (ex: "4800", "4000", "4000,00", "4.000")
-          if (/^([0-9]{3,}(?:,[0-9]{2})?|[0-9]{1,3}(?:\.[0-9]{3})+(?:,[0-9]{2})?)$/.test(texto.trim())) {
-            const conv = converterValor(texto.trim());
-            if (conv) texto = conv;
-          }
-
-          let limpa = texto.replace(/^[-•*]\s*/, '').trim();
-          if (limpa) {
-            limpa = limpa.charAt(0).toUpperCase() + limpa.slice(1);
-            if (!/[.;]$/.test(limpa)) {
-              limpa += '.';
-            }
-            return `• ${limpa}`;
-          }
-          return '';
-        }).filter(Boolean);
-
-        return linhasProcessadas.length > 0
-          ? linhasProcessadas.join('\n')
-          : '• Conforme condições comerciais acertadas entre as partes.';
-      }
-
       function generateContractPDF() {
         const data = getOrderFromForm();
         if (!data.client) {
@@ -2275,23 +2223,33 @@
         doc.text('CONTRATO DE COMPRA E VENDA DE MÓVEIS', pageW / 2, y, { align: 'center' });
         y += 12;
 
-        const today = new Date();
+        let contractDate = new Date();
+        if (data.date) {
+          const parts = data.date.split('-');
+          if (parts.length === 3) {
+            contractDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+          }
+        }
         const meses = [
           'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
           'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
         ];
-        const dataEmissaoExtenso = `Camboriú/SC, ${today.getDate()} de ${meses[today.getMonth()]} de ${today.getFullYear()}.`;
+        const dataEmissaoExtenso = `${data.cidade || 'Americana'}/${data.estado || 'SP'}, ${contractDate.getDate()} de ${meses[contractDate.getMonth()]} de ${contractDate.getFullYear()}.`;
+
+        const itemsListStr = (data.items || []).map(item => {
+          return `${item.quantity}x ${item.description} (Cód: ${item.code || '-'}) - Unitário: ${item.price} - Total: ${item.total}`;
+        }).join('; ');
 
         const totalValue = data.totals?.total || 0;
         const totalWords = valorPorExtenso(totalValue);
         const valorFormatado = formatMoney(totalValue);
-        const obsPagamento = formatarObservacoesContrato(data.observations);
+        const obsPagamento = data.observations || 'Conforme condições comerciais acertadas.';
 
         const contratanteText = `CONTRATANTE: ${data.client || '_____________________________________'}, inscrito no CPF/CNPJ nº ${data.document || '_____________________'}, residente na ${data.address || '____________________________________________________'}, Bairro ${data.bairro || '__________________'}, ${data.cidade || '__________________'}/${data.estado || '__'}, CEP ${data.cep || '________-___'}, telefone ${data.phone || '_________________'}, e-mail ${data.email || '_____________________'}, doravante denominado CONTRATANTE.`;
 
-        const objetoText = `CLÁUSULA PRIMEIRA – DO OBJETO\nO objeto deste contrato é a fabricação e o fornecimento dos móveis descritos no Pedido nº ${data.number}, no valor total de ${valorFormatado} (${totalWords}), conforme modelos, quantidades, medidas, materiais, cores e acabamentos aprovados pelo CONTRATANTE e descritos no Pedido de Venda anexo, que integra este instrumento.`;
+        const objetoText = `CLÁUSULA PRIMEIRA – DO OBJETO\nO objeto deste contrato é a fabricação e o fornecimento dos móveis descritos no Pedido nº ${data.number}, no valor total de ${valorFormatado} (${totalWords}), conforme modelos, quantidades, medidas, materiais, cores e acabamentos aprovados pelo CONTRATANTE e descritos a seguir: ${itemsListStr}.`;
 
-        const precoText = `CLÁUSULA SEGUNDA – DO PREÇO E PAGAMENTO\nO pagamento total de ${valorFormatado} (${totalWords}) será realizado da seguinte forma:\n${obsPagamento}\nA produção somente será iniciada após a confirmação da entrada e das especificações do pedido. O despacho fica condicionado à quitação integral do saldo.`;
+        const precoText = `CLÁUSULA SEGUNDA – DO PREÇO E PAGAMENTO\nO pagamento total de ${valorFormatado} (${totalWords}) será realizado da seguinte forma:\n• ${obsPagamento}\nA produção somente será iniciada após a confirmação da entrada e das especificações do pedido. O despacho fica condicionado à quitação integral do saldo.`;
 
         const prazoDiasVal = data.prazoDias || '60';
         const prazoText = `CLÁUSULA TERCEIRA – DO PRAZO E DAS ALTERAÇÕES\nO prazo estimado de produção e disponibilização para entrega é de ${prazoDiasVal} dias, contados do pagamento da entrada e da aprovação final das especificações necessárias à produção. Qualquer alteração após a aprovação deverá ser solicitada por escrito e dependerá de aceite da CONTRATADA.`;
@@ -2318,16 +2276,11 @@
         
         printParagraph(`CLÁUSULA NONA – DISPOSIÇÕES FINAIS E FORO\nO Pedido nº ${data.number} faz parte integrante deste contrato. Em caso de alteração posterior, somente terão validade as condições formalizadas por escrito entre as partes. Fica eleito o foro da Comarca de Camboriú/SC para dirimir qualquer dúvida.`, false, 10);
         
-        // ── DATA E ASSINATURAS SEMPRE JUNTAS NA MESMA FOLHA ──
-        // Garante que a data e todo o bloco de assinaturas (Contratada, Contratante e Testemunhas)
-        // fiquem obrigatoriamente na mesma folha. Se não houver espaço suficiente (~70mm),
-        // quebra a página ANTES da data, para que tudo fique junto por padrão.
-        checkPageBreak(70);
-
         y += 5;
         printParagraph(dataEmissaoExtenso, true, 10, 'right');
         
         y += 15;
+        checkPageBreak(30);
         doc.line(marginX, y, marginX + 80, y);
         doc.text('COMÉRCIO DE MÓVEIS CARIBE LTDA', marginX, y + 5);
         doc.text('CONTRATADA', marginX, y + 10);
@@ -2337,6 +2290,7 @@
         doc.text('CONTRATANTE', pageW - marginX - 80, y + 10);
 
         y += 25;
+        checkPageBreak(30);
         doc.line(marginX, y, marginX + 80, y);
         doc.text('TESTEMUNHA 1', marginX, y + 5);
         doc.text('CPF:', marginX, y + 10);
@@ -2344,10 +2298,6 @@
         doc.line(pageW - marginX - 80, y, pageW - marginX, y);
         doc.text('TESTEMUNHA 2', pageW - marginX - 80, y + 5);
         doc.text('CPF:', pageW - marginX - 80, y + 10);
-
-        // ── ANEXO AUTOMÁTICO DO PEDIDO ──────────────────────
-        doc.addPage();
-        renderOrderSheet(doc, data, true);
 
         doc.save(`Contrato_Pedido_${data.number}_CaribeMoveis.pdf`);
       }
@@ -2369,14 +2319,6 @@
 
       function renderOrdersList() {
         let orders = [...state.orders];
-        const urlParams = new URLSearchParams(window.location.search);
-        const activeSeller = urlParams.get('seller') || '';
-        if (activeSeller) {
-          const sLower = activeSeller.toLowerCase();
-          if (sLower.includes('felipe') || sLower.includes('mayara') || sLower.includes('eduardo') || sLower.includes('rodrigo')) {
-            orders = orders.filter(o => o.sellerName && o.sellerName.toLowerCase().includes(sLower));
-          }
-        }
         
         const start = elements.filterStart.value;
         const end = elements.filterEnd.value;
@@ -2421,14 +2363,6 @@
         const period = elements.rankingPeriod.value;
         const now = new Date();
         let orders = [...state.orders];
-        const urlParams = new URLSearchParams(window.location.search);
-        const activeSeller = urlParams.get('seller') || '';
-        if (activeSeller) {
-          const sLower = activeSeller.toLowerCase();
-          if (sLower.includes('felipe') || sLower.includes('mayara') || sLower.includes('eduardo') || sLower.includes('rodrigo')) {
-            orders = orders.filter(o => o.sellerName && o.sellerName.toLowerCase().includes(sLower));
-          }
-        }
         
         if (period === 'today') {
           const today = now.toISOString().split('T')[0];
@@ -2556,23 +2490,16 @@
         elements.modal.classList.remove('active');
       }
 
-      // ----- RENDERIZAÇÃO DO PEDIDO (FOLHA DO PEDIDO / ANEXO) -----
-      function renderOrderSheet(doc, data, isAttachment = false) {
+      // ----- PDF -----
+      function generatePDF(order = null) {
+        const data = order || getOrderFromForm();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
         const marginX = 15;
         const pageW = 210;
         const usableW = pageW - (marginX * 2);
-        let y = isAttachment ? 18 : 20;
-
-        if (isAttachment) {
-          doc.setFillColor(33, 33, 33);
-          doc.rect(marginX, y - 5, usableW, 8, 'F');
-          doc.setTextColor(255);
-          doc.setFontSize(10);
-          doc.setFont(undefined, 'bold');
-          doc.text(`ANEXO DO CONTRATO – PEDIDO DE VENDA Nº ${data.number}`, pageW / 2, y, { align: 'center' });
-          doc.setTextColor(0);
-          y += 12;
-        }
+        let y = 20;
 
         // ── CABEÇALHO ──────────────────────────────────────
         doc.setFontSize(20);
@@ -2733,15 +2660,7 @@
         doc.setFontSize(8);
         doc.setTextColor(150);
         doc.text('Sistema Caribe Móveis - Documento gerado em ' + new Date().toLocaleString('pt-BR'), pageW / 2, 290, { align: 'center' });
-        doc.setTextColor(0);
-      }
 
-      // ----- PDF DO PEDIDO AVULSO -----
-      function generatePDF(order = null) {
-        const data = order || getOrderFromForm();
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        renderOrderSheet(doc, data, false);
         doc.save(`Pedido_${data.number}_CaribeMoveis.pdf`);
       }
 
@@ -2774,7 +2693,23 @@
         
         // MUDANÇA 1: calcular data de entrega ao digitar prazo ou mudar data
         elements.prazoDias.addEventListener('input', calcularDataEntrega);
-        elements.orderDate.addEventListener('change', calcularDataEntrega);
+        elements.orderDate.addEventListener('change', () => {
+          const todayStr = getTodayDateStr();
+          if (!state.editingOrderNumber && elements.orderDate.value < todayStr) {
+            alert(`A Data do Pedido não pode ser anterior à data de hoje (${formatDateBR(todayStr)}). A data foi redefinida para hoje.`);
+            elements.orderDate.value = todayStr;
+          }
+          if (elements.orderDate.value) {
+            elements.deliveryDate.min = elements.orderDate.value;
+          }
+          calcularDataEntrega();
+        });
+        elements.orderDate.addEventListener('input', () => {
+          const todayStr = getTodayDateStr();
+          if (!state.editingOrderNumber && elements.orderDate.value && elements.orderDate.value < todayStr) {
+            elements.orderDate.value = todayStr;
+          }
+        });
         
         // Itens
         elements.addItemBtn.addEventListener('click', () => {
@@ -2802,6 +2737,10 @@
             return;
           }
           
+          const todayStr = getTodayDateStr();
+          if (!state.editingOrderNumber && elements.orderDate.value < todayStr) {
+            elements.orderDate.value = todayStr;
+          }
           const order = getOrderFromForm();
           
           const existingIndex = state.orders.findIndex(o => o.number === order.number);
@@ -2860,18 +2799,6 @@
           generateContractPDF();
         });
 
-        // Formatar Observações no Padrão Contratual (Extenso)
-        if (elements.formatObsBtn) {
-          elements.formatObsBtn.addEventListener('click', () => {
-            if (!elements.observations.value.trim()) {
-              alert('Digite as condições de pagamento nas observações primeiro.');
-              return;
-            }
-            elements.observations.value = formatarObservacoesContrato(elements.observations.value);
-            showSuccess('Observações formatadas no padrão de contrato com valores por extenso!');
-          });
-        }
-
         // Sincronizar Nuvem
         elements.syncCloudBtn.addEventListener('click', fetchCloudDraft);
         
@@ -2923,9 +2850,11 @@
 
       // ----- INICIALIZAÇÃO -----
       function init() {
-        const today = new Date();
-        elements.orderDate.value = today.toISOString().split('T')[0];
-        elements.deliveryDate.valueAsDate = addBusinessDays(today, 5);
+        const todayStr = getTodayDateStr();
+        elements.orderDate.min = todayStr;
+        elements.orderDate.value = todayStr;
+        elements.deliveryDate.min = todayStr;
+        elements.deliveryDate.valueAsDate = addBusinessDays(new Date(), 5);
         updateOrderNumber();
         
         initEventListeners();
@@ -2936,17 +2865,17 @@
         // Tenta buscar o rascunho mais recente da nuvem
         fetchCloudDraft();
 
-        // Integração nativa com CRM Piff-Paff
+        // Integracao nativa com CRM Piff-Paff
         try {
           const urlParams = new URLSearchParams(window.location.search);
-          const sellerParam = urlParams.get('seller');
+          const sellerParam = urlParams.get('seller') || urlParams.get('vendedor');
           if (sellerParam) {
             if (elements.sellerName && !elements.sellerName.value) {
               elements.sellerName.value = sellerParam;
             }
             const headerP = document.querySelector('.header p');
             if (headerP) {
-              headerP.innerHTML = `Sistema de Gerenciamento de Ordens de Pedido • <span style="display:inline-block; padding:3px 10px; border-radius:12px; background:#101C27; color:#00D2D3; font-weight:bold; border:1px solid #00D2D3; font-size:0.85em;">👤 Vendedor: ${sellerParam}</span>`;
+              headerP.innerHTML = `Sistema de Gerenciamento de Ordens de Pedido ? <span style="display:inline-block; padding:3px 10px; border-radius:12px; background:#101C27; color:#00D2D3; font-weight:bold; border:1px solid #00D2D3; font-size:0.85em;">?? Vendedor: ${sellerParam}</span>`;
             }
           }
 
@@ -2971,6 +2900,7 @@
             }
           }
         });
+
       }
 
       init();
