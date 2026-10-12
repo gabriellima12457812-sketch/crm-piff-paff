@@ -1,4 +1,4 @@
-﻿// ==============================================================================
+// ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/Bárbara (ES Module)
 // ENDPOINT EXCLUSIVO E BLINDADO DA Bárbara
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
@@ -683,7 +683,7 @@ export default async function handler(req, res) {
         channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
         pipeline: l.pipeline || (l.channel === 'instagram' ? 'instagram' : 'whatsapp'),
         user_id: SELLER_USER_ID,
-        vendedor_id: 'Bárbara',
+        vendedor_id: 'barbara',
         categoria: l.categoria || 1,
         notes: l.notes || ''
       });
