@@ -231,8 +231,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://hqqzumdscdjleaedguzh.supabase.co').replace(/\/$/, '');
-    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://ukuaujxvdziiaxxuuidw.supabase.co').replace(/\/$/, '');
+    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
     const authToken = await getAuthToken(supabaseUrl, publishableKey);
 
     const supabaseHeaders = {
@@ -666,21 +666,26 @@ export default async function handler(req, res) {
       const isCountOnly = action === 'count' || action === 'contar' || action === 'total' || query.count === 'true';
 
       const compactLead = (l) => ({
+        ...l,
         id: l.id,
         name: l.name,
         phone: l.phone,
         instagram: l.instagram,
-        city: l.city,
+        city: l.city || 'Brasil',
         stage: l.stage,
         stage_label: l.stage_label || l.stage,
-        value: l.value,
-        temperature: l.temperature,
-        priority: l.priority,
-        commercial_line: l.commercial_line,
+        value: Number(l.value) || 0,
+        temperature: l.temperature || 'morno',
+        priority: l.priority || 'MEDIA',
+        commercial_line: l.commercial_line || 'Linha Premium',
         followup_status: l.followup_status || 'Agendado',
         followup_date: l.followup_date,
         channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
-        notes: l.notes ? (l.notes.length > 200 ? l.notes.substring(0, 200) + '...' : l.notes) : ''
+        pipeline: l.pipeline || (l.channel === 'instagram' ? 'instagram' : 'whatsapp'),
+        user_id: SELLER_USER_ID,
+        vendedor_id: 'mayara',
+        categoria: l.categoria || 1,
+        notes: l.notes || ''
       });
 
       const isFiltered = Boolean(stageFilter || searchFilter || tempFilter);
