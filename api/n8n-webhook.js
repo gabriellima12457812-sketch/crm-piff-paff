@@ -460,9 +460,9 @@ export default async function handler(req, res) {
         }
       }
 
-      // Se não encontrou vinculado a este vendedor, busca se já existe cadastrado na base geral
+      // Se não encontrou vinculado a este vendedor, busca se já existe cadastrado sem vínculo de vendedor (legado)
       if (!existingLead) {
-        const fallbackSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&order=created_at.asc&select=*&limit=1`;
+        const fallbackSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&user_id=is.null&order=created_at.asc&select=*&limit=1`;
         const fbRes = await fetch(fallbackSearchUrl, { headers: supabaseHeaders });
         if (fbRes.ok) {
           const fbData = await fbRes.json();
