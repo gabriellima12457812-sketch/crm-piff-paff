@@ -27,6 +27,13 @@ const SELLERS = {
     leadPrefix: 'CRM-MAY-WA',
     origem: 'WhatsApp Mayara'
   },
+  barbara: {
+    user_id: 'f6666666-6666-6666-6666-666666666666',
+    vendedor_id: 'barbara',
+    name: 'Especialista Bárbara',
+    leadPrefix: 'CRM-BAR-WA',
+    origem: 'WhatsApp Bárbara'
+  },
   eduardo: {
     user_id: 'd4444444-4444-4444-4444-444444444444',
     vendedor_id: 'eduardo',
@@ -324,7 +331,9 @@ export default async function handler(req, res) {
     ).toString().toLowerCase();
 
     let seller = SELLERS.gabriel;
-    if (rawSeller.includes('eduardo')) {
+    if (rawSeller.includes('barbara')) {
+      seller = SELLERS.barbara;
+    } else if (rawSeller.includes('eduardo')) {
       seller = SELLERS.eduardo;
     } else if (rawSeller.includes('mayara')) {
       seller = SELLERS.mayara;
