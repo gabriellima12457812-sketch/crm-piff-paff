@@ -62,6 +62,14 @@
       "destination": "/api/mayara.js?action=moveInstagramLeadToWhatsApp"
     },
     {
+      "source": "/api/barbara/find-instagram",
+      "destination": "/api/barbara.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/barbara/move-to-whatsapp",
+      "destination": "/api/barbara.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
       "source": "/api/eduardo/find-instagram",
       "destination": "/api/eduardo.js?action=findInstagramLead"
     },
