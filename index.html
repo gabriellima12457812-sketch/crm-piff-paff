@@ -3360,7 +3360,14 @@
         try {
           const parsed = JSON.parse(stored);
           const minExpected = isGabriel ? 10 : 1;
+          const baseLeadsCheck = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
           if (Array.isArray(parsed) && parsed.length >= minExpected) {
+            // Se Gabriel e a base local salva for menor que a base oficial completa consolidada, prioriza a base completa oficial
+            if (isGabriel && baseLeadsCheck && baseLeadsCheck.length > parsed.length) {
+              leads = baseLeadsCheck.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'));
+              saveStorage();
+              return;
+            }
             // Filtra estritamente apenas os leads deste vendedor ativo
             leads = parsed.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, sellerKey));
             if (leads.length > 0) return;
@@ -3865,8 +3872,10 @@
         return false;
       }
 
-      // 2. Se o canal ou pipeline for explicitamente definido como WhatsApp
-      if (l.channel === 'whatsapp' || l.pipeline === 'whatsapp') return false;
+      // 2. Se o canal ou pipeline for explicitamente definido como WhatsApp ou Outros
+      const ch = String(l.channel || '').toLowerCase().trim();
+      const pipe = String(l.pipeline || '').toLowerCase().trim();
+      if (ch === 'whatsapp' || pipe === 'whatsapp' || ch === 'outro' || ch === 'outros' || pipe === 'outros') return false;
 
       // 3. Estágios exclusivos do funil de WhatsApp
       const st = String(l.stage || '').toLowerCase().trim();
@@ -3874,21 +3883,26 @@
         return false;
       }
 
-      // 4. Canal ou pipeline explicitamente definidos como Instagram
-      if (l.channel === 'instagram' || l.pipeline === 'instagram') return true;
-
-      // 5. Estágios exclusivos de prospecção do Instagram
-      if (st === 'novo' || st === 'abordagem' || st === 'conversa') return true;
-
-      // 6. Se NÃO possui telefone e tem perfil/id de instagram
+      // 4. Prefixo de CRM geral NUNCA é Instagram (pertence ao Kanban/Carteira Principal de Clientes)
       const idStr = String(l.id || '').toLowerCase();
-      const cleanInsta = String(l.instagram || '').replace(/^@/, '').trim();
-      if (idStr.startsWith('insta-') || idStr.startsWith('crm-fel-') || idStr.startsWith('crm-edu-') || idStr.startsWith('crm-may-') || idStr.startsWith('crm-gab-') || cleanInsta.length > 1) {
+      if (idStr.startsWith('crm-gab-') || idStr.startsWith('crm-fel-') || idStr.startsWith('crm-edu-') || idStr.startsWith('crm-may-')) {
+        return false;
+      }
+
+      // 5. Canal ou pipeline explicitamente definidos como Instagram
+      if (ch === 'instagram' || pipe === 'instagram') return true;
+
+      // 6. ID específico de Instagram
+      if (idStr.startsWith('insta-')) return true;
+
+      // 7. Se possui handle de Instagram válido
+      const cleanInsta = String(l.instagram || '').replace(/^@/, '').trim().toLowerCase();
+      if (cleanInsta.length > 1 && cleanInsta !== 'null' && cleanInsta !== 'undefined' && cleanInsta !== 'none') {
         return true;
       }
 
-      // 7. Se tem ID de Instagram mas NÃO tem telefone e notas indicam direct
-      if (notes.includes('direct') || notes.includes('anúncio') || notes.includes('anuncio')) {
+      // 8. Se notas indicam direct de Instagram
+      if (notes.includes('direct') && (st === 'novo' || st === 'abordagem' || st === 'conversa')) {
         return true;
       }
 
@@ -3999,8 +4013,10 @@
           if (sellerKey === 'gabriel') {
             const defaultInsta = (typeof getDefaultInstagramLeads === 'function') ? getDefaultInstagramLeads() : [];
             const existingInstaIds = new Set(cloudInsta.map(i => i.id));
+            const existingInstaHandles = new Set(cloudInsta.map(i => (i.instagram || '').toLowerCase().replace(/^@/, '')).filter(Boolean));
             defaultInsta.forEach(defL => {
-              if (!existingInstaIds.has(defL.id)) {
+              const defHandle = (defL.instagram || '').toLowerCase().replace(/^@/, '');
+              if (!existingInstaIds.has(defL.id) && (!defHandle || !existingInstaHandles.has(defHandle))) {
                 cloudInsta.push(defL);
               }
             });
@@ -4008,13 +4024,11 @@
             cloudInsta.length = 0; // Vendedores não-Gabriel nunca possuem Instagram
           }
 
-          // PRESERVAÇÃO CRÍTICA DE WHATSAPP / BASE HISTÓRICA DO GABRIEL:
-          // Se a nuvem não retornou leads de WhatsApp para o Gabriel, NUNCA zerar os leads locais!
+          // PRESERVAÇÃO CRÍTICA DE WHATSAPP / BASE HISTÓRICA DO GABRIEL (GARANTIA DA BASE OFICIAL COMPLETA):
           const isGabrielSync = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
           if (isGabrielSync) {
             const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : [];
-            const sourcePool = (Array.isArray(leads) && leads.length >= 10) ? leads : baseLeads;
-            sourcePool.forEach(l => {
+            baseLeads.forEach(l => {
               const hasIdMatch = cloudWa.some(existing => existing.id === l.id);
               const hasPhoneMatch = l.phone && cloudWa.some(existing => isMatchingPhone(existing.phone, l.phone));
               if (!hasIdMatch && !hasPhoneMatch) {
