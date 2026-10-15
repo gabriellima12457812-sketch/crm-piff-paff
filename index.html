@@ -195,6 +195,10 @@
           <button type="button" onclick="quickFillSeller('rodrigo')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-semibold cursor-pointer transition" title="Preencher login do Rodrigo (Especialista)">
             <span class="w-2 h-2 rounded-full bg-amber-400"></span> 💼 Rodrigo (Especialista)
           </button>
+          <span class="text-slate-600">•</span>
+          <button type="button" onclick="quickFillSeller('kasio')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 font-semibold cursor-pointer transition" title="Preencher login do Kasio (Vendedor)">
+            <span class="w-2 h-2 rounded-full bg-teal-400"></span> 💼 Kasio (Vendedor)
+          </button>
         </div>
 
         <!-- Abas: Entrar / Criar Conta -->
@@ -339,6 +343,7 @@
           <option value="felipe">💼 Felipe</option>
           <option value="eduardo">🎯 Eduardo</option>
           <option value="rodrigo">⚡ Rodrigo</option>
+          <option value="kasio">💼 Kasio</option>
         </select>
       </div>
 
@@ -2915,7 +2920,8 @@
       barbara: { id: 'f6666666-6666-6666-6666-666666666666', email: 'barbara@piffpaff.com.br', name: 'Especialista Bárbara', prefix: 'CRM-BAR-', role: 'vendedor' },
       felipe:  { id: 'c3333333-3333-3333-3333-333333333333', email: 'felipe@piffpaff.com.br',  name: 'Felipe',       prefix: 'CRM-FEL-', role: 'vendedor' },
       eduardo: { id: 'd4444444-4444-4444-4444-444444444444', email: 'eduardo@piffpaff.com.br', name: 'Eduardo',      prefix: 'CRM-EDU-', role: 'vendedor' },
-      rodrigo: { id: 'e5555555-5555-5555-5555-555555555555', email: 'rodrigo@piffpaff.com.br', name: 'Especialista Rodrigo', prefix: 'CRM-ROD-', role: 'vendedor' }
+      rodrigo: { id: 'e5555555-5555-5555-5555-555555555555', email: 'rodrigo@piffpaff.com.br', name: 'Especialista Rodrigo', prefix: 'CRM-ROD-', role: 'vendedor' },
+      kasio:   { id: '77777777-7777-7777-7777-777777777777', email: 'kasio@piffpaff.com.br',   name: 'Kasio',                prefix: 'CRM-KAS-', role: 'vendedor' }
     };
     window.SELLER_REGISTRY = SELLER_REGISTRY;
 
@@ -2927,6 +2933,7 @@
       if (s.includes('mayara')) return 'mayara';
       if (s.includes('felipe')) return 'felipe';
       if (s.includes('eduardo')) return 'eduardo';
+      if (s.includes('kasio') || s.includes('cassio')) return 'kasio';
       if (s.includes('rodrigo')) return 'rodrigo';
       if (s.includes('gabriel')) return 'gabriel';
       return '';
@@ -2939,7 +2946,8 @@
       mayara: 'Mayara@2026',
       felipe: 'Felipe@2026',
       eduardo: 'Eduardo@2026',
-      rodrigo: 'Rodrigo@2026'
+      rodrigo: 'Rodrigo@2026',
+      kasio: 'Kasio@2026'
     };
 
     function getSellerPassword(sellerKey) {
@@ -3575,6 +3583,9 @@
             } else if (email.includes('rodrigo')) {
               avatarEl.textContent = 'RD';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-amber-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
+            } else if (email.includes('kasio')) {
+              avatarEl.textContent = 'KS';
+              avatarEl.className = 'w-6 h-6 rounded-lg bg-teal-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
             } else {
               avatarEl.textContent = 'GL';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
