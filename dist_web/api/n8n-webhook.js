@@ -348,6 +348,8 @@ export default async function handler(req, res) {
       seller = SELLERS.felipe;
     } else if (rawSeller.includes('rodrigo')) {
       seller = SELLERS.rodrigo;
+    } else if (rawSeller.includes('kasio')) {
+      seller = SELLERS.kasio;
     }
 
     // 1.4 Extração de Texto da Mensagem (suporta todos os formatos WhatsApp)
