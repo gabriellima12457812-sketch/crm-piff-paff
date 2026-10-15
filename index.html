@@ -172,6 +172,10 @@
 
         <!-- Badges Vendedores com preenchimento com 1 clique -->
         <div class="flex items-center justify-center gap-1.5 mb-5 text-[10.5px] text-slate-400 flex-wrap">
+          <button type="button" onclick="quickFillSeller('edson')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-300 border border-amber-500/40 font-bold cursor-pointer transition shadow-md" title="Preencher login do Edson (Dono / Diretoria)">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> 👑 Edson (Dono)
+          </button>
+          <span class="text-slate-600">•</span>
           <button type="button" onclick="quickFillSeller('gabriel')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 font-semibold cursor-pointer transition" title="Preencher login do Gabriel (Admin Global)">
             <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 👑 Gabriel (Admin)
           </button>
@@ -336,7 +340,8 @@
 
       <!-- Seletor Rápido de Vendedor (1 Clique sem logout) -->
       <div class="relative flex items-center">
-        <select id="header-seller-switcher" onchange="requestSwitchActiveSeller(this.value)" class="bg-[#101C27] hover:bg-[#142332] text-xs font-bold text-slate-200 border border-cyan-500/30 hover:border-cyan-400 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-cyan-400 cursor-pointer transition shadow-sm" title="Alternar perfil de vendedor instantaneamente">
+        <select id="header-seller-switcher" onchange="requestSwitchActiveSeller(this.value)" class="bg-[#101C27] hover:bg-[#142332] text-xs font-bold text-slate-200 border border-amber-500/40 hover:border-amber-400 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-amber-400 cursor-pointer transition shadow-sm" title="Alternar perfil de vendedor instantaneamente">
+          <option value="edson">👑 Edson (Dono / Diretoria)</option>
           <option value="gabriel">👑 Gabriel Lima</option>
           <option value="mayara">🌸 Mayara</option>
           <option value="barbara">💎 Especialista Bárbara</option>
@@ -873,6 +878,150 @@
       <!-- VIEW 1: KANBAN (FUNIL DE VENDAS) -->
       <!-- ======================================================== -->
       <section id="view-kanban" class="view-content flex-1 p-4 lg:p-6 flex flex-col">
+
+        <!-- PAINEL DA DIRETORIA (EDSON - VISÃO EXECUTIVA SOMENTE LEITURA) -->
+        <div id="edson-executive-panel" class="hidden w-full mb-6">
+          <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#141F2C] via-[#101D2B] to-[#151D29] border border-amber-500/35 p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+            <!-- Header do Painel -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
+              <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/25 font-bold shrink-0">
+                  👑
+                </div>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-xl sm:text-2xl font-heading font-extrabold text-white tracking-tight">Painel da Diretoria • Edson</h2>
+                    <span class="text-[10px] font-extrabold px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                      <i class="ph-bold ph-shield-check text-xs"></i> 100% Somente Leitura
+                    </span>
+                    <span id="edson-active-inspect-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                      Visão: Toda a Empresa
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1">
+                    Acompanhamento executivo em tempo real de pipeline, projetos e clientes estratégicos da empresa.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Filtro Rápido com 1 clique por Vendedor -->
+              <div class="flex items-center gap-1.5 flex-wrap bg-[#080E14] p-1.5 rounded-2xl border border-white/10">
+                <span class="text-[11px] font-bold text-slate-400 px-2 flex items-center gap-1">
+                  <i class="ph-bold ph-users text-amber-400"></i> Filtrar:
+                </span>
+                <button type="button" onclick="filterEdsonView('all')" id="edson-btn-all" class="edson-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-md">
+                  🏢 Todos (Geral)
+                </button>
+                <button type="button" onclick="filterEdsonView('gabriel')" id="edson-btn-gabriel" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  👑 Gabriel
+                </button>
+                <button type="button" onclick="filterEdsonView('rodrigo')" id="edson-btn-rodrigo" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  ⚡ Rodrigo
+                </button>
+                <button type="button" onclick="filterEdsonView('kasio')" id="edson-btn-kasio" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  💼 Kasio
+                </button>
+                <button type="button" onclick="filterEdsonView('eduardo')" id="edson-btn-eduardo" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  🎯 Eduardo
+                </button>
+                <button type="button" onclick="filterEdsonView('mayara')" id="edson-btn-mayara" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  🌸 Mayara
+                </button>
+                <button type="button" onclick="filterEdsonView('felipe')" id="edson-btn-felipe" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  💼 Felipe
+                </button>
+                <button type="button" onclick="filterEdsonView('barbara')" id="edson-btn-barbara" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  💎 Bárbara
+                </button>
+              </div>
+            </div>
+
+            <!-- OS 3 SUPER CARDS DA DIRETORIA: PIPELINE | PROJETOS | CLIENTES IMPORTANTES -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-5">
+              
+              <!-- CARD 1: PIPELINE -->
+              <div class="p-4 sm:p-5 rounded-2xl bg-[#09121B] border border-amber-500/20 hover:border-amber-500/40 transition shadow-inner flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span class="font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <i class="ph-bold ph-chart-line-up text-base text-amber-400"></i> Pipeline em Negociação
+                    </span>
+                    <span id="edson-leads-count" class="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-bold border border-amber-500/25">0 leads</span>
+                  </div>
+                  <div id="edson-total-pipeline" class="text-2xl sm:text-3xl font-heading font-extrabold text-[#FECA57] tracking-tight">
+                    R$ 0,00
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">Volume financeiro total em negociação aberta</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Ticket Médio: <strong id="edson-avg-ticket" class="text-white font-semibold">R$ 0,00</strong></span>
+                  <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                    <i class="ph-bold ph-check-circle"></i> Consolidado
+                  </span>
+                </div>
+              </div>
+
+              <!-- CARD 2: PROJETOS -->
+              <div class="p-4 sm:p-5 rounded-2xl bg-[#09121B] border border-cyan-500/20 hover:border-cyan-500/40 transition shadow-inner flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span class="font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <i class="ph-bold ph-pencil-ruler text-base text-cyan-400"></i> Projetos em Andamento
+                    </span>
+                    <span id="edson-projects-count" class="px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 text-xs font-bold border border-cyan-500/25">0 projetos</span>
+                  </div>
+                  <div id="edson-projects-value" class="text-2xl sm:text-3xl font-heading font-extrabold text-[#00D2D3] tracking-tight">
+                    R$ 0,00
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">Clientes em fase de alinhamento 3D / Projetos</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
+                  <span class="text-slate-400">Etapa de Projetos Piff-Paff</span>
+                  <button type="button" onclick="focusEdsonStage('projetos')" class="text-cyan-300 hover:text-cyan-200 font-bold flex items-center gap-1 cursor-pointer transition">
+                    <span>Inspecionar Coluna</span> <i class="ph-bold ph-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- CARD 3: CLIENTES IMPORTANTES -->
+              <div class="p-4 sm:p-5 rounded-2xl bg-[#09121B] border border-rose-500/20 hover:border-rose-500/40 transition shadow-inner flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span class="font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <i class="ph-bold ph-crown text-base text-rose-400"></i> Clientes Importantes (VIPs)
+                    </span>
+                    <span id="edson-vip-count" class="px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 text-xs font-bold border border-rose-500/25">0 VIPs</span>
+                  </div>
+                  <div id="edson-vip-value" class="text-2xl sm:text-3xl font-heading font-extrabold text-rose-400 tracking-tight">
+                    R$ 0,00
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">Negociações de alto ticket (> R$ 30k) ou Prioridade Máxima</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
+                  <span class="text-slate-400">Grandes Contratos</span>
+                  <button type="button" onclick="toggleEdsonVipDrawer()" id="btn-toggle-vip-drawer" class="text-rose-300 hover:text-rose-200 font-bold flex items-center gap-1 cursor-pointer transition">
+                    <span id="btn-toggle-vip-text">Listar Clientes VIP</span> <i id="btn-toggle-vip-icon" class="ph-bold ph-caret-down"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- GAVETA EXPANSÍVEL: LISTA DOS TOP CLIENTES IMPORTANTES (VIPs) -->
+            <div id="edson-vip-drawer" class="hidden mt-5 pt-4 border-t border-white/10 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <i class="ph-bold ph-star text-amber-400"></i> Top Clientes Mais Importantes da Empresa
+                </h3>
+                <span class="text-[11px] text-slate-400">Clique em qualquer cliente para visualizar a ficha completa</span>
+              </div>
+              <div id="edson-vip-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1">
+                <!-- Renderizado dinamicamente -->
+              </div>
+            </div>
+
+          </div>
+        </div>
         <!-- Sub-header do Kanban -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div>
@@ -2915,6 +3064,7 @@
     // SISTEMA UNIFICADO DE ISOLAMENTO & SEGURANÇA MULTI-TENANT
     // ==========================================
     const SELLER_REGISTRY = {
+      edson:   { id: '99999999-9999-9999-9999-999999999999', email: 'edson@piffpaff.com.br',   name: 'Edson (Dono da Empresa)', prefix: 'CRM-EDS-', role: 'owner' },
       gabriel: { id: 'a1111111-1111-1111-1111-111111111111', email: 'gabriel@piffpaff.com.br', name: 'Gabriel Lima', prefix: 'CRM-GAB-', role: 'admin' },
       mayara:  { id: 'b2222222-2222-2222-2222-222222222222', email: 'mayara@piffpaff.com.br',  name: 'Mayara',       prefix: 'CRM-MAY-', role: 'vendedor' },
       barbara: { id: 'f6666666-6666-6666-6666-666666666666', email: 'barbara@piffpaff.com.br', name: 'Especialista Bárbara', prefix: 'CRM-BAR-', role: 'vendedor' },
@@ -2929,6 +3079,7 @@
       if (!raw) return '';
       const s = String(raw).toLowerCase().trim()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (s.includes('edson')) return 'edson';
       if (s.includes('barbara')) return 'barbara';
       if (s.includes('mayara')) return 'mayara';
       if (s.includes('felipe')) return 'felipe';
@@ -2941,6 +3092,7 @@
     window.normalizeSellerKey = normalizeSellerKey;
 
     const DEFAULT_PASSWORDS = {
+      edson: 'Edson@2026',
       gabriel: 'Gabriel@2026',
       barbara: 'Barbara@2026',
       mayara: 'Mayara@2026',
@@ -3031,8 +3183,8 @@
 
       if (target === currentSeller) return;
 
-      // Gabriel Lima é o Admin Supremo: tem acesso total e irrestrito sem pedir senha
-      if (currentSeller === 'gabriel') {
+      // Gabriel Lima (Admin) e Edson (Dono) têm acesso total e irrestrito sem pedir senha
+      if (currentSeller === 'gabriel' || currentSeller === 'edson' || (typeof isOwnerMode === 'function' && isOwnerMode())) {
         switchActiveSeller(target);
         return;
       }
@@ -3387,8 +3539,17 @@
         }
       }
 
-      // Se não for Gabriel (ex: Bárbara, Mayara, Felipe, etc.): inicia limpo aguardando sync da nuvem
-      if (!isGabriel) {
+      // Se for Edson (Dono): inicia com a base histórica e aguarda consolidação total
+      if (sellerKey === 'edson') {
+        const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
+        if (baseLeads && baseLeads.length > 0) {
+          leads = baseLeads.filter(l => !deletedIds.has(l.id));
+          return;
+        }
+      }
+
+      // Se não for Gabriel nem Edson: inicia limpo aguardando sync da nuvem
+      if (!isGabriel && sellerKey !== 'edson') {
         leads = [];
         return;
       }
@@ -3480,13 +3641,23 @@
     function getSellerRole(user) {
       if (!user || !user.email) return 'vendedor';
       const email = user.email.toLowerCase();
+      if (email.includes('edson') || (user && user.role === 'owner')) return 'owner';
       if (email.includes('gabriel')) return 'admin';
       return 'vendedor';
     }
 
+    function isOwnerMode() {
+      const curKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : '';
+      const curRole = (typeof getSellerRole === 'function') ? getSellerRole(authUser) : '';
+      const isOwnerFlag = localStorage.getItem('piffpaff_is_owner') === 'true';
+      return curKey === 'edson' || curRole === 'owner' || isOwnerFlag;
+    }
+    window.isOwnerMode = isOwnerMode;
+
     function getSellerName(user) {
       if (!user || !user.email) return 'Vendedor';
       const email = user.email.toLowerCase();
+      if (email.includes('edson')) return 'Edson (Dono da Empresa)';
       if (email.includes('gabriel')) return 'Gabriel Lima (Administrador)';
       if (email.includes('felipe')) return 'Felipe (Vendedor)';
       if (email.includes('mayara')) return 'Mayara (Vendedora)';
@@ -3500,6 +3671,7 @@
       if (!lead) return false;
       const sellerKey = normalizeSellerKey(targetSellerKey);
       if (!sellerKey) return false;
+      if (sellerKey === 'edson') return true; // Edson (Dono) visualiza todos os leads da empresa
 
       const leadUserId = lead.user_id ? String(lead.user_id).toLowerCase().trim() : '';
       const leadVendedor = normalizeSellerKey(lead.vendedor_id || lead.origem || '');
@@ -3568,7 +3740,10 @@
           if (switcher) switcher.value = getSellerKey(user);
 
           if (avatarEl) {
-            if (email.includes('mayara')) {
+            if (email.includes('edson')) {
+              avatarEl.textContent = 'ED';
+              avatarEl.className = 'w-6 h-6 rounded-lg bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center text-[11px] shadow-md font-heading';
+            } else if (email.includes('mayara')) {
               avatarEl.textContent = 'MY';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-rose-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
             } else if (email.includes('barbara')) {
@@ -3599,6 +3774,15 @@
           } else {
             navAdmin?.classList.add('hidden');
             navAdminMobile?.classList.add('hidden');
+          }
+
+          const isOwner = (typeof isOwnerMode === 'function') && isOwnerMode();
+          const btnNewLead = document.getElementById('btn-open-new-lead');
+          const btnReader = document.getElementById('btn-open-reader');
+          if (btnNewLead) btnNewLead.style.display = isOwner ? 'none' : 'flex';
+          if (btnReader) btnReader.style.display = isOwner ? 'none' : 'flex';
+          if (typeof updateEdsonExecutiveDashboard === 'function') {
+            updateEdsonExecutiveDashboard();
           }
 
           // Isolamento Exclusivo: O canal Instagram pertence UNICA E EXCLUSIVAMENTE ao Gabriel Lima
@@ -3756,6 +3940,9 @@
       try {
         localStorage.setItem('piffpaff_current_seller', normalizedKey);
         localStorage.setItem('piffpaff_active_seller_email', config.email);
+        if (normalizedKey === 'edson') {
+          localStorage.setItem('piffpaff_is_owner', 'true');
+        }
       } catch (e) {}
 
       // 2. Persistencia na URL (?vendedor=...) sem causar reload na tela
@@ -3838,6 +4025,7 @@
       }
       try {
         localStorage.removeItem('piffpaff_active_seller_email');
+        localStorage.removeItem('piffpaff_is_owner');
       } catch (e) {}
       currentSession = null;
       authUser = null;
@@ -3863,6 +4051,197 @@
     // ==========================================
     // 2.0 MULTI-FUNIL: IDENTIFICAÇÃO E ROTEAMENTO (INSTAGRAM vs WHATSAPP)
     // ==========================================
+
+    // ========================================================
+    // MÓDULO EXECUTIVO DA DIRETORIA (PERFIL EDSON - SOMENTE LEITURA)
+    // ========================================================
+    let currentEdsonFilterSeller = 'all'; // 'all', 'gabriel', 'rodrigo', 'kasio', 'eduardo', 'mayara', 'felipe', 'barbara'
+    let edsonConsolidatedRawLeads = []; // Cache consolidado de todos os vendedores
+
+    function filterEdsonView(sellerKey) {
+      currentEdsonFilterSeller = sellerKey;
+      
+      // Atualiza botões visuais
+      const sellers = ['all', 'gabriel', 'rodrigo', 'kasio', 'eduardo', 'mayara', 'felipe', 'barbara'];
+      sellers.forEach(s => {
+        const btn = document.getElementById(`edson-btn-${s}`);
+        if (!btn) return;
+        if (s === sellerKey) {
+          btn.className = 'edson-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-md';
+        } else {
+          btn.className = 'edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer';
+        }
+      });
+
+      const badge = document.getElementById('edson-active-inspect-badge');
+      if (badge) {
+        if (sellerKey === 'all') {
+          badge.textContent = 'Visão: Toda a Empresa (Consolidado)';
+          badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20';
+        } else {
+          const sellerName = SELLER_REGISTRY[sellerKey]?.name || sellerKey;
+          badge.textContent = `Auditando Vendedor: ${sellerName}`;
+          badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30';
+        }
+      }
+
+      applyEdsonFilter();
+    }
+    window.filterEdsonView = filterEdsonView;
+
+    function applyEdsonFilter() {
+      if (!Array.isArray(edsonConsolidatedRawLeads) || edsonConsolidatedRawLeads.length === 0) {
+        edsonConsolidatedRawLeads = [...leads];
+      }
+
+      if (currentEdsonFilterSeller === 'all') {
+        leads = [...edsonConsolidatedRawLeads];
+      } else {
+        leads = edsonConsolidatedRawLeads.filter(l => isLeadOfSeller(l, currentEdsonFilterSeller));
+      }
+
+      renderKanban();
+      renderFollowupCenter();
+      renderClientsTable();
+      updateMetrics();
+      updateEdsonExecutiveDashboard();
+    }
+    window.applyEdsonFilter = applyEdsonFilter;
+
+    function updateEdsonExecutiveDashboard() {
+      const panel = document.getElementById('edson-executive-panel');
+      if (!panel) return;
+
+      const isOwner = (typeof isOwnerMode === 'function') && isOwnerMode();
+      if (!isOwner) {
+        panel.classList.add('hidden');
+        return;
+      }
+      panel.classList.remove('hidden');
+
+      const activeLeadsList = Array.isArray(leads) ? leads : [];
+      
+      // 1. Pipeline Total
+      const totalPipeline = activeLeadsList.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+      const leadsCount = activeLeadsList.length;
+      const avgTicket = leadsCount > 0 ? (totalPipeline / leadsCount) : 0;
+
+      const pipeEl = document.getElementById('edson-total-pipeline');
+      const countEl = document.getElementById('edson-leads-count');
+      const avgEl = document.getElementById('edson-avg-ticket');
+
+      if (pipeEl) pipeEl.textContent = formatBRL(totalPipeline);
+      if (countEl) countEl.textContent = `${leadsCount} leads`;
+      if (avgEl) avgEl.textContent = formatBRL(avgTicket);
+
+      // 2. Projetos em Andamento
+      const projectLeads = activeLeadsList.filter(l => (l.stage || '').toLowerCase() === 'projetos');
+      const totalProjectsVal = projectLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+
+      const projCountEl = document.getElementById('edson-projects-count');
+      const projValEl = document.getElementById('edson-projects-value');
+
+      if (projCountEl) projCountEl.textContent = `${projectLeads.length} projetos`;
+      if (projValEl) projValEl.textContent = formatBRL(totalProjectsVal);
+
+      // 3. Clientes Importantes (VIPs: valor >= R$ 30.000 ou prioridade MÁXIMA ou Quente)
+      const vipLeads = activeLeadsList.filter(l => {
+        const val = Number(l.value) || 0;
+        const prio = (l.priority || '').toUpperCase();
+        const temp = (l.temperature || '').toLowerCase();
+        return val >= 30000 || prio === 'MAXIMA' || (val >= 20000 && temp === 'quente');
+      }).sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
+
+      const totalVipVal = vipLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+
+      const vipCountEl = document.getElementById('edson-vip-count');
+      const vipValEl = document.getElementById('edson-vip-value');
+
+      if (vipCountEl) vipCountEl.textContent = `${vipLeads.length} VIPs`;
+      if (vipValEl) vipValEl.textContent = formatBRL(totalVipVal);
+
+      // Renderiza lista VIP na gaveta
+      renderEdsonVipList(vipLeads.slice(0, 18));
+    }
+    window.updateEdsonExecutiveDashboard = updateEdsonExecutiveDashboard;
+
+    function renderEdsonVipList(vipLeads) {
+      const container = document.getElementById('edson-vip-list');
+      if (!container) return;
+
+      if (!vipLeads || vipLeads.length === 0) {
+        container.innerHTML = '<div class="col-span-full py-4 text-center text-xs text-slate-500">Nenhum cliente VIP encontrado para este filtro.</div>';
+        return;
+      }
+
+      container.innerHTML = vipLeads.map(lead => {
+        let sellerName = 'Gabriel Lima';
+        for (const [key, conf] of Object.entries(SELLER_REGISTRY)) {
+          if (isLeadOfSeller(lead, key)) {
+            sellerName = conf.name;
+            break;
+          }
+        }
+
+        const stageLabel = (lead.stage === 'novos') ? 'Novos' :
+                           (lead.stage === 'investigacao') ? 'Investigação' :
+                           (lead.stage === 'projetos') ? 'Projetos' :
+                           (lead.stage === 'proposta') ? 'Proposta' :
+                           (lead.stage === 'fechamento') ? 'Fechamento' :
+                           (lead.stage === 'concluidas') ? 'Concluída' : (lead.stage || 'Negociação');
+
+        return `
+          <div onclick="openLeadDetail('${lead.id}')" class="p-3 rounded-xl bg-[#0F1A26] hover:bg-[#142332] border border-white/10 hover:border-amber-500/40 transition cursor-pointer flex items-center justify-between gap-3 group">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="font-heading font-bold text-xs text-white truncate group-hover:text-amber-300 transition">${lead.name}</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded-md bg-amber-500/15 text-amber-300 font-bold uppercase shrink-0">${lead.priority || 'VIP'}</span>
+              </div>
+              <div class="text-[10.5px] text-slate-400 flex items-center gap-2 mt-0.5">
+                <span class="truncate"><i class="ph-bold ph-user text-cyan-400"></i> ${sellerName}</span>
+                <span>•</span>
+                <span class="truncate text-slate-400">${lead.city || 'Brasil'}</span>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="font-heading font-extrabold text-xs text-[#FECA57]">${formatBRL(lead.value)}</div>
+              <span class="text-[9.5px] font-semibold text-slate-400">${stageLabel}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    window.renderEdsonVipList = renderEdsonVipList;
+
+    function toggleEdsonVipDrawer() {
+      const drawer = document.getElementById('edson-vip-drawer');
+      const text = document.getElementById('btn-toggle-vip-text');
+      const icon = document.getElementById('btn-toggle-vip-icon');
+      if (!drawer) return;
+
+      const isHidden = drawer.classList.contains('hidden');
+      if (isHidden) {
+        drawer.classList.remove('hidden');
+        if (text) text.textContent = 'Ocultar Clientes VIP';
+        if (icon) icon.className = 'ph-bold ph-caret-up';
+      } else {
+        drawer.classList.add('hidden');
+        if (text) text.textContent = 'Listar Clientes VIP';
+        if (icon) icon.className = 'ph-bold ph-caret-down';
+      }
+    }
+    window.toggleEdsonVipDrawer = toggleEdsonVipDrawer;
+
+    function focusEdsonStage(stageName) {
+      const col = document.querySelector(`.kanban-col[data-stage="${stageName}"]`);
+      if (col) {
+        col.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        col.classList.add('ring-2', 'ring-cyan-400');
+        setTimeout(() => col.classList.remove('ring-2', 'ring-cyan-400'), 2000);
+      }
+    }
+    window.focusEdsonStage = focusEdsonStage;
+
     function isInstagramLead(l) {
       if (!l) return false;
 
@@ -3958,7 +4337,7 @@
 
         // 1. Tenta carregar via API Serverless do vendedor (Autenticação do backend sem bloqueio de RLS anon)
         // Apenas para vendedores isolados (Rodrigo, Eduardo, Felipe, Mayara, Bárbara, Kasio)
-        if (sellerKey !== 'gabriel') {
+        if (sellerKey !== 'gabriel' && sellerKey !== 'edson') {
           try {
             const apiRes = await fetch(`/api/${sellerKey}?channel=todos&limit=1000`);
             if (apiRes.ok) {
@@ -3974,7 +4353,9 @@
 
         // 2. Fallback: REST Direto no Supabase caso API serverless não responda ou para Gabriel
         if (!cloudLeads && url && key) {
-          const queryUrl = `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc`;
+          const queryUrl = (sellerKey === 'edson')
+            ? `${url}/rest/v1/leads?select=*&order=value.desc`
+            : `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc`;
           const res = await fetch(queryUrl, {
             headers: {
               'apikey': key,
@@ -4084,6 +4465,30 @@
             cloudWa.push(...Array.from(baseMap.values()));
           }
 
+          if (sellerKey === 'edson') {
+            const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS))
+              ? CARIBE_170_LEADS.filter(l => !deletedIds.has(l.id))
+              : [];
+            const edsonMap = new Map();
+            baseLeads.forEach(l => {
+              edsonMap.set(String(l.id).toUpperCase(), { ...l, vendedor_id: l.vendedor_id || 'gabriel' });
+            });
+            userCloudLeads.forEach(cL => {
+              const cId = String(cL.id || '').toUpperCase();
+              if (edsonMap.has(cId)) {
+                const target = edsonMap.get(cId);
+                if (cL.notes && cL.notes.length > (target.notes || '').length) target.notes = cL.notes;
+                if (cL.stage) target.stage = cL.stage;
+                if (cL.value) target.value = cL.value;
+              } else {
+                edsonMap.set(cId, cL);
+              }
+            });
+            cloudWa.length = 0;
+            cloudWa.push(...Array.from(edsonMap.values()));
+            edsonConsolidatedRawLeads = [...cloudWa];
+          }
+
           const currentWaJson = JSON.stringify(cloudWa);
           const currentInstaJson = JSON.stringify(cloudInsta);
           const hasDataChanged = (currentWaJson !== lastSyncedWaJson) || (currentInstaJson !== lastSyncedInstaJson);
@@ -4105,6 +4510,9 @@
             renderInstagramBoard();
             renderFollowupCenter();
             renderClientsTable();
+            if (typeof updateEdsonExecutiveDashboard === 'function') {
+              updateEdsonExecutiveDashboard();
+            }
             initArchitectsStorage();
             if (getSellerRole(authUser) === 'admin' && typeof initQuarantineStorage === 'function') {
               initQuarantineStorage();
@@ -4935,9 +5343,12 @@
     }
 
     function createLeadCard(lead) {
+      const isOwner = (typeof isOwnerMode === 'function') && isOwnerMode();
       const card = document.createElement('div');
-      card.className = 'lead-card p-4 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-[#00D2D3]/40 shadow-lg cursor-grab active:cursor-grabbing transition-all space-y-2.5';
-      card.setAttribute('draggable', 'true');
+      card.className = isOwner 
+        ? 'lead-card p-4 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-amber-500/40 shadow-lg cursor-pointer transition-all space-y-2.5'
+        : 'lead-card p-4 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-[#00D2D3]/40 shadow-lg cursor-grab active:cursor-grabbing transition-all space-y-2.5';
+      card.setAttribute('draggable', isOwner ? 'false' : 'true');
       card.setAttribute('data-id', lead.id);
 
       // Temperaturas e status de fechamento
@@ -5005,14 +5416,16 @@
         </div>
       `;
 
-      card.addEventListener('dragstart', (e) => {
-        card.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', lead.id);
-      });
+      if (!isOwner) {
+        card.addEventListener('dragstart', (e) => {
+          card.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', lead.id);
+        });
 
-      card.addEventListener('dragend', () => {
-        card.classList.remove('dragging');
-      });
+        card.addEventListener('dragend', () => {
+          card.classList.remove('dragging');
+        });
+      }
 
       card.addEventListener('click', () => {
         openLeadDetail(lead.id);
@@ -5040,6 +5453,10 @@
         col.addEventListener('drop', (e) => {
           e.preventDefault();
           col.classList.remove('drag-over');
+          if (typeof isOwnerMode === 'function' && isOwnerMode()) {
+            showToast('Modo Diretoria (Somente Leitura): alterações no funil não são permitidas.', 'warning');
+            return;
+          }
           const leadId = e.dataTransfer.getData('text/plain');
           const targetStage = col.getAttribute('data-stage');
 
@@ -5437,6 +5854,51 @@
       } else {
         waLink.classList.add('hidden');
       }
+
+      // BLINDAGEM MODO DIRETORIA (EDSON - SOMENTE LEITURA)
+      const isReadOnly = (typeof isOwnerMode === 'function') && isOwnerMode();
+      const readOnlyInputs = [
+        'edit-lead-name', 'edit-lead-phone', 'edit-lead-city', 'edit-lead-value',
+        'edit-lead-stage', 'edit-lead-temperature', 'edit-lead-priority',
+        'edit-lead-next-action', 'edit-lead-followup-date', 'input-quick-note'
+      ];
+      readOnlyInputs.forEach(inputId => {
+        const el = document.getElementById(inputId);
+        if (el) {
+          el.disabled = isReadOnly;
+          if (isReadOnly) {
+            el.classList.add('opacity-75', 'cursor-not-allowed', 'bg-slate-900/50');
+          } else {
+            el.classList.remove('opacity-75', 'cursor-not-allowed', 'bg-slate-900/50');
+          }
+        }
+      });
+
+      const btnSaveLead = document.getElementById('btn-save-detail-changes');
+      if (btnSaveLead) btnSaveLead.style.display = isReadOnly ? 'none' : 'flex';
+
+      const btnDeleteLead = document.getElementById('btn-delete-lead');
+      if (btnDeleteLead) btnDeleteLead.style.display = isReadOnly ? 'none' : 'flex';
+
+      const btnQuickNote = document.getElementById('btn-save-quick-note');
+      if (btnQuickNote) btnQuickNote.style.display = isReadOnly ? 'none' : 'flex';
+
+      let ownerBanner = document.getElementById('detail-owner-banner');
+      if (!ownerBanner) {
+        ownerBanner = document.createElement('div');
+        ownerBanner.id = 'detail-owner-banner';
+        ownerBanner.className = 'mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-3 shadow-md';
+        ownerBanner.innerHTML = `
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center justify-center text-lg shrink-0">👑</div>
+          <div>
+            <span class="font-bold text-white uppercase tracking-wider block">Visualização Executiva da Diretoria (Edson)</span>
+            <span class="text-[11px] text-amber-300/80">Modo de auditoria estrito: alterações e exclusões estão desabilitadas para garantir a integridade dos dados da empresa.</span>
+          </div>
+        `;
+        const modalBody = document.querySelector('#modal-lead-detail .overflow-y-auto') || document.getElementById('modal-lead-detail');
+        if (modalBody) modalBody.insertBefore(ownerBanner, modalBody.firstChild);
+      }
+      if (ownerBanner) ownerBanner.style.display = isReadOnly ? 'flex' : 'none';
 
       document.getElementById('modal-lead-detail').classList.remove('hidden');
     }
@@ -10453,6 +10915,10 @@
       const todayStr = new Date().toISOString().split('T')[0];
       const overdue = leads.filter(l => l.followup_date && l.followup_date < todayStr && l.stage !== 'concluidas');
       document.getElementById('badge-followup-urgent').textContent = overdue.length;
+
+      if (typeof updateEdsonExecutiveDashboard === 'function') {
+        updateEdsonExecutiveDashboard();
+      }
     }
 
     // ==========================================
@@ -10974,6 +11440,10 @@
       }
 
       document.getElementById('btn-save-quick-note').addEventListener('click', async () => {
+        if (typeof isOwnerMode === 'function' && isOwnerMode()) {
+          showToast('Modo Diretoria (Somente Leitura): inclusão de notas não é permitida.', 'warning');
+          return;
+        }
         const input = document.getElementById('input-quick-note');
         const note = input.value.trim();
         if (!note || !activeLead) return;
@@ -10992,6 +11462,10 @@
       });
 
       document.getElementById('btn-save-detail-changes').addEventListener('click', () => {
+        if (typeof isOwnerMode === 'function' && isOwnerMode()) {
+          showToast('Modo Diretoria (Somente Leitura): alterações não são permitidas.', 'warning');
+          return;
+        }
         if (!activeLead) return;
 
         try {
@@ -11055,6 +11529,10 @@
       });
 
       document.getElementById('btn-delete-lead').addEventListener('click', async () => {
+        if (typeof isOwnerMode === 'function' && isOwnerMode()) {
+          showToast('Modo Diretoria (Somente Leitura): exclusões não são permitidas.', 'warning');
+          return;
+        }
         if (!activeLead) return;
         const leadName = activeLead.name;
         const leadId = activeLead.id;
