@@ -2902,7 +2902,7 @@
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-semibold bg-[#14212E] border border-white/10"></div>
 
   <!-- BANCO DE DADOS OFICIAL ANTIGO (131 LEADS) -->
-  <script src="leads_data.js"></script>
+  <script src="leads_data.js?v=909_official_20261015"></script>
 
   <!-- JAVASCRIPT MASTER: LOGIC, PARSER, DRAG & DROP, TTS, CSV -->
   <script>
@@ -3362,11 +3362,13 @@
           const minExpected = isGabriel ? 10 : 1;
           const baseLeadsCheck = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
           if (Array.isArray(parsed) && parsed.length >= minExpected) {
-            // Se Gabriel e a base local salva for menor que a base oficial completa consolidada, prioriza a base completa oficial
-            if (isGabriel && baseLeadsCheck && baseLeadsCheck.length > parsed.length) {
-              leads = baseLeadsCheck.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'));
-              saveStorage();
-              return;
+            // Se Gabriel e a base salva tiver menos de 800 clientes (ex: resíduo antigo de 594), força a base completa oficial de 909
+            if (isGabriel && (parsed.length < 800 || (baseLeadsCheck && baseLeadsCheck.length > parsed.length))) {
+              if (baseLeadsCheck && baseLeadsCheck.length > 0) {
+                leads = baseLeadsCheck.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'));
+                saveStorage();
+                return;
+              }
             }
             // Filtra estritamente apenas os leads deste vendedor ativo
             leads = parsed.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, sellerKey));
@@ -4035,6 +4037,16 @@
                 cloudWa.push(l);
               }
             });
+            // Blindagem: assegura que cloudWa mantenha integralmente todos os leads da base oficial
+            if (baseLeads.length > cloudWa.length) {
+              const currentWaIds = new Set(cloudWa.map(x => x.id));
+              baseLeads.forEach(bl => {
+                if (!currentWaIds.has(bl.id)) {
+                  cloudWa.push(bl);
+                  currentWaIds.add(bl.id);
+                }
+              });
+            }
           }
 
           const currentWaJson = JSON.stringify(cloudWa);
