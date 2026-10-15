@@ -1,4 +1,4 @@
-﻿// ==============================================================================
+// ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/gabriel (ES Module)
 // ENDPOINT EXCLUSIVO E BLINDADO DO GABRIEL LIMA
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
@@ -1372,8 +1372,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://hqqzumdscdjleaedguzh.supabase.co').replace(/\/$/, '');
-    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://ukuaujxvdziiaxxuuidw.supabase.co').replace(/\/$/, '');
+    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
     const authToken = await getAuthToken(supabaseUrl, publishableKey);
 
     const supabaseHeaders = {
@@ -1422,6 +1422,7 @@ export default async function handler(req, res) {
       // Detecção estrita de Lead no Funil Instagram
       function isInstagramCard(l) {
         if (!l) return false;
+        if (cleanPhone(l.phone)) return false; // Se possui telefone, pertence ao WhatsApp
         const notesStr = String(l.notes || '').toLowerCase();
         if (
           notesStr.includes('transição de funil') ||
@@ -1435,11 +1436,9 @@ export default async function handler(req, res) {
         if (l.channel === 'whatsapp' || l.pipeline === 'whatsapp') return false;
         if (l.channel === 'instagram' || l.pipeline === 'instagram') return true;
         const idLower = String(l.id || '').toLowerCase();
-        if (idLower.startsWith('insta-') || idLower.startsWith('crm-gab-')) return true;
-        const st = String(l.stage || '').toLowerCase().trim();
-        if (['novo', 'abordagem', 'conversa'].includes(st)) return true;
+        if (idLower.startsWith('insta-')) return true;
         const cInsta = cleanInstagram(l.instagram);
-        if (cInsta.length > 1 && !cleanPhone(l.phone)) return true;
+        if (cInsta.length > 1) return true;
         if (notesStr.includes('[canal: instagram]') || notesStr.includes('direct') || notesStr.includes('instagram direct')) return true;
         return false;
       }

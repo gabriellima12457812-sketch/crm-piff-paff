@@ -3957,19 +3957,22 @@
         let cloudLeads = null;
 
         // 1. Tenta carregar via API Serverless do vendedor (Autenticação do backend sem bloqueio de RLS anon)
-        try {
-          const apiRes = await fetch(`/api/${sellerKey}?channel=todos&limit=1000`);
-          if (apiRes.ok) {
-            const apiData = await apiRes.json();
-            if (apiData && Array.isArray(apiData.leads)) {
-              cloudLeads = apiData.leads;
+        // Apenas para vendedores isolados (Rodrigo, Eduardo, Felipe, Mayara, Bárbara, Kasio)
+        if (sellerKey !== 'gabriel') {
+          try {
+            const apiRes = await fetch(`/api/${sellerKey}?channel=todos&limit=1000`);
+            if (apiRes.ok) {
+              const apiData = await apiRes.json();
+              if (apiData && Array.isArray(apiData.leads)) {
+                cloudLeads = apiData.leads;
+              }
             }
+          } catch (e) {
+            console.warn(`[Sync] Falha ao consultar /api/${sellerKey}, usando fallback direto:`, e);
           }
-        } catch (e) {
-          console.warn(`[Sync] Falha ao consultar /api/${sellerKey}, usando fallback direto:`, e);
         }
 
-        // 2. Fallback: REST Direto no Supabase caso API serverless não responda
+        // 2. Fallback: REST Direto no Supabase caso API serverless não responda ou para Gabriel
         if (!cloudLeads && url && key) {
           const queryUrl = `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc`;
           const res = await fetch(queryUrl, {
@@ -3986,7 +3989,7 @@
 
         if (Array.isArray(cloudLeads)) {
           const deletedIds = new Set(getDeletedLeadIds());
-          // FILTRO ESTRITO DE ISOLAMENTO: cada vendedor visualiza exclusivamente seus prÃ³prios leads
+          // FILTRO ESTRITO DE ISOLAMENTO: cada vendedor visualiza exclusivamente seus próprios leads
           const userCloudLeads = cloudLeads.filter(l => {
             if (deletedIds.has(l.id)) return false;
             return isLeadOfSeller(l, sellerKey);
@@ -4025,39 +4028,60 @@
           // Canal Instagram EXCLUSIVO do Gabriel Lima:
           if (sellerKey === 'gabriel') {
             const defaultInsta = (typeof getDefaultInstagramLeads === 'function') ? getDefaultInstagramLeads() : [];
-            const existingInstaIds = new Set(cloudInsta.map(i => i.id));
-            const existingInstaHandles = new Set(cloudInsta.map(i => (i.instagram || '').toLowerCase().replace(/^@/, '')).filter(Boolean));
-            defaultInsta.forEach(defL => {
-              const defHandle = (defL.instagram || '').toLowerCase().replace(/^@/, '');
-              if (!existingInstaIds.has(defL.id) && (!defHandle || !existingInstaHandles.has(defHandle))) {
-                cloudInsta.push(defL);
-              }
-            });
+            cloudInsta.length = 0;
+            cloudInsta.push(...defaultInsta);
           } else {
             cloudInsta.length = 0; // Vendedores não-Gabriel nunca possuem Instagram
           }
 
-          // PRESERVAÇÃO CRÍTICA DE WHATSAPP / BASE HISTÓRICA DO GABRIEL (GARANTIA DA BASE OFICIAL COMPLETA):
+          // PRESERVAÇÃO CRÍTICA E CANÔNICA DE WHATSAPP / BASE OFICIAL DO GABRIEL (909 LEADS):
           const isGabrielSync = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
           if (isGabrielSync) {
-            const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : [];
+            const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS))
+              ? CARIBE_170_LEADS.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'))
+              : [];
+
+            const baseMap = new Map();
+            const phoneMap = new Map();
+
             baseLeads.forEach(l => {
-              const hasIdMatch = cloudWa.some(existing => existing.id === l.id);
-              const hasPhoneMatch = l.phone && cloudWa.some(existing => isMatchingPhone(existing.phone, l.phone));
-              if (!hasIdMatch && !hasPhoneMatch) {
-                cloudWa.push(l);
+              baseMap.set(String(l.id).toUpperCase(), { ...l });
+              const cleanP = cleanPhone(l.phone);
+              if (cleanP) phoneMap.set(cleanP, l.id);
+            });
+
+            // Atualiza leads existentes com notas ou status mais recentes do Supabase em nuvem
+            cloudWa.forEach(cL => {
+              const cId = String(cL.id || '').toUpperCase();
+              const cPhone = cleanPhone(cL.phone);
+
+              if (baseMap.has(cId)) {
+                const target = baseMap.get(cId);
+                if (cL.notes && cL.notes.length > (target.notes || '').length) {
+                  target.notes = cL.notes;
+                }
+                if (cL.stage && cL.stage !== 'novos') {
+                  target.stage = cL.stage;
+                }
+                if (cL.last_interaction) {
+                  target.last_interaction = cL.last_interaction;
+                }
+              } else if (cPhone && phoneMap.has(cPhone)) {
+                const target = baseMap.get(phoneMap.get(cPhone));
+                if (target) {
+                  if (cL.notes && cL.notes.length > (target.notes || '').length) {
+                    target.notes = cL.notes;
+                  }
+                  if (cL.stage && cL.stage !== 'novos') {
+                    target.stage = cL.stage;
+                  }
+                }
               }
             });
-            // Blindagem: assegura que cloudWa mantenha integralmente todos os leads da base oficial
-            if (baseLeads.length > cloudWa.length) {
-              const currentWaIds = new Set(cloudWa.map(x => x.id));
-              baseLeads.forEach(bl => {
-                if (!currentWaIds.has(bl.id)) {
-                  cloudWa.push(bl);
-                  currentWaIds.add(bl.id);
-                }
-              });
-            }
+
+            // Garante rigorosamente os 909 leads canônicos oficiais sem inchaço ou pipeline duplicado
+            cloudWa.length = 0;
+            cloudWa.push(...Array.from(baseMap.values()));
           }
 
           const currentWaJson = JSON.stringify(cloudWa);
