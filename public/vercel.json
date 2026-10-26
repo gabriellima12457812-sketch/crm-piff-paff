@@ -1,0 +1,155 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/setup-admin",
+      "destination": "/setup-admin.html"
+    },
+    {
+      "source": "/api/admin/users/:id/toggle-status",
+      "destination": "/api/admin/users.js?action=toggle_status&id=:id"
+    },
+    {
+      "source": "/api/admin/users",
+      "destination": "/api/admin/users.js"
+    },
+    {
+      "source": "/api/auth",
+      "destination": "/api/auth.js"
+    },
+    {
+      "source": "/api/setup-admin",
+      "destination": "/api/setup-admin.js"
+    },
+    {
+      "source": "/pasta_digital",
+      "destination": "/pasta_digital.html"
+    },
+    {
+      "source": "/pedidos",
+      "destination": "/contracts"
+    },
+    {
+      "source": "/gerador-pedidos",
+      "destination": "/contracts"
+    },
+    {
+      "source": "/atendimento",
+      "destination": "/atendimento.html"
+    },
+    {
+      "source": "/qualificacao",
+      "destination": "/atendimento.html"
+    },
+    {
+      "source": "/conectar",
+      "destination": "/conectar_whatsapp.html"
+    },
+    {
+      "source": "/conectar-whatsapp",
+      "destination": "/conectar_whatsapp.html"
+    },
+    {
+      "source": "/conectar_whatsapp",
+      "destination": "/conectar_whatsapp.html"
+    },
+    {
+      "source": "/api/felipe/find-instagram",
+      "destination": "/api/felipe.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/felipe/move-to-whatsapp",
+      "destination": "/api/felipe.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/api/gabriel/find-instagram",
+      "destination": "/api/gabriel.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/gabriel/move-to-whatsapp",
+      "destination": "/api/gabriel.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/api/mayara/find-instagram",
+      "destination": "/api/mayara.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/mayara/move-to-whatsapp",
+      "destination": "/api/mayara.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/api/barbara/find-instagram",
+      "destination": "/api/barbara.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/barbara/move-to-whatsapp",
+      "destination": "/api/barbara.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/api/eduardo/find-instagram",
+      "destination": "/api/eduardo.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/eduardo/move-to-whatsapp",
+      "destination": "/api/eduardo.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/api/rodrigo/find-instagram",
+      "destination": "/api/rodrigo.js?action=findInstagramLead"
+    },
+    {
+      "source": "/api/rodrigo/move-to-whatsapp",
+      "destination": "/api/rodrigo.js?action=moveInstagramLeadToWhatsApp"
+    },
+    {
+      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar|setup-admin).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+}

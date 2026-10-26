@@ -6,6 +6,30 @@
       "destination": "/index.html"
     },
     {
+      "source": "/dashboard",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/setup-admin",
+      "destination": "/setup-admin.html"
+    },
+    {
+      "source": "/api/admin/users/:id/toggle-status",
+      "destination": "/api/admin/users.js?action=toggle_status&id=:id"
+    },
+    {
+      "source": "/api/admin/users",
+      "destination": "/api/admin/users.js"
+    },
+    {
+      "source": "/api/auth",
+      "destination": "/api/auth.js"
+    },
+    {
+      "source": "/api/setup-admin",
+      "destination": "/api/setup-admin.js"
+    },
+    {
       "source": "/pasta_digital",
       "destination": "/pasta_digital.html"
     },
@@ -86,7 +110,7 @@
       "destination": "/api/rodrigo.js?action=moveInstagramLeadToWhatsApp"
     },
     {
-      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar).*)",
+      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar|setup-admin).*)",
       "destination": "/index.html"
     }
   ],

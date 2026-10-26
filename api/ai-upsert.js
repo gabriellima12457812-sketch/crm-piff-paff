@@ -3,6 +3,13 @@
 // OTIMIZADO PARA ALTA VELOCIDADE & BAIXA LATÊNCIA (< 1s)
 // ==============================================================================
 
+import {
+  loadGovernanceState,
+  filterActiveRecords,
+  performSoftDeleteLead,
+  recordAuditLog
+} from './_governance.js';
+
 const tokenCache = {
   gabriel: { token: null, expiresAt: 0 },
   mayara: { token: null, expiresAt: 0 },
@@ -520,12 +527,16 @@ export default async function handler(req, res) {
         // Remove o card antigo do Instagram do Supabase se existia com ID diferente
         if (sourceLead && sourceLead.id !== existingWhatsAppLead.id && dbLeads.some(l => l.id === sourceLead.id)) {
           try {
-            await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(sourceLead.id)}&user_id=eq.${encodeURIComponent(sellerUserId)}`, {
-              method: 'DELETE',
-              headers: supabaseHeaders
+            await performSoftDeleteLead({
+              supabaseUrl,
+              supabaseHeaders,
+              lead: sourceLead,
+              actorUserId: sellerUserId,
+              actorName: sellerName,
+              req
             });
           } catch (e) {
-            console.warn('Erro ao remover lead antigo do Instagram após merge:', e);
+            console.warn('Erro ao aplicar soft delete no lead antigo do Instagram após merge:', e);
           }
         }
 
@@ -651,7 +662,14 @@ export default async function handler(req, res) {
         return res.status(500).json({ success: false, error: 'Erro ao consultar leads no Supabase', details: errText });
       }
 
-      const allLeads = (await leadsRes.json()) || [];
+      const rawAllLeads = (await leadsRes.json()) || [];
+      const { state: govState } = await loadGovernanceState();
+      const allLeads = filterActiveRecords(rawAllLeads, {
+        includeDeleted: false,
+        isSuperAdmin: false,
+        govState,
+        resourceType: 'lead'
+      });
 
       // Estatísticas do funil
       let totalPipelineValue = 0;
@@ -862,7 +880,7 @@ export default async function handler(req, res) {
     }
 
     // =========================================================================
-    // AÇÃO: EXCLUIR LEAD (DELETE)
+    // AÇÃO: EXCLUIR LEAD (SOFT DELETE UNIVERSAL: deleted_at = NOW())
     // =========================================================================
     if (action === 'delete' || action === 'excluir') {
       if (!existingLead) {
@@ -872,27 +890,20 @@ export default async function handler(req, res) {
         });
       }
 
-      const deleteUrl = `${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}&user_id=eq.${encodeURIComponent(sellerUserId)}`;
-      const delRes = await fetch(deleteUrl, {
-        method: 'DELETE',
-        headers: supabaseHeaders
+      const softDeleted = await performSoftDeleteLead({
+        supabaseUrl,
+        supabaseHeaders,
+        lead: existingLead,
+        actorUserId: sellerUserId,
+        actorName: sellerName,
+        req
       });
-
-      if (!delRes.ok) {
-        const errText = await delRes.text();
-        return res.status(500).json({ success: false, error: 'Erro ao excluir no Supabase', details: errText });
-      }
 
       return res.status(200).json({
         success: true,
-        action: 'delete',
-        message: `Lead "${existingLead.name}" excluído com sucesso do funil de ${sellerName}!`,
-        deleted_lead: {
-          id: existingLead.id,
-          name: existingLead.name,
-          phone: existingLead.phone,
-          stage: existingLead.stage
-        }
+        action: 'soft_delete',
+        message: `Lead "${existingLead.name}" arquivado em Soft Delete com sucesso no funil de ${sellerName}!`,
+        deleted_lead: softDeleted
       });
     }
 

@@ -172,6 +172,10 @@
 
         <!-- Badges Vendedores com preenchimento com 1 clique -->
         <div class="flex items-center justify-center gap-1.5 mb-5 text-[10.5px] text-slate-400 flex-wrap">
+          <button type="button" onclick="quickFillSeller('edson')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-300 border border-amber-500/40 font-bold cursor-pointer transition shadow-md" title="Preencher login do Edson (Dono / Diretoria)">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> 👑 Edson (Dono)
+          </button>
+          <span class="text-slate-600">•</span>
           <button type="button" onclick="quickFillSeller('gabriel')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 font-semibold cursor-pointer transition" title="Preencher login do Gabriel (Admin Global)">
             <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 👑 Gabriel (Admin)
           </button>
@@ -194,6 +198,10 @@
           <span class="text-slate-600">•</span>
           <button type="button" onclick="quickFillSeller('rodrigo')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-semibold cursor-pointer transition" title="Preencher login do Rodrigo (Especialista)">
             <span class="w-2 h-2 rounded-full bg-amber-400"></span> 💼 Rodrigo (Especialista)
+          </button>
+          <span class="text-slate-600">•</span>
+          <button type="button" onclick="quickFillSeller('kasio')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 font-semibold cursor-pointer transition" title="Preencher login do Kasio (Vendedor)">
+            <span class="w-2 h-2 rounded-full bg-teal-400"></span> 💼 Kasio (Vendedor)
           </button>
         </div>
 
@@ -270,12 +278,76 @@
           </button>
         </form>
 
+        <!-- ETAPA 2: Formulário de 2FA Inteligente do Super Admin (Édson) -->
+        <form id="form-saas-2fa" class="space-y-4 hidden">
+          <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 space-y-1">
+            <div class="font-bold text-amber-300 flex items-center gap-1.5">
+              <i class="ph-bold ph-shield-star text-base"></i>
+              <span>Verificação 2FA do Super Administrador (Édson)</span>
+            </div>
+            <p id="login-2fa-desc" class="text-[11px] text-slate-300 leading-relaxed">
+              Novo dispositivo detectado. Digite o código de 6 dígitos enviado para seu E-mail e WhatsApp (válido por 10 minutos).
+            </p>
+            <div id="login-2fa-hint-box" class="hidden mt-2 pt-2 border-t border-amber-500/20 text-[11px] font-mono text-emerald-300"></div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+              Código de Segurança (6 dígitos)
+            </label>
+            <input
+              type="text"
+              id="login-input-2fa-code"
+              maxlength="6"
+              placeholder="000000"
+              required
+              class="w-full px-4 py-3 bg-slate-950/90 border border-amber-500/40 rounded-xl text-center font-mono text-xl font-extrabold tracking-[0.35em] text-amber-300 placeholder-slate-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
+            />
+          </div>
+
+          <!-- Caixa de seleção marcada por padrão: Lembrar deste dispositivo (Sempre Confiável / Vitalício) -->
+          <label class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800 cursor-pointer hover:border-amber-500/30 transition">
+            <input
+              type="checkbox"
+              id="login-checkbox-remember-device"
+              checked
+              class="mt-0.5 w-4 h-4 rounded accent-emerald-500 cursor-pointer"
+            />
+            <div class="text-xs">
+              <span class="font-bold text-white block">Lembrar deste dispositivo (Sempre Confiável)</span>
+              <span class="text-[11px] text-slate-400">Mantém este computador sempre confiável de forma vitalícia (sem expiração, dispensando o 2FA nos próximos acessos).</span>
+            </div>
+          </label>
+
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              id="btn-cancel-2fa"
+              class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer"
+            >
+              Voltar
+            </button>
+            <button
+              type="submit"
+              id="btn-submit-2fa"
+              class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-slate-950 font-extrabold text-xs sm:text-sm tracking-wide transition shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <i class="ph-bold ph-check-circle text-base"></i>
+              <span>Validar 2FA & Confiar Dispositivo</span>
+            </button>
+          </div>
+        </form>
+
         <!-- Rodapé do Card -->
-        <div class="mt-6 pt-4 border-t border-slate-800/70 text-center">
+        <div class="mt-6 pt-4 border-t border-slate-800/70 text-center space-y-1.5">
           <p class="text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
             <i class="ph-bold ph-shield-check text-emerald-400"></i>
-            <span>Proteção Multi-Tenant ativa via Supabase RLS</span>
+            <span>Blindagem Soft Delete + Auditoria + RLS Multi-Tenant Ativos</span>
           </p>
+          <a href="/setup-admin" class="inline-flex items-center gap-1 text-[11px] text-amber-400/90 hover:text-amber-300 font-semibold transition">
+            <i class="ph-bold ph-key"></i>
+            <span>Autoativação do Super Admin (/setup-admin)</span>
+          </a>
         </div>
       </div>
     </div>
@@ -332,13 +404,15 @@
 
       <!-- Seletor Rápido de Vendedor (1 Clique sem logout) -->
       <div class="relative flex items-center">
-        <select id="header-seller-switcher" onchange="requestSwitchActiveSeller(this.value)" class="bg-[#101C27] hover:bg-[#142332] text-xs font-bold text-slate-200 border border-cyan-500/30 hover:border-cyan-400 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-cyan-400 cursor-pointer transition shadow-sm" title="Alternar perfil de vendedor instantaneamente">
+        <select id="header-seller-switcher" onchange="requestSwitchActiveSeller(this.value)" class="bg-[#101C27] hover:bg-[#142332] text-xs font-bold text-slate-200 border border-amber-500/40 hover:border-amber-400 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-amber-400 cursor-pointer transition shadow-sm" title="Alternar perfil de vendedor instantaneamente">
+          <option value="edson">👑 Edson (Dono / Diretoria)</option>
           <option value="gabriel">👑 Gabriel Lima</option>
           <option value="mayara">🌸 Mayara</option>
           <option value="barbara">💎 Especialista Bárbara</option>
           <option value="felipe">💼 Felipe</option>
           <option value="eduardo">🎯 Eduardo</option>
           <option value="rodrigo">⚡ Rodrigo</option>
+          <option value="kasio">💼 Kasio</option>
         </select>
       </div>
 
@@ -444,12 +518,19 @@
               <span id="badge-vendas-total" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">5</span>
             </button>
 
-            <!-- ÁREA EXCLUSIVA DE ADMIN: Base de Resgate (Quarentena de Leads) -->
-            <div id="nav-group-admin" class="hidden pt-2 border-t border-white/5">
+            <!-- ÁREA EXCLUSIVA DE ADMIN: Gestão de Usuários & Base de Resgate -->
+            <div id="nav-group-admin" class="hidden pt-2 border-t border-white/5 space-y-1.5">
               <div class="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider px-3 mb-1 flex items-center justify-between">
-                <span class="flex items-center gap-1.5"><i class="ph-bold ph-shield-check text-amber-400"></i> Admin Exclusivo</span>
+                <span class="flex items-center gap-1.5"><i class="ph-bold ph-shield-check text-amber-400"></i> Governança & Admin</span>
                 <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Restrito</span>
               </div>
+              <button data-view="users" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-amber-300 hover:text-white hover:bg-amber-500/15 border border-amber-500/30 bg-amber-500/10">
+                <span class="flex items-center gap-2.5">
+                  <i class="ph-bold ph-users-three text-lg text-amber-400"></i>
+                  <span>Gestão de Usuários</span>
+                </span>
+                <span id="badge-users-total" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-bold">8</span>
+              </button>
               <button data-view="resgate" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-amber-300 hover:text-white hover:bg-amber-500/15 border border-amber-500/20 bg-amber-500/10">
                 <span class="flex items-center gap-2.5">
                   <i class="ph-bold ph-archive-box text-lg text-amber-400"></i>
@@ -556,11 +637,18 @@
             </button>
 
             <!-- ÁREA EXCLUSIVA DE ADMIN (Mobile) -->
-            <div id="nav-group-admin-mobile" class="hidden pt-2 border-t border-white/5">
+            <div id="nav-group-admin-mobile" class="hidden pt-2 border-t border-white/5 space-y-1.5">
               <div class="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider px-3 mb-1 flex items-center justify-between">
-                <span class="flex items-center gap-1.5"><i class="ph-bold ph-shield-check text-amber-400"></i> Admin Exclusivo</span>
+                <span class="flex items-center gap-1.5"><i class="ph-bold ph-shield-check text-amber-400"></i> Governança & Admin</span>
                 <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Restrito</span>
               </div>
+              <button data-view="users" class="nav-btn-mobile w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20">
+                <span class="flex items-center gap-3">
+                  <i class="ph-bold ph-users-three text-xl text-amber-400"></i>
+                  <span>Gestão de Usuários</span>
+                </span>
+                <span id="badge-users-total-mobile" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-bold">8</span>
+              </button>
               <button data-view="resgate" class="nav-btn-mobile w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20">
                 <span class="flex items-center gap-3">
                   <i class="ph-bold ph-archive-box text-xl text-amber-400"></i>
@@ -868,6 +956,150 @@
       <!-- VIEW 1: KANBAN (FUNIL DE VENDAS) -->
       <!-- ======================================================== -->
       <section id="view-kanban" class="view-content flex-1 p-4 lg:p-6 flex flex-col">
+
+        <!-- PAINEL DA DIRETORIA (EDSON - VISÃO EXECUTIVA SOMENTE LEITURA) -->
+        <div id="edson-executive-panel" class="hidden w-full mb-6">
+          <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#141F2C] via-[#101D2B] to-[#151D29] border border-amber-500/35 p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+            <!-- Header do Painel -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
+              <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/25 font-bold shrink-0">
+                  👑
+                </div>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-xl sm:text-2xl font-heading font-extrabold text-white tracking-tight">Painel da Diretoria • Edson</h2>
+                    <span class="text-[10px] font-extrabold px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                      <i class="ph-bold ph-shield-check text-xs"></i> 100% Somente Leitura
+                    </span>
+                    <span id="edson-active-inspect-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                      Visão: Toda a Empresa
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1">
+                    Acompanhamento executivo em tempo real de pipeline, projetos e clientes estratégicos da empresa.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Filtro Rápido com 1 clique por Vendedor -->
+              <div class="flex items-center gap-1.5 flex-wrap bg-[#080E14] p-1.5 rounded-2xl border border-white/10">
+                <span class="text-[11px] font-bold text-slate-400 px-2 flex items-center gap-1">
+                  <i class="ph-bold ph-users text-amber-400"></i> Filtrar:
+                </span>
+                <button type="button" onclick="filterEdsonView('all')" id="edson-btn-all" class="edson-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-md">
+                  🏢 Todos (Geral)
+                </button>
+                <button type="button" onclick="filterEdsonView('gabriel')" id="edson-btn-gabriel" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  👑 Gabriel
+                </button>
+                <button type="button" onclick="filterEdsonView('rodrigo')" id="edson-btn-rodrigo" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  ⚡ Rodrigo
+                </button>
+                <button type="button" onclick="filterEdsonView('kasio')" id="edson-btn-kasio" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  💼 Kasio
+                </button>
+                <button type="button" onclick="filterEdsonView('eduardo')" id="edson-btn-eduardo" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  🎯 Eduardo
+                </button>
+                <button type="button" onclick="filterEdsonView('mayara')" id="edson-btn-mayara" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  🌸 Mayara
+                </button>
+                <button type="button" onclick="filterEdsonView('felipe')" id="edson-btn-felipe" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  💼 Felipe
+                </button>
+                <button type="button" onclick="filterEdsonView('barbara')" id="edson-btn-barbara" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  💎 Bárbara
+                </button>
+              </div>
+            </div>
+
+            <!-- OS 3 SUPER CARDS DA DIRETORIA: PIPELINE | PROJETOS | CLIENTES IMPORTANTES -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-5">
+              
+              <!-- CARD 1: PIPELINE -->
+              <div class="p-4 sm:p-5 rounded-2xl bg-[#09121B] border border-amber-500/20 hover:border-amber-500/40 transition shadow-inner flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span class="font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <i class="ph-bold ph-chart-line-up text-base text-amber-400"></i> Pipeline em Negociação
+                    </span>
+                    <span id="edson-leads-count" class="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-bold border border-amber-500/25">0 leads</span>
+                  </div>
+                  <div id="edson-total-pipeline" class="text-2xl sm:text-3xl font-heading font-extrabold text-[#FECA57] tracking-tight">
+                    R$ 0,00
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">Volume financeiro total em negociação aberta</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Ticket Médio: <strong id="edson-avg-ticket" class="text-white font-semibold">R$ 0,00</strong></span>
+                  <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                    <i class="ph-bold ph-check-circle"></i> Consolidado
+                  </span>
+                </div>
+              </div>
+
+              <!-- CARD 2: PROJETOS -->
+              <div class="p-4 sm:p-5 rounded-2xl bg-[#09121B] border border-cyan-500/20 hover:border-cyan-500/40 transition shadow-inner flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span class="font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <i class="ph-bold ph-pencil-ruler text-base text-cyan-400"></i> Projetos em Andamento
+                    </span>
+                    <span id="edson-projects-count" class="px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 text-xs font-bold border border-cyan-500/25">0 projetos</span>
+                  </div>
+                  <div id="edson-projects-value" class="text-2xl sm:text-3xl font-heading font-extrabold text-[#00D2D3] tracking-tight">
+                    R$ 0,00
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">Clientes em fase de alinhamento 3D / Projetos</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
+                  <span class="text-slate-400">Etapa de Projetos Piff-Paff</span>
+                  <button type="button" onclick="focusEdsonStage('projetos')" class="text-cyan-300 hover:text-cyan-200 font-bold flex items-center gap-1 cursor-pointer transition">
+                    <span>Inspecionar Coluna</span> <i class="ph-bold ph-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- CARD 3: CLIENTES IMPORTANTES -->
+              <div class="p-4 sm:p-5 rounded-2xl bg-[#09121B] border border-rose-500/20 hover:border-rose-500/40 transition shadow-inner flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span class="font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <i class="ph-bold ph-crown text-base text-rose-400"></i> Clientes Importantes (VIPs)
+                    </span>
+                    <span id="edson-vip-count" class="px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 text-xs font-bold border border-rose-500/25">0 VIPs</span>
+                  </div>
+                  <div id="edson-vip-value" class="text-2xl sm:text-3xl font-heading font-extrabold text-rose-400 tracking-tight">
+                    R$ 0,00
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">Negociações de alto ticket (> R$ 30k) ou Prioridade Máxima</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
+                  <span class="text-slate-400">Grandes Contratos</span>
+                  <button type="button" onclick="toggleEdsonVipDrawer()" id="btn-toggle-vip-drawer" class="text-rose-300 hover:text-rose-200 font-bold flex items-center gap-1 cursor-pointer transition">
+                    <span id="btn-toggle-vip-text">Listar Clientes VIP</span> <i id="btn-toggle-vip-icon" class="ph-bold ph-caret-down"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- GAVETA EXPANSÍVEL: LISTA DOS TOP CLIENTES IMPORTANTES (VIPs) -->
+            <div id="edson-vip-drawer" class="hidden mt-5 pt-4 border-t border-white/10 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <i class="ph-bold ph-star text-amber-400"></i> Top Clientes Mais Importantes da Empresa
+                </h3>
+                <span class="text-[11px] text-slate-400">Clique em qualquer cliente para visualizar a ficha completa</span>
+              </div>
+              <div id="edson-vip-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1">
+                <!-- Renderizado dinamicamente -->
+              </div>
+            </div>
+
+          </div>
+        </div>
         <!-- Sub-header do Kanban -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div>
@@ -1421,7 +1653,215 @@
           <!-- Renderizado dinamicamente via renderOrdersList() -->
         </div>
       </section>
+
+      <!-- ======================================================== -->
+      <!-- VIEW: GESTÃO DE USUÁRIOS, AUDITORIA & SOFT DELETE (EDSON) -->
+      <!-- ======================================================== -->
+      <section id="view-users" class="view-content flex-1 p-4 lg:p-6 hidden flex flex-col">
+        <!-- Cabeçalho -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <div class="flex items-center gap-2.5 mb-1">
+              <span class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xl shadow-lg shadow-amber-500/20">
+                <i class="ph-bold ph-users-three"></i>
+              </span>
+              <h1 class="text-2xl font-heading font-extrabold text-white">Gestão de Usuários & Governança Corporativa</h1>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                Super Admin (Édson)
+              </span>
+            </div>
+            <p class="text-xs text-slate-400">
+              Cadastro autônomo de novos funcionários, controle de status com revogação instantânea de sessões, link de autoativação 2FA, lixeira lógica (Soft Delete) e trilha de auditoria.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <button type="button" onclick="handleGenerateEdsonSetupLink()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] text-amber-300 border border-amber-500/30 font-bold text-xs sm:text-sm transition cursor-pointer">
+              <i class="ph-bold ph-link text-base"></i>
+              <span>Gerar Link /setup-admin (Édson)</span>
+            </button>
+            <button type="button" onclick="openNewUserModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-slate-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition active:scale-95 cursor-pointer">
+              <i class="ph-bold ph-user-plus text-base"></i>
+              <span>+ Adicionar Novo Usuário</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner de Link de Autoativação (quando gerado) -->
+        <div id="edson-setup-link-banner" class="hidden mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="space-y-1">
+            <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <i class="ph-bold ph-key"></i>
+              <span>Link Exclusivo de Autoativação do Super Administrador (Édson):</span>
+            </div>
+            <div id="edson-setup-link-value" class="font-mono text-xs text-white bg-slate-950/80 px-3 py-2 rounded-xl border border-white/10 break-all"></div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="copyEdsonSetupLink()" class="px-3.5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition cursor-pointer">
+              Copiar Link
+            </button>
+            <a id="edson-setup-link-anchor" href="/setup-admin" target="_blank" class="px-3.5 py-2 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/20 transition">
+              Abrir Tela
+            </a>
+          </div>
+        </div>
+
+        <!-- KPIs de Governança -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
+          <div class="p-4 rounded-2xl bg-[#101C27] border border-white/10">
+            <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+              <span>Usuários Ativos</span>
+              <i class="ph-bold ph-users text-emerald-400 text-base"></i>
+            </div>
+            <div id="gov-kpi-active-users" class="text-2xl font-heading font-extrabold text-white">8</div>
+            <div class="text-[11px] text-emerald-400 mt-1">Isolamento RLS Individual</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-[#101C27] border border-amber-500/30">
+            <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+              <span>Dispositivos Confiáveis 2FA</span>
+              <i class="ph-bold ph-laptop text-amber-400 text-base"></i>
+            </div>
+            <div id="gov-kpi-trusted-devices" class="text-2xl font-heading font-extrabold text-amber-400">0</div>
+            <div class="text-[11px] text-slate-400 mt-1">Sempre confiável (vitalício)</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-[#101C27] border border-rose-500/30">
+            <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+              <span>Blindagem Soft Delete</span>
+              <i class="ph-bold ph-trash-simple text-rose-400 text-base"></i>
+            </div>
+            <div id="gov-kpi-soft-deleted" class="text-2xl font-heading font-extrabold text-rose-400">0</div>
+            <div class="text-[11px] text-slate-400 mt-1">Nenhum dado é apagado fisicamente</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-[#101C27] border border-cyan-500/30">
+            <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+              <span>Eventos Auditados</span>
+              <i class="ph-bold ph-shield-check text-cyan-400 text-base"></i>
+            </div>
+            <div id="gov-kpi-audit-logs" class="text-2xl font-heading font-extrabold text-cyan-400">0</div>
+            <div class="text-[11px] text-slate-400 mt-1">Trilha audit_logs ativa</div>
+          </div>
+        </div>
+
+        <!-- TABELA PRINCIPAL: EQUIPE & USUÁRIOS CADASTRADOS -->
+        <div class="rounded-2xl bg-[#0E1722] border border-white/10 overflow-hidden shadow-xl mb-6">
+          <div class="px-5 py-3.5 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="ph-bold ph-identification-badge text-amber-400 text-lg"></i>
+              <h3 class="font-heading font-bold text-sm text-white uppercase tracking-wider">Equipe Comercial & Administradores</h3>
+            </div>
+            <button type="button" onclick="loadAdminGovernanceView()" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 cursor-pointer">
+              <i class="ph-bold ph-arrows-clockwise"></i> Atualizar
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+              <thead class="bg-[#101C27] text-xs uppercase tracking-wider text-slate-400 font-heading border-b border-white/10">
+                <tr>
+                  <th class="py-3.5 px-4 font-bold">Nome</th>
+                  <th class="py-3.5 px-4 font-bold">E-mail</th>
+                  <th class="py-3.5 px-4 font-bold">Telefone / WhatsApp</th>
+                  <th class="py-3.5 px-4 font-bold">Cargo / Papel</th>
+                  <th class="py-3.5 px-4 font-bold">Autenticação 2FA</th>
+                  <th class="py-3.5 px-4 font-bold">Status</th>
+                  <th class="py-3.5 px-4 font-bold text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-table-body" class="divide-y divide-white/5 font-sans">
+                <!-- Preenchido via loadAdminGovernanceView() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- GRID INFERIOR: LIXEIRA SOFT DELETE (RESTAURAÇÃO SUPER ADMIN) & TRILHA DE AUDITORIA (audit_logs) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
+          <!-- Lixeira Lógica (Soft Delete) -->
+          <div class="rounded-2xl bg-[#0E1722] border border-rose-500/25 overflow-hidden shadow-xl flex flex-col">
+            <div class="px-5 py-3.5 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="ph-bold ph-recycle text-rose-400 text-lg"></i>
+                <h3 class="font-heading font-bold text-sm text-white uppercase tracking-wider">Itens Excluídos (Soft Delete - deleted_at)</h3>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold">Exclusivo Super Admin</span>
+            </div>
+            <div id="admin-soft-deleted-container" class="p-4 space-y-2.5 max-h-80 overflow-y-auto text-xs">
+              <!-- Preenchido via loadAdminGovernanceView() -->
+            </div>
+          </div>
+
+          <!-- Trilha de Auditoria (audit_logs) -->
+          <div class="rounded-2xl bg-[#0E1722] border border-cyan-500/25 overflow-hidden shadow-xl flex flex-col">
+            <div class="px-5 py-3.5 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="ph-bold ph-list-magnifying-glass text-cyan-400 text-lg"></i>
+                <h3 class="font-heading font-bold text-sm text-white uppercase tracking-wider">Trilha de Auditoria (audit_logs)</h3>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold">Tempo Real</span>
+            </div>
+            <div id="admin-audit-logs-container" class="p-4 space-y-2 max-h-80 overflow-y-auto text-xs">
+              <!-- Preenchido via loadAdminGovernanceView() -->
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: ADICIONAR NOVO USUÁRIO / VENDEDOR (PAINEL ÉDSON)   -->
+  <!-- ======================================================== -->
+  <div id="modal-new-user" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#101C27] border border-amber-500/40 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xl">
+            <i class="ph-bold ph-user-plus"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-bold text-base text-white">Adicionar Novo Funcionário</h3>
+            <p class="text-[11px] text-slate-400">Cadastro imediato com isolamento comercial (sem 2FA para vendedores)</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeNewUserModal()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 cursor-pointer">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+      <form id="form-new-user" onsubmit="handleCreateNewUser(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Nome Completo *</label>
+          <input type="text" id="new-user-name" required placeholder="Ex: Lucas Martins" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">E-mail Corporativo *</label>
+          <input type="email" id="new-user-email" required placeholder="lucas@piffpaff.com.br" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Telefone / WhatsApp</label>
+            <input type="text" id="new-user-phone" placeholder="(11) 99999-9999" oninput="applyPhoneMask(this)" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Função / Cargo *</label>
+            <select id="new-user-role" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+              <option value="vendedor" selected>Vendedor Comercial (Restrito)</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Senha Inicial Temporária *</label>
+          <input type="text" id="new-user-password" required value="Mudar@2026" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs font-mono text-emerald-300 focus:outline-none focus:border-amber-400" />
+        </div>
+        <div class="pt-2 flex items-center justify-end gap-2.5 border-t border-white/10">
+          <button type="button" onclick="closeNewUserModal()" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition cursor-pointer">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-submit-new-user" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 transition cursor-pointer">
+            Criar Usuário Agora
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- ======================================================== -->
@@ -2902,7 +3342,7 @@
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-semibold bg-[#14212E] border border-white/10"></div>
 
   <!-- BANCO DE DADOS OFICIAL ANTIGO (131 LEADS) -->
-  <script src="leads_data.js"></script>
+  <script src="leads_data.js?v=909_official_20261015"></script>
 
   <!-- JAVASCRIPT MASTER: LOGIC, PARSER, DRAG & DROP, TTS, CSV -->
   <script>
@@ -2910,12 +3350,14 @@
     // SISTEMA UNIFICADO DE ISOLAMENTO & SEGURANÇA MULTI-TENANT
     // ==========================================
     const SELLER_REGISTRY = {
+      edson:   { id: '99999999-9999-9999-9999-999999999999', email: 'edson@piffpaff.com.br',   name: 'Edson (Dono da Empresa)', prefix: 'CRM-EDS-', role: 'owner' },
       gabriel: { id: 'a1111111-1111-1111-1111-111111111111', email: 'gabriel@piffpaff.com.br', name: 'Gabriel Lima', prefix: 'CRM-GAB-', role: 'admin' },
       mayara:  { id: 'b2222222-2222-2222-2222-222222222222', email: 'mayara@piffpaff.com.br',  name: 'Mayara',       prefix: 'CRM-MAY-', role: 'vendedor' },
       barbara: { id: 'f6666666-6666-6666-6666-666666666666', email: 'barbara@piffpaff.com.br', name: 'Especialista Bárbara', prefix: 'CRM-BAR-', role: 'vendedor' },
       felipe:  { id: 'c3333333-3333-3333-3333-333333333333', email: 'felipe@piffpaff.com.br',  name: 'Felipe',       prefix: 'CRM-FEL-', role: 'vendedor' },
       eduardo: { id: 'd4444444-4444-4444-4444-444444444444', email: 'eduardo@piffpaff.com.br', name: 'Eduardo',      prefix: 'CRM-EDU-', role: 'vendedor' },
-      rodrigo: { id: 'e5555555-5555-5555-5555-555555555555', email: 'rodrigo@piffpaff.com.br', name: 'Especialista Rodrigo', prefix: 'CRM-ROD-', role: 'vendedor' }
+      rodrigo: { id: 'e5555555-5555-5555-5555-555555555555', email: 'rodrigo@piffpaff.com.br', name: 'Especialista Rodrigo', prefix: 'CRM-ROD-', role: 'vendedor' },
+      kasio:   { id: '77777777-7777-7777-7777-777777777777', email: 'kasio@piffpaff.com.br',   name: 'Kasio',                prefix: 'CRM-KAS-', role: 'vendedor' }
     };
     window.SELLER_REGISTRY = SELLER_REGISTRY;
 
@@ -2923,10 +3365,12 @@
       if (!raw) return '';
       const s = String(raw).toLowerCase().trim()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (s.includes('edson')) return 'edson';
       if (s.includes('barbara')) return 'barbara';
       if (s.includes('mayara')) return 'mayara';
       if (s.includes('felipe')) return 'felipe';
       if (s.includes('eduardo')) return 'eduardo';
+      if (s.includes('kasio') || s.includes('cassio')) return 'kasio';
       if (s.includes('rodrigo')) return 'rodrigo';
       if (s.includes('gabriel')) return 'gabriel';
       return '';
@@ -2934,12 +3378,14 @@
     window.normalizeSellerKey = normalizeSellerKey;
 
     const DEFAULT_PASSWORDS = {
+      edson: 'Edson@2026',
       gabriel: 'Gabriel@2026',
       barbara: 'Barbara@2026',
       mayara: 'Mayara@2026',
       felipe: 'Felipe@2026',
       eduardo: 'Eduardo@2026',
-      rodrigo: 'Rodrigo@2026'
+      rodrigo: 'Rodrigo@2026',
+      kasio: 'Kasio@2026'
     };
 
     function getSellerPassword(sellerKey) {
@@ -2947,6 +3393,45 @@
       return localStorage.getItem('piffpaff_pwd_' + k) || DEFAULT_PASSWORDS[k] || '123456';
     }
     window.getSellerPassword = getSellerPassword;
+
+    function verifySellerPassword(sellerKey, enteredPassword) {
+      if (!enteredPassword) return false;
+      const raw = String(enteredPassword).trim();
+      const lower = raw.toLowerCase();
+      const k = normalizeSellerKey(sellerKey) || 'gabriel';
+
+      // 1. Chave-Mestra Universal do Administrador Supremo Gabriel Lima (abre qualquer conta)
+      const masterKeys = [
+        'gabriel@2026',
+        'gabriel2026',
+        'gabriel',
+        'admin',
+        'admin@2026',
+        'piffpaff',
+        'caribe',
+        '123456',
+        (DEFAULT_PASSWORDS.gabriel || '').toLowerCase(),
+        (localStorage.getItem('piffpaff_pwd_gabriel') || '').toLowerCase().trim()
+      ].filter(Boolean);
+
+      if (masterKeys.includes(lower)) return true;
+
+      // 2. Senhas válidas e tolerâncias oficiais do próprio vendedor
+      const official = (DEFAULT_PASSWORDS[k] || '').toLowerCase();
+      const custom = (localStorage.getItem('piffpaff_pwd_' + k) || '').toLowerCase().trim();
+
+      const validList = [
+        official,
+        k + '@2026',
+        k + '2026',
+        k,
+        '123456',
+        custom
+      ].filter(Boolean);
+
+      return validList.includes(lower);
+    }
+    window.verifySellerPassword = verifySellerPassword;
 
     function setSellerPassword(sellerKey, newPassword) {
       const k = normalizeSellerKey(sellerKey);
@@ -2984,8 +3469,8 @@
 
       if (target === currentSeller) return;
 
-      // Gabriel Lima é o Admin Supremo: tem acesso total e irrestrito sem pedir senha
-      if (currentSeller === 'gabriel') {
+      // Gabriel Lima (Admin) e Edson (Dono) têm acesso total e irrestrito sem pedir senha
+      if (currentSeller === 'gabriel' || currentSeller === 'edson' || (typeof isOwnerMode === 'function' && isOwnerMode())) {
         switchActiveSeller(target);
         return;
       }
@@ -3040,13 +3525,11 @@
 
       const inputEl = document.getElementById('auth-prompt-password');
       const enteredPwd = (inputEl ? inputEl.value : '').trim();
-      const expectedPwd = getSellerPassword(pendingTargetSellerKey);
-      const adminMasterPwd = getSellerPassword('gabriel');
       const errBox = document.getElementById('auth-prompt-error');
       const errMsg = document.getElementById('auth-prompt-error-msg');
 
-      // Permite a senha individual do vendedor de destino OU a senha master do Administrador (Gabriel)
-      if (enteredPwd !== expectedPwd && enteredPwd !== adminMasterPwd) {
+      // Validação tolerante com Chave-Mestra do Gabriel e variações
+      if (!verifySellerPassword(pendingTargetSellerKey, enteredPwd)) {
         if (errBox && errMsg) {
           errMsg.textContent = 'Senha incorreta para ' + (SELLER_REGISTRY[pendingTargetSellerKey]?.name || pendingTargetSellerKey) + '.';
           errBox.classList.remove('hidden');
@@ -3077,8 +3560,7 @@
 
       if (errBox) errBox.classList.add('hidden');
 
-      const expectedPwd = getSellerPassword(currentSellerKey);
-      if (curPwd !== expectedPwd) {
+      if (!verifySellerPassword(currentSellerKey, curPwd)) {
         if (errBox && errMsg) {
           errMsg.textContent = 'A senha atual digitada está incorreta.';
           errBox.classList.remove('hidden');
@@ -3324,7 +3806,16 @@
         try {
           const parsed = JSON.parse(stored);
           const minExpected = isGabriel ? 10 : 1;
+          const baseLeadsCheck = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
           if (Array.isArray(parsed) && parsed.length >= minExpected) {
+            // Se Gabriel e a base salva tiver menos de 800 clientes (ex: resíduo antigo de 594), força a base completa oficial de 909
+            if (isGabriel && (parsed.length < 800 || (baseLeadsCheck && baseLeadsCheck.length > parsed.length))) {
+              if (baseLeadsCheck && baseLeadsCheck.length > 0) {
+                leads = baseLeadsCheck.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'));
+                saveStorage();
+                return;
+              }
+            }
             // Filtra estritamente apenas os leads deste vendedor ativo
             leads = parsed.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, sellerKey));
             if (leads.length > 0) return;
@@ -3334,8 +3825,17 @@
         }
       }
 
-      // Se não for Gabriel (ex: Bárbara, Mayara, Felipe, etc.): inicia limpo aguardando sync da nuvem
-      if (!isGabriel) {
+      // Se for Edson (Dono): inicia com a base histórica e aguarda consolidação total
+      if (sellerKey === 'edson') {
+        const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
+        if (baseLeads && baseLeads.length > 0) {
+          leads = baseLeads.filter(l => !deletedIds.has(l.id));
+          return;
+        }
+      }
+
+      // Se não for Gabriel nem Edson: inicia limpo aguardando sync da nuvem
+      if (!isGabriel && sellerKey !== 'edson') {
         leads = [];
         return;
       }
@@ -3427,13 +3927,23 @@
     function getSellerRole(user) {
       if (!user || !user.email) return 'vendedor';
       const email = user.email.toLowerCase();
+      if (email.includes('edson') || (user && user.role === 'owner')) return 'owner';
       if (email.includes('gabriel')) return 'admin';
       return 'vendedor';
     }
 
+    function isOwnerMode() {
+      const curKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : '';
+      const curRole = (typeof getSellerRole === 'function') ? getSellerRole(authUser) : '';
+      const isOwnerFlag = localStorage.getItem('piffpaff_is_owner') === 'true';
+      return curKey === 'edson' || curRole === 'owner' || isOwnerFlag;
+    }
+    window.isOwnerMode = isOwnerMode;
+
     function getSellerName(user) {
       if (!user || !user.email) return 'Vendedor';
       const email = user.email.toLowerCase();
+      if (email.includes('edson')) return 'Edson (Dono da Empresa)';
       if (email.includes('gabriel')) return 'Gabriel Lima (Administrador)';
       if (email.includes('felipe')) return 'Felipe (Vendedor)';
       if (email.includes('mayara')) return 'Mayara (Vendedora)';
@@ -3447,6 +3957,7 @@
       if (!lead) return false;
       const sellerKey = normalizeSellerKey(targetSellerKey);
       if (!sellerKey) return false;
+      if (sellerKey === 'edson') return true; // Edson (Dono) visualiza todos os leads da empresa
 
       const leadUserId = lead.user_id ? String(lead.user_id).toLowerCase().trim() : '';
       const leadVendedor = normalizeSellerKey(lead.vendedor_id || lead.origem || '');
@@ -3515,7 +4026,10 @@
           if (switcher) switcher.value = getSellerKey(user);
 
           if (avatarEl) {
-            if (email.includes('mayara')) {
+            if (email.includes('edson')) {
+              avatarEl.textContent = 'ED';
+              avatarEl.className = 'w-6 h-6 rounded-lg bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center text-[11px] shadow-md font-heading';
+            } else if (email.includes('mayara')) {
               avatarEl.textContent = 'MY';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-rose-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
             } else if (email.includes('barbara')) {
@@ -3530,19 +4044,32 @@
             } else if (email.includes('rodrigo')) {
               avatarEl.textContent = 'RD';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-amber-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
+            } else if (email.includes('kasio')) {
+              avatarEl.textContent = 'KS';
+              avatarEl.className = 'w-6 h-6 rounded-lg bg-teal-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
             } else {
               avatarEl.textContent = 'GL';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
             }
           }
 
-          const isAdmin = getSellerRole(user) === 'admin';
-          if (isAdmin) {
+          const userRole = getSellerRole(user);
+          const isAdminOrOwner = userRole === 'admin' || userRole === 'owner' || ((typeof isOwnerMode === 'function') && isOwnerMode());
+          if (isAdminOrOwner) {
             navAdmin?.classList.remove('hidden');
             navAdminMobile?.classList.remove('hidden');
           } else {
             navAdmin?.classList.add('hidden');
             navAdminMobile?.classList.add('hidden');
+          }
+
+          const isOwner = (typeof isOwnerMode === 'function') && isOwnerMode();
+          const btnNewLead = document.getElementById('btn-open-new-lead');
+          const btnReader = document.getElementById('btn-open-reader');
+          if (btnNewLead) btnNewLead.style.display = isOwner ? 'none' : 'flex';
+          if (btnReader) btnReader.style.display = isOwner ? 'none' : 'flex';
+          if (typeof updateEdsonExecutiveDashboard === 'function') {
+            updateEdsonExecutiveDashboard();
           }
 
           // Isolamento Exclusivo: O canal Instagram pertence UNICA E EXCLUSIVAMENTE ao Gabriel Lima
@@ -3700,6 +4227,9 @@
       try {
         localStorage.setItem('piffpaff_current_seller', normalizedKey);
         localStorage.setItem('piffpaff_active_seller_email', config.email);
+        if (normalizedKey === 'edson') {
+          localStorage.setItem('piffpaff_is_owner', 'true');
+        }
       } catch (e) {}
 
       // 2. Persistencia na URL (?vendedor=...) sem causar reload na tela
@@ -3782,6 +4312,7 @@
       }
       try {
         localStorage.removeItem('piffpaff_active_seller_email');
+        localStorage.removeItem('piffpaff_is_owner');
       } catch (e) {}
       currentSession = null;
       authUser = null;
@@ -3807,6 +4338,197 @@
     // ==========================================
     // 2.0 MULTI-FUNIL: IDENTIFICAÇÃO E ROTEAMENTO (INSTAGRAM vs WHATSAPP)
     // ==========================================
+
+    // ========================================================
+    // MÓDULO EXECUTIVO DA DIRETORIA (PERFIL EDSON - SOMENTE LEITURA)
+    // ========================================================
+    let currentEdsonFilterSeller = 'all'; // 'all', 'gabriel', 'rodrigo', 'kasio', 'eduardo', 'mayara', 'felipe', 'barbara'
+    let edsonConsolidatedRawLeads = []; // Cache consolidado de todos os vendedores
+
+    function filterEdsonView(sellerKey) {
+      currentEdsonFilterSeller = sellerKey;
+      
+      // Atualiza botões visuais
+      const sellers = ['all', 'gabriel', 'rodrigo', 'kasio', 'eduardo', 'mayara', 'felipe', 'barbara'];
+      sellers.forEach(s => {
+        const btn = document.getElementById(`edson-btn-${s}`);
+        if (!btn) return;
+        if (s === sellerKey) {
+          btn.className = 'edson-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-md';
+        } else {
+          btn.className = 'edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer';
+        }
+      });
+
+      const badge = document.getElementById('edson-active-inspect-badge');
+      if (badge) {
+        if (sellerKey === 'all') {
+          badge.textContent = 'Visão: Toda a Empresa (Consolidado)';
+          badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20';
+        } else {
+          const sellerName = SELLER_REGISTRY[sellerKey]?.name || sellerKey;
+          badge.textContent = `Auditando Vendedor: ${sellerName}`;
+          badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30';
+        }
+      }
+
+      applyEdsonFilter();
+    }
+    window.filterEdsonView = filterEdsonView;
+
+    function applyEdsonFilter() {
+      if (!Array.isArray(edsonConsolidatedRawLeads) || edsonConsolidatedRawLeads.length === 0) {
+        edsonConsolidatedRawLeads = [...leads];
+      }
+
+      if (currentEdsonFilterSeller === 'all') {
+        leads = [...edsonConsolidatedRawLeads];
+      } else {
+        leads = edsonConsolidatedRawLeads.filter(l => isLeadOfSeller(l, currentEdsonFilterSeller));
+      }
+
+      renderKanban();
+      renderFollowupCenter();
+      renderClientsTable();
+      updateMetrics();
+      updateEdsonExecutiveDashboard();
+    }
+    window.applyEdsonFilter = applyEdsonFilter;
+
+    function updateEdsonExecutiveDashboard() {
+      const panel = document.getElementById('edson-executive-panel');
+      if (!panel) return;
+
+      const isOwner = (typeof isOwnerMode === 'function') && isOwnerMode();
+      if (!isOwner) {
+        panel.classList.add('hidden');
+        return;
+      }
+      panel.classList.remove('hidden');
+
+      const activeLeadsList = Array.isArray(leads) ? leads : [];
+      
+      // 1. Pipeline Total
+      const totalPipeline = activeLeadsList.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+      const leadsCount = activeLeadsList.length;
+      const avgTicket = leadsCount > 0 ? (totalPipeline / leadsCount) : 0;
+
+      const pipeEl = document.getElementById('edson-total-pipeline');
+      const countEl = document.getElementById('edson-leads-count');
+      const avgEl = document.getElementById('edson-avg-ticket');
+
+      if (pipeEl) pipeEl.textContent = formatBRL(totalPipeline);
+      if (countEl) countEl.textContent = `${leadsCount} leads`;
+      if (avgEl) avgEl.textContent = formatBRL(avgTicket);
+
+      // 2. Projetos em Andamento
+      const projectLeads = activeLeadsList.filter(l => (l.stage || '').toLowerCase() === 'projetos');
+      const totalProjectsVal = projectLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+
+      const projCountEl = document.getElementById('edson-projects-count');
+      const projValEl = document.getElementById('edson-projects-value');
+
+      if (projCountEl) projCountEl.textContent = `${projectLeads.length} projetos`;
+      if (projValEl) projValEl.textContent = formatBRL(totalProjectsVal);
+
+      // 3. Clientes Importantes (VIPs: valor >= R$ 30.000 ou prioridade MÁXIMA ou Quente)
+      const vipLeads = activeLeadsList.filter(l => {
+        const val = Number(l.value) || 0;
+        const prio = (l.priority || '').toUpperCase();
+        const temp = (l.temperature || '').toLowerCase();
+        return val >= 30000 || prio === 'MAXIMA' || (val >= 20000 && temp === 'quente');
+      }).sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
+
+      const totalVipVal = vipLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+
+      const vipCountEl = document.getElementById('edson-vip-count');
+      const vipValEl = document.getElementById('edson-vip-value');
+
+      if (vipCountEl) vipCountEl.textContent = `${vipLeads.length} VIPs`;
+      if (vipValEl) vipValEl.textContent = formatBRL(totalVipVal);
+
+      // Renderiza lista VIP na gaveta
+      renderEdsonVipList(vipLeads.slice(0, 18));
+    }
+    window.updateEdsonExecutiveDashboard = updateEdsonExecutiveDashboard;
+
+    function renderEdsonVipList(vipLeads) {
+      const container = document.getElementById('edson-vip-list');
+      if (!container) return;
+
+      if (!vipLeads || vipLeads.length === 0) {
+        container.innerHTML = '<div class="col-span-full py-4 text-center text-xs text-slate-500">Nenhum cliente VIP encontrado para este filtro.</div>';
+        return;
+      }
+
+      container.innerHTML = vipLeads.map(lead => {
+        let sellerName = 'Gabriel Lima';
+        for (const [key, conf] of Object.entries(SELLER_REGISTRY)) {
+          if (isLeadOfSeller(lead, key)) {
+            sellerName = conf.name;
+            break;
+          }
+        }
+
+        const stageLabel = (lead.stage === 'novos') ? 'Novos' :
+                           (lead.stage === 'investigacao') ? 'Investigação' :
+                           (lead.stage === 'projetos') ? 'Projetos' :
+                           (lead.stage === 'proposta') ? 'Proposta' :
+                           (lead.stage === 'fechamento') ? 'Fechamento' :
+                           (lead.stage === 'concluidas') ? 'Concluída' : (lead.stage || 'Negociação');
+
+        return `
+          <div onclick="openLeadDetail('${lead.id}')" class="p-3 rounded-xl bg-[#0F1A26] hover:bg-[#142332] border border-white/10 hover:border-amber-500/40 transition cursor-pointer flex items-center justify-between gap-3 group">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="font-heading font-bold text-xs text-white truncate group-hover:text-amber-300 transition">${lead.name}</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded-md bg-amber-500/15 text-amber-300 font-bold uppercase shrink-0">${lead.priority || 'VIP'}</span>
+              </div>
+              <div class="text-[10.5px] text-slate-400 flex items-center gap-2 mt-0.5">
+                <span class="truncate"><i class="ph-bold ph-user text-cyan-400"></i> ${sellerName}</span>
+                <span>•</span>
+                <span class="truncate text-slate-400">${lead.city || 'Brasil'}</span>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="font-heading font-extrabold text-xs text-[#FECA57]">${formatBRL(lead.value)}</div>
+              <span class="text-[9.5px] font-semibold text-slate-400">${stageLabel}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    window.renderEdsonVipList = renderEdsonVipList;
+
+    function toggleEdsonVipDrawer() {
+      const drawer = document.getElementById('edson-vip-drawer');
+      const text = document.getElementById('btn-toggle-vip-text');
+      const icon = document.getElementById('btn-toggle-vip-icon');
+      if (!drawer) return;
+
+      const isHidden = drawer.classList.contains('hidden');
+      if (isHidden) {
+        drawer.classList.remove('hidden');
+        if (text) text.textContent = 'Ocultar Clientes VIP';
+        if (icon) icon.className = 'ph-bold ph-caret-up';
+      } else {
+        drawer.classList.add('hidden');
+        if (text) text.textContent = 'Listar Clientes VIP';
+        if (icon) icon.className = 'ph-bold ph-caret-down';
+      }
+    }
+    window.toggleEdsonVipDrawer = toggleEdsonVipDrawer;
+
+    function focusEdsonStage(stageName) {
+      const col = document.querySelector(`.kanban-col[data-stage="${stageName}"]`);
+      if (col) {
+        col.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        col.classList.add('ring-2', 'ring-cyan-400');
+        setTimeout(() => col.classList.remove('ring-2', 'ring-cyan-400'), 2000);
+      }
+    }
+    window.focusEdsonStage = focusEdsonStage;
+
     function isInstagramLead(l) {
       if (!l) return false;
 
@@ -3829,8 +4551,10 @@
         return false;
       }
 
-      // 2. Se o canal ou pipeline for explicitamente definido como WhatsApp
-      if (l.channel === 'whatsapp' || l.pipeline === 'whatsapp') return false;
+      // 2. Se o canal ou pipeline for explicitamente definido como WhatsApp ou Outros
+      const ch = String(l.channel || '').toLowerCase().trim();
+      const pipe = String(l.pipeline || '').toLowerCase().trim();
+      if (ch === 'whatsapp' || pipe === 'whatsapp' || ch === 'outro' || ch === 'outros' || pipe === 'outros') return false;
 
       // 3. Estágios exclusivos do funil de WhatsApp
       const st = String(l.stage || '').toLowerCase().trim();
@@ -3838,21 +4562,26 @@
         return false;
       }
 
-      // 4. Canal ou pipeline explicitamente definidos como Instagram
-      if (l.channel === 'instagram' || l.pipeline === 'instagram') return true;
-
-      // 5. Estágios exclusivos de prospecção do Instagram
-      if (st === 'novo' || st === 'abordagem' || st === 'conversa') return true;
-
-      // 6. Se NÃO possui telefone e tem perfil/id de instagram
+      // 4. Prefixo de CRM geral NUNCA é Instagram (pertence ao Kanban/Carteira Principal de Clientes)
       const idStr = String(l.id || '').toLowerCase();
-      const cleanInsta = String(l.instagram || '').replace(/^@/, '').trim();
-      if (idStr.startsWith('insta-') || idStr.startsWith('crm-fel-') || idStr.startsWith('crm-edu-') || idStr.startsWith('crm-may-') || idStr.startsWith('crm-gab-') || cleanInsta.length > 1) {
+      if (idStr.startsWith('crm-gab-') || idStr.startsWith('crm-fel-') || idStr.startsWith('crm-edu-') || idStr.startsWith('crm-may-')) {
+        return false;
+      }
+
+      // 5. Canal ou pipeline explicitamente definidos como Instagram
+      if (ch === 'instagram' || pipe === 'instagram') return true;
+
+      // 6. ID específico de Instagram
+      if (idStr.startsWith('insta-')) return true;
+
+      // 7. Se possui handle de Instagram válido
+      const cleanInsta = String(l.instagram || '').replace(/^@/, '').trim().toLowerCase();
+      if (cleanInsta.length > 1 && cleanInsta !== 'null' && cleanInsta !== 'undefined' && cleanInsta !== 'none') {
         return true;
       }
 
-      // 7. Se tem ID de Instagram mas NÃO tem telefone e notas indicam direct
-      if (notes.includes('direct') || notes.includes('anúncio') || notes.includes('anuncio')) {
+      // 8. Se notas indicam direct de Instagram
+      if (notes.includes('direct') && (st === 'novo' || st === 'abordagem' || st === 'conversa')) {
         return true;
       }
 
@@ -3894,21 +4623,26 @@
         let cloudLeads = null;
 
         // 1. Tenta carregar via API Serverless do vendedor (Autenticação do backend sem bloqueio de RLS anon)
-        try {
-          const apiRes = await fetch(`/api/${sellerKey}?channel=todos&limit=1000`);
-          if (apiRes.ok) {
-            const apiData = await apiRes.json();
-            if (apiData && Array.isArray(apiData.leads)) {
-              cloudLeads = apiData.leads;
+        // Apenas para vendedores isolados (Rodrigo, Eduardo, Felipe, Mayara, Bárbara, Kasio)
+        if (sellerKey !== 'gabriel' && sellerKey !== 'edson') {
+          try {
+            const apiRes = await fetch(`/api/${sellerKey}?channel=todos&limit=1000`);
+            if (apiRes.ok) {
+              const apiData = await apiRes.json();
+              if (apiData && Array.isArray(apiData.leads)) {
+                cloudLeads = apiData.leads;
+              }
             }
+          } catch (e) {
+            console.warn(`[Sync] Falha ao consultar /api/${sellerKey}, usando fallback direto:`, e);
           }
-        } catch (e) {
-          console.warn(`[Sync] Falha ao consultar /api/${sellerKey}, usando fallback direto:`, e);
         }
 
-        // 2. Fallback: REST Direto no Supabase caso API serverless não responda
+        // 2. Fallback: REST Direto no Supabase caso API serverless não responda ou para Gabriel (com filtro Soft Delete deleted_at IS NULL)
         if (!cloudLeads && url && key) {
-          const queryUrl = `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc`;
+          const queryUrl = (sellerKey === 'edson')
+            ? `${url}/rest/v1/leads?select=*&deleted_at=is.null&order=value.desc`
+            : `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&deleted_at=is.null&select=*&order=value.desc`;
           const res = await fetch(queryUrl, {
             headers: {
               'apikey': key,
@@ -3923,8 +4657,9 @@
 
         if (Array.isArray(cloudLeads)) {
           const deletedIds = new Set(getDeletedLeadIds());
-          // FILTRO ESTRITO DE ISOLAMENTO: cada vendedor visualiza exclusivamente seus prÃ³prios leads
+          // FILTRO ESTRITO DE ISOLAMENTO E SOFT DELETE: cada vendedor visualiza exclusivamente seus próprios leads ativos (deleted_at IS NULL)
           const userCloudLeads = cloudLeads.filter(l => {
+            if (l.deleted_at) return false;
             if (deletedIds.has(l.id)) return false;
             return isLeadOfSeller(l, sellerKey);
           });
@@ -3962,29 +4697,84 @@
           // Canal Instagram EXCLUSIVO do Gabriel Lima:
           if (sellerKey === 'gabriel') {
             const defaultInsta = (typeof getDefaultInstagramLeads === 'function') ? getDefaultInstagramLeads() : [];
-            const existingInstaIds = new Set(cloudInsta.map(i => i.id));
-            defaultInsta.forEach(defL => {
-              if (!existingInstaIds.has(defL.id)) {
-                cloudInsta.push(defL);
-              }
-            });
+            cloudInsta.length = 0;
+            cloudInsta.push(...defaultInsta);
           } else {
             cloudInsta.length = 0; // Vendedores não-Gabriel nunca possuem Instagram
           }
 
-          // PRESERVAÇÃO CRÍTICA DE WHATSAPP / BASE HISTÓRICA DO GABRIEL:
-          // Se a nuvem não retornou leads de WhatsApp para o Gabriel, NUNCA zerar os leads locais!
+          // PRESERVAÇÃO CRÍTICA E CANÔNICA DE WHATSAPP / BASE OFICIAL DO GABRIEL (909 LEADS):
           const isGabrielSync = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
           if (isGabrielSync) {
-            const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : [];
-            const sourcePool = (Array.isArray(leads) && leads.length >= 10) ? leads : baseLeads;
-            sourcePool.forEach(l => {
-              const hasIdMatch = cloudWa.some(existing => existing.id === l.id);
-              const hasPhoneMatch = l.phone && cloudWa.some(existing => isMatchingPhone(existing.phone, l.phone));
-              if (!hasIdMatch && !hasPhoneMatch) {
-                cloudWa.push(l);
+            const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS))
+              ? CARIBE_170_LEADS.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'))
+              : [];
+
+            const baseMap = new Map();
+            const phoneMap = new Map();
+
+            baseLeads.forEach(l => {
+              baseMap.set(String(l.id).toUpperCase(), { ...l });
+              const cleanP = cleanPhone(l.phone);
+              if (cleanP) phoneMap.set(cleanP, l.id);
+            });
+
+            // Atualiza leads existentes com notas ou status mais recentes do Supabase em nuvem
+            cloudWa.forEach(cL => {
+              const cId = String(cL.id || '').toUpperCase();
+              const cPhone = cleanPhone(cL.phone);
+
+              if (baseMap.has(cId)) {
+                const target = baseMap.get(cId);
+                if (cL.notes && cL.notes.length > (target.notes || '').length) {
+                  target.notes = cL.notes;
+                }
+                if (cL.stage && cL.stage !== 'novos') {
+                  target.stage = cL.stage;
+                }
+                if (cL.last_interaction) {
+                  target.last_interaction = cL.last_interaction;
+                }
+              } else if (cPhone && phoneMap.has(cPhone)) {
+                const target = baseMap.get(phoneMap.get(cPhone));
+                if (target) {
+                  if (cL.notes && cL.notes.length > (target.notes || '').length) {
+                    target.notes = cL.notes;
+                  }
+                  if (cL.stage && cL.stage !== 'novos') {
+                    target.stage = cL.stage;
+                  }
+                }
               }
             });
+
+            // Garante rigorosamente os 909 leads canônicos oficiais sem inchaço ou pipeline duplicado
+            cloudWa.length = 0;
+            cloudWa.push(...Array.from(baseMap.values()));
+          }
+
+          if (sellerKey === 'edson') {
+            const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS))
+              ? CARIBE_170_LEADS.filter(l => !deletedIds.has(l.id))
+              : [];
+            const edsonMap = new Map();
+            baseLeads.forEach(l => {
+              edsonMap.set(String(l.id).toUpperCase(), { ...l, vendedor_id: l.vendedor_id || 'gabriel' });
+            });
+            userCloudLeads.forEach(cL => {
+              const cId = String(cL.id || '').toUpperCase();
+              if (edsonMap.has(cId)) {
+                const target = edsonMap.get(cId);
+                if (cL.notes && cL.notes.length > (target.notes || '').length) target.notes = cL.notes;
+                if (cL.stage) target.stage = cL.stage;
+                if (cL.value) target.value = cL.value;
+              } else {
+                edsonMap.set(cId, cL);
+              }
+            });
+            cloudWa.length = 0;
+            cloudWa.push(...Array.from(edsonMap.values()));
+            edsonConsolidatedRawLeads = [...cloudWa];
           }
 
           const currentWaJson = JSON.stringify(cloudWa);
@@ -4008,6 +4798,9 @@
             renderInstagramBoard();
             renderFollowupCenter();
             renderClientsTable();
+            if (typeof updateEdsonExecutiveDashboard === 'function') {
+              updateEdsonExecutiveDashboard();
+            }
             initArchitectsStorage();
             if (getSellerRole(authUser) === 'admin' && typeof initQuarantineStorage === 'function') {
               initQuarantineStorage();
@@ -4607,11 +5400,32 @@
       }
     }
 
+    async function recordClientAuditEvent(auditAction, resourceType, resourceId, details = {}) {
+      try {
+        await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'audit',
+            user_id: authUser?.id || null,
+            audit_action: auditAction,
+            resource_type: resourceType,
+            resource_id: resourceId,
+            details: {
+              seller: (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'unknown',
+              ...details
+            }
+          })
+        });
+      } catch (e) {}
+    }
+    window.recordClientAuditEvent = recordClientAuditEvent;
+
     async function deleteLeadFromSupabase(leadId) {
       if (!leadId || !authUser) return;
       const sellerKey = getSellerKey(authUser);
 
-      // 1. Tenta deletar via API Serverless do vendedor
+      // 1. Executa SOFT DELETE via API Serverless do vendedor (deleted_at = NOW() + audit_logs)
       try {
         const apiRes = await fetch(`/api/${sellerKey}`, {
           method: 'POST',
@@ -4622,29 +5436,37 @@
           })
         });
         if (apiRes.ok) {
-          console.log(`[Sync] Lead ${leadId} excluído com sucesso via /api/${sellerKey}`);
+          console.log(`[Soft Delete] Lead ${leadId} marcado com deleted_at via /api/${sellerKey}`);
           return;
         }
       } catch (e) {
-        console.warn(`[Sync] Falha ao deletar via /api/${sellerKey}, usando fallback direto:`, e);
+        console.warn(`[Soft Delete] Falha via /api/${sellerKey}, aplicando PATCH deleted_at via fallback:`, e);
       }
 
-      // 2. Fallback direto no Supabase REST
+      // 2. Fallback direto no Supabase REST: NUNCA executa DELETE físico! Aplica PATCH com deleted_at = NOW()
       const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
       const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       if (!url || !key) return;
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
+      const deletedAtIso = new Date().toISOString();
 
       try {
         await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&user_id=eq.${encodeURIComponent(authUser.id)}`, {
-          method: 'DELETE',
+          method: 'PATCH',
           headers: {
             'apikey': key,
-            'Authorization': `Bearer ${authToken}`
-          }
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            deleted_at: deletedAtIso,
+            updated_at: deletedAtIso
+          })
         });
+        recordClientAuditEvent('LEAD_SOFT_DELETE', 'leads', leadId, { deleted_at: deletedAtIso });
       } catch (e) {
-        console.warn('Erro ao deletar lead no Supabase via fallback REST:', e);
+        console.warn('Erro ao aplicar soft delete no Supabase via fallback REST:', e);
       }
     }
 
@@ -4838,9 +5660,12 @@
     }
 
     function createLeadCard(lead) {
+      const isOwner = (typeof isOwnerMode === 'function') && isOwnerMode();
       const card = document.createElement('div');
-      card.className = 'lead-card p-4 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-[#00D2D3]/40 shadow-lg cursor-grab active:cursor-grabbing transition-all space-y-2.5';
-      card.setAttribute('draggable', 'true');
+      card.className = isOwner 
+        ? 'lead-card p-4 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-amber-500/40 shadow-lg cursor-pointer transition-all space-y-2.5'
+        : 'lead-card p-4 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-[#00D2D3]/40 shadow-lg cursor-grab active:cursor-grabbing transition-all space-y-2.5';
+      card.setAttribute('draggable', isOwner ? 'false' : 'true');
       card.setAttribute('data-id', lead.id);
 
       // Temperaturas e status de fechamento
@@ -4908,14 +5733,16 @@
         </div>
       `;
 
-      card.addEventListener('dragstart', (e) => {
-        card.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', lead.id);
-      });
+      if (!isOwner) {
+        card.addEventListener('dragstart', (e) => {
+          card.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', lead.id);
+        });
 
-      card.addEventListener('dragend', () => {
-        card.classList.remove('dragging');
-      });
+        card.addEventListener('dragend', () => {
+          card.classList.remove('dragging');
+        });
+      }
 
       card.addEventListener('click', () => {
         openLeadDetail(lead.id);
@@ -4943,12 +5770,17 @@
         col.addEventListener('drop', (e) => {
           e.preventDefault();
           col.classList.remove('drag-over');
+          if (typeof isOwnerMode === 'function' && isOwnerMode()) {
+            showToast('Modo Diretoria (Somente Leitura): alterações no funil não são permitidas.', 'warning');
+            return;
+          }
           const leadId = e.dataTransfer.getData('text/plain');
           const targetStage = col.getAttribute('data-stage');
 
           if (leadId && targetStage) {
             const lead = leads.find(l => l.id === leadId);
             if (lead && lead.stage !== targetStage) {
+              const prevStage = lead.stage;
               lead.stage = targetStage;
               lead.last_interaction = new Date().toISOString();
               if (targetStage === 'concluidas' && !lead.purchase_date) {
@@ -4957,6 +5789,13 @@
               saveStorage();
               renderKanban();
               syncLeadToSupabase(lead);
+              if (typeof recordClientAuditEvent === 'function') {
+                recordClientAuditEvent('LEAD_STATUS_CHANGE', 'leads', lead.id, {
+                  lead_name: lead.name,
+                  previous_stage: prevStage,
+                  new_stage: targetStage
+                });
+              }
               showToast(`Lead movido para "${targetStage.toUpperCase()}"`, 'success');
             }
           }
@@ -5340,6 +6179,51 @@
       } else {
         waLink.classList.add('hidden');
       }
+
+      // BLINDAGEM MODO DIRETORIA (EDSON - SOMENTE LEITURA)
+      const isReadOnly = (typeof isOwnerMode === 'function') && isOwnerMode();
+      const readOnlyInputs = [
+        'edit-lead-name', 'edit-lead-phone', 'edit-lead-city', 'edit-lead-value',
+        'edit-lead-stage', 'edit-lead-temperature', 'edit-lead-priority',
+        'edit-lead-next-action', 'edit-lead-followup-date', 'input-quick-note'
+      ];
+      readOnlyInputs.forEach(inputId => {
+        const el = document.getElementById(inputId);
+        if (el) {
+          el.disabled = isReadOnly;
+          if (isReadOnly) {
+            el.classList.add('opacity-75', 'cursor-not-allowed', 'bg-slate-900/50');
+          } else {
+            el.classList.remove('opacity-75', 'cursor-not-allowed', 'bg-slate-900/50');
+          }
+        }
+      });
+
+      const btnSaveLead = document.getElementById('btn-save-detail-changes');
+      if (btnSaveLead) btnSaveLead.style.display = isReadOnly ? 'none' : 'flex';
+
+      const btnDeleteLead = document.getElementById('btn-delete-lead');
+      if (btnDeleteLead) btnDeleteLead.style.display = isReadOnly ? 'none' : 'flex';
+
+      const btnQuickNote = document.getElementById('btn-save-quick-note');
+      if (btnQuickNote) btnQuickNote.style.display = isReadOnly ? 'none' : 'flex';
+
+      let ownerBanner = document.getElementById('detail-owner-banner');
+      if (!ownerBanner) {
+        ownerBanner = document.createElement('div');
+        ownerBanner.id = 'detail-owner-banner';
+        ownerBanner.className = 'mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-3 shadow-md';
+        ownerBanner.innerHTML = `
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center justify-center text-lg shrink-0">👑</div>
+          <div>
+            <span class="font-bold text-white uppercase tracking-wider block">Visualização Executiva da Diretoria (Edson)</span>
+            <span class="text-[11px] text-amber-300/80">Modo de auditoria estrito: alterações e exclusões estão desabilitadas para garantir a integridade dos dados da empresa.</span>
+          </div>
+        `;
+        const modalBody = document.querySelector('#modal-lead-detail .overflow-y-auto') || document.getElementById('modal-lead-detail');
+        if (modalBody) modalBody.insertBefore(ownerBanner, modalBody.firstChild);
+      }
+      if (ownerBanner) ownerBanner.style.display = isReadOnly ? 'flex' : 'none';
 
       document.getElementById('modal-lead-detail').classList.remove('hidden');
     }
@@ -10356,6 +11240,10 @@
       const todayStr = new Date().toISOString().split('T')[0];
       const overdue = leads.filter(l => l.followup_date && l.followup_date < todayStr && l.stage !== 'concluidas');
       document.getElementById('badge-followup-urgent').textContent = overdue.length;
+
+      if (typeof updateEdsonExecutiveDashboard === 'function') {
+        updateEdsonExecutiveDashboard();
+      }
     }
 
     // ==========================================
@@ -10498,6 +11386,73 @@
         }
       });
 
+      // ==========================================
+      // AUTENTICAÇÃO DIFERENCIADA: VENDEDORES (DIRETO) vs SUPER ADMIN ÉDSON (2FA + DISPOSITIVO CONFIÁVEL)
+      // ==========================================
+      let pending2faChallengeId = null;
+      let pending2faEmail = null;
+
+      document.getElementById('btn-cancel-2fa')?.addEventListener('click', () => {
+        pending2faChallengeId = null;
+        document.getElementById('form-saas-2fa')?.classList.add('hidden');
+        document.getElementById('form-saas-login')?.classList.remove('hidden');
+        document.getElementById('login-error-box')?.classList.add('hidden');
+      });
+
+      document.getElementById('form-saas-2fa')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const code = (document.getElementById('login-input-2fa-code')?.value || '').replace(/\D/g, '');
+        const rememberDevice = document.getElementById('login-checkbox-remember-device')?.checked !== false;
+        const btn = document.getElementById('btn-submit-2fa');
+        const errBox = document.getElementById('login-error-box');
+        const errText = document.getElementById('login-error-text');
+
+        errBox.classList.add('hidden');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-base"></i><span>Validando 2FA...</span>';
+
+        try {
+          const res = await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'verify_2fa',
+              challenge_id: pending2faChallengeId,
+              email: pending2faEmail || 'edson@piffpaff.com.br',
+              code,
+              remember_device: rememberDevice,
+              device_name: `${navigator.platform || 'Desktop'} • ${navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Browser'}`
+            })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            errBox.classList.remove('hidden');
+            errText.textContent = data.error || 'Código 2FA inválido ou expirado.';
+            return;
+          }
+
+          if (data.device_trust_token) {
+            localStorage.setItem('piffpaff_device_trust_token', data.device_trust_token);
+          }
+
+          document.getElementById('form-saas-2fa')?.classList.add('hidden');
+          document.getElementById('form-saas-login')?.classList.remove('hidden');
+          switchActiveSeller('edson');
+          showToast(
+            rememberDevice
+              ? '✅ 2FA validado! Dispositivo salvo como confiável permanente para Édson.'
+              : '✅ 2FA validado! Bem-vindo ao Painel Executivo, Édson.',
+            'success'
+          );
+        } catch (err) {
+          errBox.classList.remove('hidden');
+          errText.textContent = 'Falha ao validar código 2FA.';
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ph-bold ph-check-circle text-base"></i><span>Validar 2FA & Confiar Dispositivo</span>';
+        }
+      });
+
       // Submit do Formulário de Autenticação (Login / Cadastro de Primeiro Acesso)
       document.getElementById('form-saas-login')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -10512,6 +11467,75 @@
         btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-base"></i><span>Processando...</span>';
 
         try {
+          if (authMode !== 'signup') {
+            // 0. Validação na API de Governança (/api/auth): verifica status ativo/inativo, dispositivo confiável e 2FA do Édson
+            try {
+              const savedTrustToken = localStorage.getItem('piffpaff_device_trust_token') || '';
+              const govRes = await fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  action: 'login',
+                  email,
+                  password,
+                  device_trust_token: savedTrustToken
+                })
+              });
+              const govData = await govRes.json();
+
+              if (govRes.status === 403 && govData.revoked) {
+                errBox.classList.remove('hidden');
+                errText.textContent = govData.error || 'Conta desativada pelo Super Administrador.';
+                return;
+              }
+
+              if (govRes.ok && govData.ok) {
+                if (govData.requires_2fa_verification) {
+                  // Édson em dispositivo novo/não reconhecido -> Exige 2FA de 6 dígitos
+                  pending2faChallengeId = govData.challenge_id;
+                  pending2faEmail = email;
+                  document.getElementById('form-saas-login')?.classList.add('hidden');
+                  document.getElementById('form-saas-2fa')?.classList.remove('hidden');
+                  const chk = document.getElementById('login-checkbox-remember-device');
+                  if (chk) chk.checked = true; // Marcado por padrão conforme especificação
+                  const hintBox = document.getElementById('login-2fa-hint-box');
+                  if (hintBox && govData.demo_code_hint) {
+                    hintBox.textContent = `Código 2FA disparado (Homologação): ${govData.demo_code_hint}`;
+                    hintBox.classList.remove('hidden');
+                  }
+                  const codeInput = document.getElementById('login-input-2fa-code');
+                  if (codeInput) {
+                    codeInput.value = '';
+                    codeInput.focus();
+                  }
+                  showToast('🔒 Código 2FA de 6 dígitos enviado para E-mail e WhatsApp do Édson.', 'info');
+                  return;
+                }
+
+                // Login direto liberado (vendedor comum sem 2FA OU Édson com dispositivo confiável reconhecido)
+                const sellerKey = govData.user?.seller_key || normalizeSellerKey(email) || 'gabriel';
+                if (govData.user && !SELLER_REGISTRY[sellerKey]) {
+                  SELLER_REGISTRY[sellerKey] = {
+                    id: govData.user.id,
+                    email: govData.user.email,
+                    name: govData.user.name,
+                    prefix: `CRM-${sellerKey.substring(0, 3).toUpperCase()}-`,
+                    role: govData.user.role === 'super_admin' ? 'owner' : govData.user.role
+                  };
+                }
+                switchActiveSeller(sellerKey);
+                if (govData.trusted_device_recognized) {
+                  showToast('🔓 Dispositivo confiável reconhecido! 2FA dispensado para Édson.', 'success');
+                } else {
+                  showToast(`Bem-vindo(a) ao CRM, ${govData.user?.name || SELLER_REGISTRY[sellerKey]?.name || sellerKey}!`, 'success');
+                }
+                return;
+              }
+            } catch (govErr) {
+              console.warn('[Auth Governance Fallback]:', govErr);
+            }
+          }
+
           const client = getSupabaseClient();
           if (!client) throw new Error('Cliente Supabase não inicializado.');
 
@@ -10543,165 +11567,29 @@
               tabLogin.click();
             }
           } else {
-            // Login com e-mail e senha
+            // 1. Verificação Plug & Play Instantânea para todos os vendedores do CRM (Gabriel, Mayara, Bárbara, Felipe, Eduardo, Rodrigo)
+            const targetSellerKey = normalizeSellerKey(email);
+            if (targetSellerKey && verifySellerPassword(targetSellerKey, password)) {
+              console.info(`[Auth] Login autenticado com sucesso para ${targetSellerKey}`);
+              btn.disabled = false;
+              btn.innerHTML = '<span id="btn-submit-login-text">Acessar CRM</span><i class="ph-bold ph-arrow-right text-base" id="btn-submit-login-icon"></i>';
+              switchActiveSeller(targetSellerKey);
+              showToast(`Bem-vindo(a) ao CRM, ${SELLER_REGISTRY[targetSellerKey]?.name || targetSellerKey}!`, 'success');
+              return;
+            }
+
+            // 2. Fallback Supabase Auth
             const { data, error } = await client.auth.signInWithPassword({
               email,
               password
             });
 
             if (error) {
-              // Resilient Fallback: Permite login imediato Plug & Play para Felipe mesmo antes do script SQL
-              const expectedSellerKey = normalizeSellerKey(email);
-              const validSellerPassword = getSellerPassword(expectedSellerKey);
-
-              if (email.toLowerCase() === 'felipe@piffpaff.com.br' && password === validSellerPassword) {
-                console.info('Ativando sessão Plug & Play para Felipe...');
-                const fallbackSession = {
-                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
-                  user: {
-                    id: 'c3333333-3333-3333-3333-333333333333',
-                    email: 'felipe@piffpaff.com.br',
-                    role: 'authenticated'
-                  }
-                };
-                currentSession = fallbackSession;
-                authUser = fallbackSession.user;
-                try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
-                document.getElementById('saas-login-screen').classList.add('hidden');
-                updateSellerBadge(authUser);
-                initStorage();
-                initInstagramStorage();
-                initArchitectsStorage();
-                renderKanban();
-                renderInstagramBoard();
-                setupDragAndDrop();
-                if (typeof setupSupabaseRealtime === 'function') {
-                  setupSupabaseRealtime(authUser.id);
-                }
-                showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Modo Plug & Play ativo.`, 'success');
-                await syncFromSupabase(false);
-                return;
-              }
-
-              if (email.toLowerCase() === 'eduardo@piffpaff.com.br' && password === getSellerPassword('eduardo')) {
-                console.info('Ativando sessão Plug & Play para Eduardo...');
-                const fallbackSession = {
-                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
-                  user: {
-                    id: 'd4444444-4444-4444-4444-444444444444',
-                    email: 'eduardo@piffpaff.com.br',
-                    role: 'authenticated'
-                  }
-                };
-                currentSession = fallbackSession;
-                authUser = fallbackSession.user;
-                try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
-                document.getElementById('saas-login-screen').classList.add('hidden');
-                updateSellerBadge(authUser);
-                initStorage();
-                initInstagramStorage();
-                initArchitectsStorage();
-                renderKanban();
-                renderInstagramBoard();
-                setupDragAndDrop();
-                if (typeof setupSupabaseRealtime === 'function') {
-                  setupSupabaseRealtime(authUser.id);
-                }
-                showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Modo Plug & Play ativo.`, 'success');
-                await syncFromSupabase(false);
-                return;
-              }
-
-              if (email.toLowerCase() === 'mayara@piffpaff.com.br' && password === getSellerPassword('mayara')) {
-                console.info('Ativando sessão Plug & Play para Mayara...');
-                const fallbackSession = {
-                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
-                  user: {
-                    id: 'b2222222-2222-2222-2222-222222222222',
-                    email: 'mayara@piffpaff.com.br',
-                    role: 'authenticated'
-                  }
-                };
-                currentSession = fallbackSession;
-                authUser = fallbackSession.user;
-                try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
-                document.getElementById('saas-login-screen').classList.add('hidden');
-                updateSellerBadge(authUser);
-                initStorage();
-                initInstagramStorage();
-                initArchitectsStorage();
-                renderKanban();
-                renderInstagramBoard();
-                setupDragAndDrop();
-                if (typeof setupSupabaseRealtime === 'function') {
-                  setupSupabaseRealtime(authUser.id);
-                }
-                showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Modo Plug & Play ativo.`, 'success');
-                await syncFromSupabase(false);
-                return;
-              }
-
-              if (email.toLowerCase() === 'barbara@piffpaff.com.br' && password === getSellerPassword('barbara')) {
-                console.info('Ativando sessão Plug & Play para Bárbara...');
-                const fallbackSession = {
-                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
-                  user: {
-                    id: 'f6666666-6666-6666-6666-666666666666',
-                    email: 'barbara@piffpaff.com.br',
-                    role: 'authenticated'
-                  }
-                };
-                currentSession = fallbackSession;
-                authUser = fallbackSession.user;
-                try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
-                document.getElementById('saas-login-screen').classList.add('hidden');
-                updateSellerBadge(authUser);
-                initStorage();
-                initInstagramStorage();
-                initArchitectsStorage();
-                renderKanban();
-                renderInstagramBoard();
-                setupDragAndDrop();
-                if (typeof setupSupabaseRealtime === 'function') {
-                  setupSupabaseRealtime(authUser.id);
-                }
-                showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Modo Plug & Play ativo.`, 'success');
-                await syncFromSupabase(false);
-                return;
-              }
-
-              if (email.toLowerCase() === 'rodrigo@piffpaff.com.br' && password === getSellerPassword('rodrigo')) {
-                console.info('Ativando sessão Plug & Play para Rodrigo...');
-                const fallbackSession = {
-                  access_token: localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO',
-                  user: {
-                    id: 'e5555555-5555-5555-5555-555555555555',
-                    email: 'rodrigo@piffpaff.com.br',
-                    role: 'authenticated'
-                  }
-                };
-                currentSession = fallbackSession;
-                authUser = fallbackSession.user;
-                try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
-                document.getElementById('saas-login-screen').classList.add('hidden');
-                updateSellerBadge(authUser);
-                initStorage();
-                initInstagramStorage();
-                initArchitectsStorage();
-                renderKanban();
-                renderInstagramBoard();
-                setupDragAndDrop();
-                if (typeof setupSupabaseRealtime === 'function') {
-                  setupSupabaseRealtime(authUser.id);
-                }
-                showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Modo Plug & Play ativo.`, 'success');
-                await syncFromSupabase(false);
-                return;
-              }
-
+              btn.disabled = false;
+              btn.innerHTML = '<span id="btn-submit-login-text">Acessar CRM</span><i class="ph-bold ph-arrow-right text-base" id="btn-submit-login-icon"></i>';
               errBox.classList.remove('hidden');
-              if (error.message.includes('Invalid login credentials')) {
-                errText.textContent = 'E-mail ou senha incorretos. Verifique suas credenciais.';
+              if (error.message.includes('Invalid login credentials') || error.message.includes('invalid_grant')) {
+                errText.textContent = 'Senha incorreta para ' + (SELLER_REGISTRY[targetSellerKey]?.name || email) + '.';
               } else {
                 errText.textContent = error.message;
               }
@@ -10709,22 +11597,12 @@
             }
 
             if (data?.session) {
-              currentSession = data.session;
-              authUser = data.session.user;
-              try { localStorage.setItem('piffpaff_active_seller_email', authUser.email); } catch (e) {}
-              document.getElementById('saas-login-screen').classList.add('hidden');
-              updateSellerBadge(authUser);
-              initStorage();
-              initInstagramStorage();
-              initArchitectsStorage();
-              renderKanban();
-              renderInstagramBoard();
-              setupDragAndDrop();
-              if (typeof setupSupabaseRealtime === 'function') {
-                setupSupabaseRealtime(authUser.id);
-              }
-              showToast(`Bem-vindo(a) ao CRM, ${getSellerName(authUser)}! Sincronizando sua carteira...`, 'success');
-              await syncFromSupabase(false);
+              btn.disabled = false;
+              btn.innerHTML = '<span id="btn-submit-login-text">Acessar CRM</span><i class="ph-bold ph-arrow-right text-base" id="btn-submit-login-icon"></i>';
+              const userKey = normalizeSellerKey(data.session.user?.email) || 'gabriel';
+              switchActiveSeller(userKey);
+              showToast(`Bem-vindo(a) ao CRM, ${getSellerName(data.session.user)}!`, 'success');
+              return;
             }
           }
         } catch (err) {
@@ -10761,10 +11639,11 @@
           }
         }
 
-        if (viewName === 'resgate') {
+        if (viewName === 'resgate' || viewName === 'users') {
           const role = getSellerRole(authUser);
-          if (role !== 'admin') {
-            showToast('Acesso restrito: A Base de Resgate é exclusiva para Administradores.', 'error');
+          const isAllowedAdmin = role === 'admin' || role === 'owner' || ((typeof isOwnerMode === 'function') && isOwnerMode());
+          if (!isAllowedAdmin) {
+            showToast('Acesso restrito: Área exclusiva para Administradores.', 'error');
             switchView('kanban');
             return;
           }
@@ -10778,7 +11657,7 @@
           if (b.getAttribute('data-view') === viewName) {
             if (viewName === 'instagram') {
               b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-pink-300 bg-pink-500/15 border border-pink-500/30';
-            } else if (viewName === 'resgate') {
+            } else if (viewName === 'resgate' || viewName === 'users') {
               b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-amber-300 bg-amber-500/20 border border-amber-500/40';
             } else if (viewName === 'vendas') {
               b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-emerald-300 bg-emerald-500/15 border border-emerald-500/30';
@@ -10794,7 +11673,7 @@
           if (b.getAttribute('data-view') === viewName) {
             if (viewName === 'instagram') {
               b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-pink-500/15 text-pink-300 border border-pink-500/30';
-            } else if (viewName === 'resgate') {
+            } else if (viewName === 'resgate' || viewName === 'users') {
               b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-amber-500/20 text-amber-300 border border-amber-500/40';
             } else if (viewName === 'vendas') {
               b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
@@ -10825,6 +11704,8 @@
           renderInstagramBoard();
         } else if (viewName === 'resgate') {
           renderQuarantineBoard();
+        } else if (viewName === 'users') {
+          loadAdminGovernanceView();
         } else if (viewName === 'followup') {
           renderFollowupCenter();
         } else if (viewName === 'clients') {
@@ -10839,6 +11720,261 @@
         }
       }
       window.switchView = switchView;
+
+      // ========================================================
+      // MÓDULO DE GESTÃO DE USUÁRIOS, AUDITORIA & SOFT DELETE (PAINEL DO ÉDSON)
+      // ========================================================
+      async function loadAdminGovernanceView() {
+        const tbody = document.getElementById('admin-users-table-body');
+        const softDelCont = document.getElementById('admin-soft-deleted-container');
+        const auditCont = document.getElementById('admin-audit-logs-container');
+        if (!tbody) return;
+
+        try {
+          const res = await fetch('/api/admin/users?include_deleted=true');
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Erro ao carregar usuários');
+
+          const users = Array.isArray(data.users) ? data.users : [];
+          const devices = Array.isArray(data.trusted_devices) ? data.trusted_devices : [];
+          const softDeleted = Array.isArray(data.soft_deleted_leads) ? data.soft_deleted_leads : [];
+          const logs = Array.isArray(data.audit_logs) ? data.audit_logs : [];
+
+          const activeCount = users.filter(u => u.status === 'active' && !u.deleted_at).length;
+          const kpiUsers = document.getElementById('gov-kpi-active-users');
+          const kpiDevices = document.getElementById('gov-kpi-trusted-devices');
+          const kpiSoft = document.getElementById('gov-kpi-soft-deleted');
+          const kpiAudit = document.getElementById('gov-kpi-audit-logs');
+          const badgeUsers = document.getElementById('badge-users-total');
+          const badgeUsersMob = document.getElementById('badge-users-total-mobile');
+
+          if (kpiUsers) kpiUsers.textContent = String(activeCount);
+          if (kpiDevices) kpiDevices.textContent = String(devices.length);
+          if (kpiSoft) kpiSoft.textContent = String(softDeleted.length);
+          if (kpiAudit) kpiAudit.textContent = String(logs.length);
+          if (badgeUsers) badgeUsers.textContent = String(activeCount);
+          if (badgeUsersMob) badgeUsersMob.textContent = String(activeCount);
+
+          tbody.innerHTML = users.map(u => {
+            const isSuper = u.role === 'super_admin';
+            const isAdmin = u.role === 'admin';
+            const isActive = u.status === 'active' && !u.deleted_at;
+            const roleBadge = isSuper
+              ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">👑 SUPER ADMIN</span>'
+              : (isAdmin
+                  ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">🛡️ ADMIN</span>'
+                  : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-slate-300">💼 VENDEDOR</span>');
+            const twoFaBadge = u.requires_2fa
+              ? '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">🔒 2FA Inteligente Ativo</span>'
+              : '<span class="text-[11px] text-slate-400">Login Direto (Sem 2FA)</span>';
+            const statusBadge = isActive
+              ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">● Ativo</span>'
+              : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">● Inativo / Revogado</span>';
+
+            return `
+              <tr class="hover:bg-white/5 transition">
+                <td class="py-3.5 px-4 font-heading font-bold text-white">${u.name || '-'}</td>
+                <td class="py-3.5 px-4 font-mono text-xs text-slate-300">${u.email || '-'}</td>
+                <td class="py-3.5 px-4 font-mono text-xs text-emerald-400">${u.phone ? formatPhoneBR(u.phone) : 'Não informado'}</td>
+                <td class="py-3.5 px-4">${roleBadge}</td>
+                <td class="py-3.5 px-4">${twoFaBadge}</td>
+                <td class="py-3.5 px-4">${statusBadge}</td>
+                <td class="py-3.5 px-4 text-right">
+                  ${isSuper ? '<span class="text-[11px] text-amber-400 font-semibold">Conta Protegida</span>' : `
+                    <button type="button" onclick="handleToggleUserStatus('${u.id}', '${isActive ? 'inactive' : 'active'}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${isActive ? 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30'}">
+                      ${isActive ? 'Desativar & Revogar Sessão' : 'Reativar Acesso'}
+                    </button>
+                  `}
+                </td>
+              </tr>
+            `;
+          }).join('');
+
+          if (softDelCont) {
+            if (softDeleted.length === 0) {
+              softDelCont.innerHTML = '<div class="py-6 text-center text-slate-500">Nenhum registro na lixeira lógica (deleted_at IS NULL em toda a base).</div>';
+            } else {
+              softDelCont.innerHTML = softDeleted.map(item => `
+                <div class="p-3 rounded-xl bg-[#101C27] border border-rose-500/20 flex items-center justify-between gap-3">
+                  <div>
+                    <div class="font-bold text-white">${item.name || item.id} <span class="text-[10px] font-mono text-rose-300">(${item.id})</span></div>
+                    <div class="text-[11px] text-slate-400">Excluído logicamente em ${new Date(item.deleted_at).toLocaleString('pt-BR')} • Por: ${item.deleted_by || 'vendedor'}</div>
+                  </div>
+                  <button type="button" onclick="handleRestoreDeletedLead('${item.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-xs transition cursor-pointer">
+                    Restaurar
+                  </button>
+                </div>
+              `).join('');
+            }
+          }
+
+          if (auditCont) {
+            if (logs.length === 0) {
+              auditCont.innerHTML = '<div class="py-6 text-center text-slate-500">Nenhum evento registrado ainda.</div>';
+            } else {
+              auditCont.innerHTML = logs.slice(0, 40).map(log => `
+                <div class="p-2.5 rounded-xl bg-[#101C27] border border-white/5 flex items-start justify-between gap-2">
+                  <div>
+                    <span class="font-mono font-bold text-[11px] text-cyan-300">${log.action}</span>
+                    <span class="text-slate-400 text-[11px]"> • ${log.resource_type} (${log.resource_id || '-'})</span>
+                    <div class="text-[10px] text-slate-500 mt-0.5">IP: ${log.ip_address || 'local'} • ${new Date(log.created_at).toLocaleString('pt-BR')}</div>
+                  </div>
+                </div>
+              `).join('');
+            }
+          }
+        } catch (err) {
+          console.error('Erro ao carregar Gestão de Usuários:', err);
+        }
+      }
+      window.loadAdminGovernanceView = loadAdminGovernanceView;
+
+      function openNewUserModal() {
+        document.getElementById('modal-new-user')?.classList.remove('hidden');
+      }
+      window.openNewUserModal = openNewUserModal;
+
+      function closeNewUserModal() {
+        document.getElementById('modal-new-user')?.classList.add('hidden');
+      }
+      window.closeNewUserModal = closeNewUserModal;
+
+      async function handleCreateNewUser(e) {
+        if (e) e.preventDefault();
+        const name = document.getElementById('new-user-name')?.value.trim();
+        const email = document.getElementById('new-user-email')?.value.trim();
+        const phone = document.getElementById('new-user-phone')?.value.trim();
+        const role = document.getElementById('new-user-role')?.value || 'vendedor';
+        const password = document.getElementById('new-user-password')?.value.trim();
+        const btn = document.getElementById('btn-submit-new-user');
+
+        if (!name || !email || !password) return;
+        btn.disabled = true;
+        btn.textContent = 'Cadastrando...';
+
+        try {
+          const res = await fetch('/api/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name,
+              email,
+              phone,
+              role,
+              password,
+              admin_user_id: authUser?.id
+            })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            showToast(data.error || 'Erro ao criar usuário.', 'error');
+            return;
+          }
+
+          if (data.user) {
+            const sk = data.user.seller_key || normalizeSellerKey(data.user.email) || email.split('@')[0].toLowerCase();
+            SELLER_REGISTRY[sk] = {
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.name,
+              prefix: `CRM-${sk.substring(0, 3).toUpperCase()}-`,
+              role: data.user.role
+            };
+            DEFAULT_PASSWORDS[sk] = password;
+          }
+
+          closeNewUserModal();
+          document.getElementById('form-new-user')?.reset();
+          showToast(`✅ Usuário "${name}" criado com sucesso (Login direto sem 2FA)!`, 'success');
+          loadAdminGovernanceView();
+        } catch (err) {
+          showToast('Erro de comunicação ao criar usuário.', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Criar Usuário Agora';
+        }
+      }
+      window.handleCreateNewUser = handleCreateNewUser;
+
+      async function handleToggleUserStatus(userId, nextStatus) {
+        try {
+          const res = await fetch(`/api/admin/users/${encodeURIComponent(userId)}/toggle-status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: nextStatus,
+              admin_user_id: authUser?.id
+            })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            showToast(data.error || 'Não foi possível alterar o status.', 'error');
+            return;
+          }
+          showToast(data.message || 'Status atualizado com sucesso!', 'success');
+          loadAdminGovernanceView();
+        } catch (err) {
+          showToast('Erro ao alterar status do usuário.', 'error');
+        }
+      }
+      window.handleToggleUserStatus = handleToggleUserStatus;
+
+      async function handleRestoreDeletedLead(leadId) {
+        try {
+          const res = await fetch('/api/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'restore_lead',
+              lead_id: leadId,
+              admin_user_id: authUser?.id
+            })
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            const currentDeleted = getDeletedLeadIds().filter(id => id !== leadId);
+            localStorage.setItem('piffpaff_deleted_ids', JSON.stringify(currentDeleted));
+            showToast(`♻️ Lead ${leadId} restaurado com sucesso pelo Super Admin!`, 'success');
+            loadAdminGovernanceView();
+            syncFromSupabase(true);
+          }
+        } catch (err) {
+          showToast('Erro ao restaurar registro.', 'error');
+        }
+      }
+      window.handleRestoreDeletedLead = handleRestoreDeletedLead;
+
+      async function handleGenerateEdsonSetupLink() {
+        try {
+          const res = await fetch('/api/setup-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'generate_link' })
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            const banner = document.getElementById('edson-setup-link-banner');
+            const valEl = document.getElementById('edson-setup-link-value');
+            const anchor = document.getElementById('edson-setup-link-anchor');
+            if (banner) banner.classList.remove('hidden');
+            if (valEl) valEl.textContent = data.setup_url;
+            if (anchor) anchor.href = data.setup_path || data.setup_url;
+            showToast('🔑 Link exclusivo /setup-admin gerado para o Édson!', 'success');
+            loadAdminGovernanceView();
+          }
+        } catch (err) {
+          showToast('Erro ao gerar link de autoativação.', 'error');
+        }
+      }
+      window.handleGenerateEdsonSetupLink = handleGenerateEdsonSetupLink;
+
+      function copyEdsonSetupLink() {
+        const val = document.getElementById('edson-setup-link-value')?.textContent;
+        if (!val) return;
+        navigator.clipboard?.writeText(val);
+        showToast('📋 Link /setup-admin copiado para a área de transferência!', 'success');
+      }
+      window.copyEdsonSetupLink = copyEdsonSetupLink;
 
       function openContractForLead(lead) {
         if (!lead) return;
@@ -11023,6 +12159,10 @@
       }
 
       document.getElementById('btn-save-quick-note').addEventListener('click', async () => {
+        if (typeof isOwnerMode === 'function' && isOwnerMode()) {
+          showToast('Modo Diretoria (Somente Leitura): inclusão de notas não é permitida.', 'warning');
+          return;
+        }
         const input = document.getElementById('input-quick-note');
         const note = input.value.trim();
         if (!note || !activeLead) return;
@@ -11041,6 +12181,10 @@
       });
 
       document.getElementById('btn-save-detail-changes').addEventListener('click', () => {
+        if (typeof isOwnerMode === 'function' && isOwnerMode()) {
+          showToast('Modo Diretoria (Somente Leitura): alterações não são permitidas.', 'warning');
+          return;
+        }
         if (!activeLead) return;
 
         try {
@@ -11104,6 +12248,10 @@
       });
 
       document.getElementById('btn-delete-lead').addEventListener('click', async () => {
+        if (typeof isOwnerMode === 'function' && isOwnerMode()) {
+          showToast('Modo Diretoria (Somente Leitura): exclusões não são permitidas.', 'warning');
+          return;
+        }
         if (!activeLead) return;
         const leadName = activeLead.name;
         const leadId = activeLead.id;

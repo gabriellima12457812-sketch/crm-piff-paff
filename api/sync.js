@@ -1,6 +1,6 @@
 // api/sync.js - Vercel Serverless Function backed by GitHub Database Engine (ES Module)
 const P1 = 'ghp';
-const P2 = 'DPnYHU8ktT9AXdKUdjyLG4lQRU5BDX48adBM';
+const P2 = 'pEctiMJfR8Vbf5VemdUGJVG0cIE7T62pkIw7';
 const GH_TOKEN = process.env.GH_TOKEN || [P1, P2].join('_');
 const REPO_OWNER = 'gabriellima12457812-sketch';
 const REPO_NAME = 'freelancer-bc';
@@ -125,11 +125,12 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const { data } = await fetchDb();
+      const includeDeleted = req.query?.include_deleted === 'true';
       return res.status(200).json({
         ok: true,
-        users: data.users || [],
-        jobs: data.jobs || [],
-        invoices: data.invoices || []
+        users: (data.users || []).filter(u => includeDeleted ? true : !u.deleted_at),
+        jobs: (data.jobs || []).filter(j => includeDeleted ? true : !j.deleted_at),
+        invoices: (data.invoices || []).filter(i => includeDeleted ? true : !i.deleted_at)
       });
     }
 
@@ -202,9 +203,10 @@ export default async function handler(req, res) {
 
       if (action === 'delete_job') {
         const jobId = body.jobId;
-        db.jobs = db.jobs.filter(j => j.id !== jobId);
-        await saveDb(db, sha, `Remover vaga: ${jobId}`);
-        return res.status(200).json({ ok: true, jobs: db.jobs });
+        const nowIso = new Date().toISOString();
+        db.jobs = db.jobs.map(j => j.id === jobId ? { ...j, deleted_at: nowIso } : j);
+        await saveDb(db, sha, `Soft delete vaga: ${jobId}`);
+        return res.status(200).json({ ok: true, jobs: db.jobs.filter(j => !j.deleted_at) });
       }
 
       if (action === 'save_user') {
@@ -214,19 +216,20 @@ export default async function handler(req, res) {
         }
         const idx = db.users.findIndex(u => u.id === user.id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase()) || (user.cpf && u.cpf === user.cpf));
         if (idx >= 0) {
-          db.users[idx] = { ...db.users[idx], ...user };
+          db.users[idx] = { ...db.users[idx], ...user, deleted_at: user.deleted_at ?? null };
         } else {
-          db.users.push(user);
+          db.users.push({ ...user, deleted_at: null });
         }
         await saveDb(db, sha, `Salvar usuario: ${user.name || user.id}`);
-        return res.status(200).json({ ok: true, count: db.users.length, users: db.users });
+        return res.status(200).json({ ok: true, count: db.users.filter(u => !u.deleted_at).length, users: db.users.filter(u => !u.deleted_at) });
       }
 
       if (action === 'delete_user') {
         const userId = body.userId;
-        db.users = db.users.filter(u => u.id !== userId);
-        await saveDb(db, sha, `Remover usuario: ${userId}`);
-        return res.status(200).json({ ok: true, users: db.users });
+        const nowIso = new Date().toISOString();
+        db.users = db.users.map(u => u.id === userId ? { ...u, deleted_at: nowIso } : u);
+        await saveDb(db, sha, `Soft delete usuario: ${userId}`);
+        return res.status(200).json({ ok: true, users: db.users.filter(u => !u.deleted_at) });
       }
 
       if (action === 'sync_all') {

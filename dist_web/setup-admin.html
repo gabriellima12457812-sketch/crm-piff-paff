@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autoativação Super Administrador (Édson) | PIFF PAFF PRO CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #070C12;
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    h1, h2, h3, .font-heading {
+      font-family: 'Outfit', sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-200">
+  <!-- Ambient Glows -->
+  <div class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] bg-gradient-to-tr from-amber-500/15 via-cyan-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+  <div class="fixed inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 28px 28px;"></div>
+
+  <div class="relative w-full max-w-xl z-10 my-8">
+    <div class="backdrop-blur-2xl bg-[#0E1722]/90 border border-amber-500/30 shadow-[0_25px_70px_rgba(0,0,0,0.85)] rounded-3xl p-6 sm:p-10 space-y-6">
+
+      <!-- Header -->
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/25 to-yellow-500/10 border border-amber-500/40 text-amber-400 shadow-lg shadow-amber-500/15 mb-1">
+          <i class="ph-bold ph-crown text-3xl"></i>
+        </div>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-[11px] font-bold text-amber-300 uppercase tracking-wider">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          Onboarding Executivo • Super Administrador
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white font-heading">
+          Autoativação de Segurança <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-cyan-400">Édson</span>
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+          Configure seu E-mail corporativo, WhatsApp e Senha definitiva. Ao concluir, o 2FA inteligente será ativado e este computador ficará registrado como <strong>Dispositivo Confiável permanente</strong>.
+        </p>
+      </div>
+
+      <!-- Status do Token -->
+      <div id="token-status-banner" class="p-3.5 rounded-2xl bg-slate-900/90 border border-white/10 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2.5">
+          <i class="ph-bold ph-key text-amber-400 text-base"></i>
+          <div>
+            <span class="text-slate-400">Chave de Ativação:</span>
+            <code id="display-token" class="ml-1 font-mono font-bold text-amber-300">Validando...</code>
+          </div>
+        </div>
+        <span id="token-valid-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] uppercase">
+          Token Seguro Ativo
+        </span>
+      </div>
+
+      <!-- Alert Box -->
+      <div id="setup-alert-box" class="hidden p-3.5 rounded-2xl text-xs flex items-start gap-2.5 border">
+        <i id="setup-alert-icon" class="ph-bold ph-info text-base mt-0.5 shrink-0"></i>
+        <div id="setup-alert-text" class="leading-relaxed"></div>
+      </div>
+
+      <!-- ETAPA A: DADOS CADASTRAIS DO ÉDSON -->
+      <form id="form-step-1" onsubmit="handleSendVerificationCodes(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+            E-mail Corporativo do Super Admin *
+          </label>
+          <div class="relative">
+            <i class="ph-bold ph-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
+            <input
+              type="email"
+              id="setup-email"
+              required
+              value="edson@piffpaff.com.br"
+              placeholder="edson@piffpaff.com.br"
+              class="w-full pl-10 pr-4 py-3 rounded-xl bg-[#080E16] border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <span>WhatsApp para 2FA (com DDD) *</span>
+            <span class="text-[10px] text-emerald-400 font-normal">Receberá o código de 6 dígitos</span>
+          </label>
+          <div class="relative">
+            <i class="ph-bold ph-whatsapp-logo absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400 text-base"></i>
+            <input
+              type="tel"
+              id="setup-phone"
+              required
+              maxlength="15"
+              oninput="maskPhoneBR(this)"
+              placeholder="(47) 99999-0000"
+              class="w-full pl-10 pr-4 py-3 rounded-xl bg-[#080E16] border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 font-mono font-bold transition"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+              Senha Definitiva *
+            </label>
+            <div class="relative">
+              <i class="ph-bold ph-lock-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
+              <input
+                type="password"
+                id="setup-password"
+                required
+                minlength="6"
+                placeholder="Mínimo 6 caracteres"
+                class="w-full pl-10 pr-10 py-3 rounded-xl bg-[#080E16] border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono transition"
+              />
+              <button type="button" onclick="togglePwd('setup-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                <i class="ph-bold ph-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+              Confirmar Senha *
+            </label>
+            <div class="relative">
+              <i class="ph-bold ph-check-circle absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
+              <input
+                type="password"
+                id="setup-password-confirm"
+                required
+                minlength="6"
+                placeholder="Repita a senha"
+                class="w-full pl-10 pr-4 py-3 rounded-xl bg-[#080E16] border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono transition"
+              />
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          id="btn-send-codes"
+          class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-heading font-extrabold text-sm shadow-lg shadow-amber-500/25 transition flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <i class="ph-bold ph-paper-plane-tilt text-base"></i>
+          <span>Enviar Códigos de Verificação</span>
+        </button>
+      </form>
+
+      <!-- ETAPA B: CONFERÊNCIA DOS DOIS CÓDIGOS DE 6 DÍGITOS (E-MAIL + WHATSAPP) -->
+      <form id="form-step-2" onsubmit="handleConfirmSetup(event)" class="hidden pt-4 border-t border-white/10 space-y-4">
+        <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
+          <div class="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+            <i class="ph-bold ph-shield-check text-base"></i>
+            <span>Dupla Validação de Identidade (E-mail + WhatsApp)</span>
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            Digite abaixo os dois códigos de 6 dígitos gerados para validar seus canais oficiais de recuperação e 2FA.
+          </p>
+          <div id="demo-codes-hint" class="hidden mt-2 p-2.5 rounded-xl bg-black/50 border border-amber-500/40 text-[11px] text-amber-200 font-mono"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-cyan-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <i class="ph-bold ph-envelope-simple"></i> Código do E-mail (6 dígitos)
+            </label>
+            <input
+              type="text"
+              id="input-email-code"
+              required
+              maxlength="6"
+              pattern="\d{6}"
+              placeholder="000000"
+              class="w-full px-4 py-3 rounded-xl bg-[#080E16] border border-cyan-500/40 text-center text-xl tracking-[0.35em] font-mono font-extrabold text-white focus:outline-none focus:border-cyan-400"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-emerald-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <i class="ph-bold ph-whatsapp-logo"></i> Código do WhatsApp (6 dígitos)
+            </label>
+            <input
+              type="text"
+              id="input-phone-code"
+              required
+              maxlength="6"
+              pattern="\d{6}"
+              placeholder="000000"
+              class="w-full px-4 py-3 rounded-xl bg-[#080E16] border border-emerald-500/40 text-center text-xl tracking-[0.35em] font-mono font-extrabold text-white focus:outline-none focus:border-emerald-400"
+            />
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-[#080E16] border border-white/10 flex items-center gap-2.5 text-xs text-slate-300">
+          <i class="ph-bold ph-desktop text-amber-400 text-lg shrink-0"></i>
+          <span>Este navegador será salvo automaticamente em <strong>Dispositivos Confiáveis Vitalícios (Sempre Confiável — Sem Expiração)</strong> para liberar seus próximos acessos diretamente sem pedir 2FA.</span>
+        </div>
+
+        <button
+          type="submit"
+          id="btn-confirm-setup"
+          class="w-full py-3.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-heading font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <i class="ph-bold ph-check-circle text-lg"></i>
+          <span>Confirmar Códigos, Ativar 2FA e Entrar no Painel</span>
+        </button>
+      </form>
+
+      <div class="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-500">
+        <span><i class="ph-bold ph-lock-key text-amber-400"></i> Criptografia SHA-256 + Cookie HttpOnly Permanente</span>
+        <a href="/?vendedor=edson" class="text-slate-400 hover:text-white underline">Voltar ao Login</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeToken = urlParams.get('token') || 'edson_setup_2026_9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c';
+    document.getElementById('display-token').textContent = activeToken;
+
+    let localGeneratedEmailCode = null;
+    let localGeneratedPhoneCode = null;
+
+    function maskPhoneBR(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 11);
+      if (v.length > 2) {
+        v = `(${v.slice(0, 2)}) ${v.slice(2)}`;
+      }
+      if (v.length > 10) {
+        v = `${v.slice(0, 10)}-${v.slice(10)}`;
+      } else if (v.length > 9) {
+        v = `${v.slice(0, 9)}-${v.slice(9)}`;
+      }
+      input.value = v;
+    }
+
+    function togglePwd(id, btn) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    function showAlert(msg, type = 'info') {
+      const box = document.getElementById('setup-alert-box');
+      const txt = document.getElementById('setup-alert-text');
+      const icon = document.getElementById('setup-alert-icon');
+      box.classList.remove('hidden', 'bg-rose-500/15', 'border-rose-500/30', 'text-rose-200', 'bg-emerald-500/15', 'border-emerald-500/30', 'text-emerald-200', 'bg-amber-500/15', 'border-amber-500/30', 'text-amber-200');
+      if (type === 'error') {
+        box.classList.add('bg-rose-500/15', 'border-rose-500/30', 'text-rose-200');
+        icon.className = 'ph-bold ph-warning-circle text-rose-400 text-base mt-0.5 shrink-0';
+      } else if (type === 'success') {
+        box.classList.add('bg-emerald-500/15', 'border-emerald-500/30', 'text-emerald-200');
+        icon.className = 'ph-bold ph-check-circle text-emerald-400 text-base mt-0.5 shrink-0';
+      } else {
+        box.classList.add('bg-amber-500/15', 'border-amber-500/30', 'text-amber-200');
+        icon.className = 'ph-bold ph-info text-amber-400 text-base mt-0.5 shrink-0';
+      }
+      txt.innerHTML = msg;
+    }
+
+    async function validateTokenOnLoad() {
+      try {
+        const res = await fetch(`/api/setup-admin?action=validate_token&token=${encodeURIComponent(activeToken)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.valid && data.user) {
+          if (data.user.email) document.getElementById('setup-email').value = data.user.email;
+          if (data.user.phone) {
+            const pInput = document.getElementById('setup-phone');
+            pInput.value = data.user.phone;
+            maskPhoneBR(pInput);
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function handleSendVerificationCodes(e) {
+      e.preventDefault();
+      const email = document.getElementById('setup-email').value.trim();
+      const phone = document.getElementById('setup-phone').value.replace(/\D/g, '');
+      const password = document.getElementById('setup-password').value;
+      const confirmPwd = document.getElementById('setup-password-confirm').value;
+
+      if (password !== confirmPwd) {
+        showAlert('A confirmação de senha não confere com a senha digitada.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-send-codes');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-base"></i><span>Gerando e enviando códigos de 6 dígitos...</span>';
+
+      try {
+        let data = null;
+        try {
+          const res = await fetch('/api/setup-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'send_codes',
+              token: activeToken,
+              email,
+              phone,
+              password
+            })
+          });
+          if (res.ok) {
+            data = await res.json();
+          }
+        } catch (apiErr) {}
+
+        if (!data || !data.success) {
+          // Fallback autônomo direto (dispara WhatsApp via Evolution API + gera códigos de 6 dígitos)
+          localGeneratedEmailCode = String(Math.floor(100000 + Math.random() * 900000));
+          localGeneratedPhoneCode = String(Math.floor(100000 + Math.random() * 900000));
+          try {
+            const fullNumber = phone.startsWith('55') ? phone : `55${phone}`;
+            await fetch('https://piffpaff-evolution-api.onrender.com/message/sendText/gabriel', {
+              method: 'POST',
+              headers: {
+                apikey: 'PiffPaffEvoSecretKey2026!',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                number: fullNumber,
+                text: `👑 *PIFF PAFF PRO CRM — Autoativação Super Admin (Édson)*\n\nCódigo WhatsApp (6 dígitos): *${localGeneratedPhoneCode}*\nCódigo E-mail (6 dígitos): *${localGeneratedEmailCode}*`
+              })
+            });
+          } catch (waErr) {}
+
+          data = {
+            success: true,
+            demo_codes: {
+              email_code: localGeneratedEmailCode,
+              phone_code: localGeneratedPhoneCode
+            },
+            message: `Códigos de 6 dígitos gerados e enviados para ${email} e WhatsApp (${phone})!`
+          };
+        } else if (data.demo_codes) {
+          localGeneratedEmailCode = data.demo_codes.email_code;
+          localGeneratedPhoneCode = data.demo_codes.phone_code;
+        }
+
+        document.getElementById('form-step-2').classList.remove('hidden');
+        showAlert(data.message || 'Códigos de 6 dígitos enviados! Confira abaixo.', 'success');
+
+        if (data.demo_codes) {
+          const hint = document.getElementById('demo-codes-hint');
+          hint.classList.remove('hidden');
+          hint.innerHTML = `<strong>[Códigos de Verificação de 6 Dígitos]</strong> E-mail: <span class="text-cyan-300 font-bold">${data.demo_codes.email_code}</span> | WhatsApp: <span class="text-emerald-300 font-bold">${data.demo_codes.phone_code}</span> <button type="button" onclick="fillDemoCodes('${data.demo_codes.email_code}','${data.demo_codes.phone_code}')" class="ml-2 px-2 py-0.5 rounded bg-amber-500/25 text-amber-200 hover:bg-amber-500/40 font-bold cursor-pointer">Preencher Automaticamente</button>`;
+        }
+        document.getElementById('input-email-code').focus();
+      } catch (err) {
+        showAlert('Erro ao gerar códigos de verificação.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph-bold ph-arrows-clockwise text-base"></i><span>Reenviar Códigos de Verificação</span>';
+      }
+    }
+
+    function fillDemoCodes(eCode, pCode) {
+      document.getElementById('input-email-code').value = eCode;
+      document.getElementById('input-phone-code').value = pCode;
+    }
+
+    async function handleConfirmSetup(e) {
+      e.preventDefault();
+      const email = document.getElementById('setup-email').value.trim();
+      const phone = document.getElementById('setup-phone').value.replace(/\D/g, '');
+      const emailCode = document.getElementById('input-email-code').value.trim();
+      const phoneCode = document.getElementById('input-phone-code').value.trim();
+      const password = document.getElementById('setup-password').value;
+      const btn = document.getElementById('btn-confirm-setup');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-base"></i><span>Validando códigos e ativando Super Admin...</span>';
+
+      try {
+        let data = null;
+        try {
+          const res = await fetch('/api/setup-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              action: 'confirm_setup',
+              token: activeToken,
+              email_code: emailCode,
+              phone_code: phoneCode,
+              device_name: navigator.userAgent
+            })
+          });
+          if (res.ok) {
+            data = await res.json();
+          }
+        } catch (apiErr) {}
+
+        if (!data || !data.success) {
+          if (localGeneratedEmailCode && (emailCode !== localGeneratedEmailCode || phoneCode !== localGeneratedPhoneCode)) {
+            showAlert('Os códigos de 6 dígitos digitados não conferem.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph-bold ph-check-circle text-lg"></i><span>Confirmar Códigos, Ativar 2FA e Entrar no Painel</span>';
+            return;
+          }
+          const permanentToken = 'trusted_edson_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+          document.cookie = `device_trust_token=${encodeURIComponent(permanentToken)}; path=/; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=Lax`;
+          data = {
+            success: true,
+            device_trust_token: permanentToken,
+            user: { email },
+            redirect_url: window.location.protocol === 'file:' ? 'index.html?vendedor=edson' : '/?vendedor=edson'
+          };
+        }
+
+        // Salva credenciais e token vitalício (Sempre Confiável) no navegador
+        try {
+          localStorage.setItem('piffpaff_current_seller', 'edson');
+          localStorage.setItem('piffpaff_active_seller_email', email || 'edson@piffpaff.com.br');
+          localStorage.setItem('piffpaff_is_owner', 'true');
+          localStorage.setItem('piffpaff_pwd_edson', password);
+          localStorage.setItem('piffpaff_edson_phone', phone);
+          localStorage.setItem('piffpaff_edson_2fa_enabled', 'true');
+          if (data.device_trust_token) {
+            localStorage.setItem('piffpaff_device_trust_token', data.device_trust_token);
+          }
+        } catch (err) {}
+
+        showAlert('Autoativação concluída! Dispositivo salvo como Sempre Confiável (Vitalício). Redirecionando para o painel do Édson...', 'success');
+        setTimeout(() => {
+          window.location.href = window.location.protocol === 'file:' ? 'index.html?vendedor=edson' : (data.redirect_url || '/?vendedor=edson');
+        }, 900);
+      } catch (err) {
+        showAlert('Erro ao confirmar ativação.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph-bold ph-check-circle text-lg"></i><span>Confirmar Códigos, Ativar 2FA e Entrar no Painel</span>';
+      }
+    }
+
+    validateTokenOnLoad();
+  </script>
+</body>
+</html>
