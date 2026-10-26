@@ -4638,11 +4638,11 @@
           }
         }
 
-        // 2. Fallback: REST Direto no Supabase caso API serverless não responda ou para Gabriel (com filtro Soft Delete deleted_at IS NULL)
+        // 2. Fallback: REST Direto no Supabase caso API serverless não responda ou para Gabriel/Edson
         if (!cloudLeads && url && key) {
           const queryUrl = (sellerKey === 'edson')
-            ? `${url}/rest/v1/leads?select=*&deleted_at=is.null&order=value.desc`
-            : `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&deleted_at=is.null&select=*&order=value.desc`;
+            ? `${url}/rest/v1/leads?select=*&order=value.desc&limit=2000`
+            : `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc&limit=1000`;
           const res = await fetch(queryUrl, {
             headers: {
               'apikey': key,
