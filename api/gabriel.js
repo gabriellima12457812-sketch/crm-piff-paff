@@ -4,13 +4,6 @@
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
 // ==============================================================================
 
-import {
-  loadGovernanceState,
-  filterActiveRecords,
-  performSoftDeleteLead,
-  recordAuditLog
-} from '../lib/governance.js';
-
 const SELLER_USER_ID = 'a1111111-1111-1111-1111-111111111111';
 const SELLER_NAME = 'Gabriel Lima';
 const SELLER_CREDENTIALS = { email: 'gabriel@piffpaff.com.br', password: 'Gabriel@2026' };
@@ -1646,19 +1639,15 @@ export default async function handler(req, res) {
         }
         if (!resultLead) resultLead = { ...existingWhatsAppLead, ...mergePayload };
 
-        // Aplica Soft Delete no card antigo do Instagram se existia com ID diferente
+        // Remove o card antigo do Instagram do Supabase se existia com ID diferente
         if (sourceLead && sourceLead.id !== existingWhatsAppLead.id && dbLeads.some(l => l.id === sourceLead.id)) {
           try {
-            await performSoftDeleteLead({
-              supabaseUrl,
-              supabaseHeaders,
-              lead: sourceLead,
-              actorUserId: SELLER_USER_ID,
-              actorName: SELLER_NAME,
-              req
+            await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(sourceLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
+              method: 'DELETE',
+              headers: supabaseHeaders
             });
           } catch (e) {
-            console.warn('Erro ao aplicar soft delete no lead antigo do Instagram após merge:', e);
+            console.warn('Erro ao remover lead antigo do Instagram após merge:', e);
           }
         }
 
@@ -1886,20 +1875,12 @@ export default async function handler(req, res) {
       const existingIds = new Set(dbLeads.map(l => l.id));
       const existingInstas = new Set(dbLeads.map(l => (l.instagram || '').toLowerCase().replace(/^@/, '')));
 
-      const rawMergedLeads = [...dbLeads];
+      const mergedLeads = [...dbLeads];
       DEFAULT_INSTAGRAM_LEADS_GABRIEL.forEach(instaLead => {
         const cleanInsta = (instaLead.instagram || '').toLowerCase().replace(/^@/, '');
         if (!existingIds.has(instaLead.id) && !existingInstas.has(cleanInsta)) {
-          rawMergedLeads.push(instaLead);
+          mergedLeads.push(instaLead);
         }
-      });
-
-      const { state: govState } = await loadGovernanceState();
-      const mergedLeads = filterActiveRecords(rawMergedLeads, {
-        includeDeleted: query.include_deleted === 'true',
-        isSuperAdmin: query.role === 'super_admin',
-        govState,
-        resourceType: 'lead'
       });
 
       const requestedChannel = (query.channel || body.channel || query.pipeline || body.pipeline || '').toLowerCase().trim();
@@ -2111,24 +2092,24 @@ export default async function handler(req, res) {
       }
     }
 
-    // EXCLUIR (SOFT DELETE UNIVERSAL: deleted_at = NOW() + TRILHA DE AUDITORIA)
+    // EXCLUIR
     if (action === 'delete' || action === 'excluir') {
       if (!existingLead) {
         return res.status(404).json({ success: false, error: `Lead "${name || phone || id}" não foi encontrado na carteira de ${SELLER_NAME}.` });
       }
-      const softDeleted = await performSoftDeleteLead({
-        supabaseUrl,
-        supabaseHeaders,
-        lead: existingLead,
-        actorUserId: SELLER_USER_ID,
-        actorName: SELLER_NAME,
-        req
+      const delRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
+        method: 'DELETE',
+        headers: supabaseHeaders
       });
+      if (!delRes.ok) {
+        const errText = await delRes.text();
+        return res.status(500).json({ success: false, error: 'Erro ao excluir no Supabase', details: errText });
+      }
       return res.status(200).json({
         success: true,
-        action: 'soft_delete',
-        message: `Lead "${existingLead.name}" arquivado em Soft Delete com sucesso no funil de ${SELLER_NAME}!`,
-        deleted_lead: softDeleted
+        action: 'delete',
+        message: `Lead "${existingLead.name}" excluído com sucesso do funil de ${SELLER_NAME}!`,
+        deleted_lead: existingLead
       });
     }
 
@@ -2245,21 +2226,6 @@ export default async function handler(req, res) {
       }
       const updated = await updateRes.json();
       resultData = Array.isArray(updated) ? updated[0] : updated;
-      if (existingLead.stage !== payload.stage) {
-        await recordAuditLog({
-          req,
-          user_id: SELLER_USER_ID,
-          action: 'LEAD_STATUS_CHANGE',
-          resource_type: 'lead',
-          resource_id: existingLead.id,
-          details: {
-            lead_name: existingLead.name,
-            previous_stage: existingLead.stage,
-            new_stage: payload.stage,
-            seller: SELLER_NAME
-          }
-        });
-      }
     } else {
       payload.id = id || (isInstagram ? `insta-${Date.now()}-${Math.random().toString(36).substring(2, 7)}` : `lead-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`);
       payload.name = payload.name || (normalizedPhone ? `Cliente (${normalizedPhone})` : (normalizedInsta ? `@${normalizedInsta}` : 'Novo Lead Instagram'));

@@ -1,16 +1,9 @@
-// ==============================================================================
+﻿// ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/RODRIGO (ES Module)
 // ENDPOINT EXCLUSIVO E BLINDADO DO VENDEDOR RODRIGO
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
 // SUPORTE COMPLETO AO FUNIL DE INSTAGRAM DIRECT + FUNIL WHATSAPP
 // ==============================================================================
-
-import {
-  loadGovernanceState,
-  filterActiveRecords,
-  performSoftDeleteLead,
-  recordAuditLog
-} from '../lib/governance.js';
 
 const SELLER_USER_ID = 'e5555555-5555-5555-5555-555555555555';
 const SELLER_NAME = 'RODRIGO';
@@ -728,20 +721,12 @@ export default async function handler(req, res) {
       const existingIds = new Set(dbLeads.map(l => l.id));
       const existingInstas = new Set(dbLeads.map(l => (l.instagram || '').toLowerCase().replace(/^@/, '')));
 
-      const rawMergedLeads = [...dbLeads];
+      const mergedLeads = [...dbLeads];
       DEFAULT_INSTAGRAM_LEADS_RODRIGO.forEach(instaLead => {
         const cleanInsta = (instaLead.instagram || '').toLowerCase().replace(/^@/, '');
         if (!existingIds.has(instaLead.id) && !existingInstas.has(cleanInsta)) {
-          rawMergedLeads.push(instaLead);
+          mergedLeads.push(instaLead);
         }
-      });
-
-      const { state: govState } = await loadGovernanceState();
-      const mergedLeads = filterActiveRecords(rawMergedLeads, {
-        includeDeleted: false,
-        isSuperAdmin: false,
-        govState,
-        resourceType: 'lead'
       });
 
       const requestedChannel = (query.channel || body.channel || query.pipeline || body.pipeline || '').toLowerCase().trim();
@@ -948,22 +933,21 @@ export default async function handler(req, res) {
       }
     }
 
-    // EXCLUIR (SOFT DELETE UNIVERSAL: deleted_at = NOW() + TRILHA DE AUDITORIA)
+    // EXCLUIR
     if (action === 'delete' || action === 'excluir') {
-      const targetLead = existingLead || { id: id || `temp-${Date.now()}`, name: name || phone || 'Lead', user_id: SELLER_USER_ID };
-      const softDeleted = await performSoftDeleteLead({
-        supabaseUrl,
-        supabaseHeaders,
-        lead: targetLead,
-        actorUserId: SELLER_USER_ID,
-        actorName: SELLER_NAME,
-        req
-      });
+      if (existingLead) {
+        try {
+          await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
+            method: 'DELETE',
+            headers: supabaseHeaders
+          });
+        } catch (e) {}
+      }
       return res.status(200).json({
         success: true,
-        action: 'soft_delete',
-        message: `Lead "${targetLead.name}" arquivado em Soft Delete no funil de ${SELLER_NAME}!`,
-        deleted_lead: softDeleted
+        action: 'delete',
+        message: `Lead "${name || phone || id || 'selecionado'}" processado no funil de ${SELLER_NAME}!`,
+        deleted_lead: existingLead || { id: id || 'temp', name: name || 'Lead' }
       });
     }
 

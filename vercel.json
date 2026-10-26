@@ -6,30 +6,6 @@
       "destination": "/index.html"
     },
     {
-      "source": "/dashboard",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/setup-admin",
-      "destination": "/setup-admin.html"
-    },
-    {
-      "source": "/api/admin/users/:id/toggle-status",
-      "destination": "/api/edson?gov_route=admin_users&action=toggle_status&id=:id"
-    },
-    {
-      "source": "/api/admin/users",
-      "destination": "/api/edson?gov_route=admin_users"
-    },
-    {
-      "source": "/api/auth",
-      "destination": "/api/edson?gov_route=auth"
-    },
-    {
-      "source": "/api/setup-admin",
-      "destination": "/api/edson?gov_route=setup_admin"
-    },
-    {
       "source": "/pasta_digital",
       "destination": "/pasta_digital.html"
     },
@@ -110,7 +86,7 @@
       "destination": "/api/rodrigo.js?action=moveInstagramLeadToWhatsApp"
     },
     {
-      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar|setup-admin).*)",
+      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar).*)",
       "destination": "/index.html"
     }
   ],

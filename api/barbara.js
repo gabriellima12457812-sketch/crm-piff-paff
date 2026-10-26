@@ -4,13 +4,6 @@
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
 // ==============================================================================
 
-import {
-  loadGovernanceState,
-  filterActiveRecords,
-  performSoftDeleteLead,
-  recordAuditLog
-} from '../lib/governance.js';
-
 const SELLER_USER_ID = 'f6666666-6666-6666-6666-666666666666';
 const SELLER_NAME = 'Bárbara';
 const SELLER_CREDENTIALS = { email: 'barbara@piffpaff.com.br', password: 'Barbara@2026' };
@@ -634,14 +627,7 @@ export default async function handler(req, res) {
         return res.status(500).json({ success: false, error: 'Erro ao consultar leads no Supabase', details: errText });
       }
 
-      const rawAllLeads = (await leadsRes.json()) || [];
-      const { state: govState } = await loadGovernanceState();
-      const allLeads = filterActiveRecords(rawAllLeads, {
-        includeDeleted: false,
-        isSuperAdmin: false,
-        govState,
-        resourceType: 'lead'
-      });
+      const allLeads = (await leadsRes.json()) || [];
 
       let totalPipelineValue = 0;
       const stagesSummary = { novos: 0, investigacao: 0, projetos: 0, proposta: 0, fechamento: 0, concluidas: 0 };
@@ -839,24 +825,24 @@ export default async function handler(req, res) {
       else targetStage = 'novos';
     }
 
-    // EXCLUIR (SOFT DELETE UNIVERSAL: deleted_at = NOW() + TRILHA DE AUDITORIA)
+    // EXCLUIR
     if (action === 'delete' || action === 'excluir') {
       if (!existingLead) {
         return res.status(404).json({ success: false, error: `Lead "${name || phone || id}" não foi encontrado na carteira de ${SELLER_NAME}.` });
       }
-      const softDeleted = await performSoftDeleteLead({
-        supabaseUrl,
-        supabaseHeaders,
-        lead: existingLead,
-        actorUserId: SELLER_USER_ID,
-        actorName: SELLER_NAME,
-        req
+      const delRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
+        method: 'DELETE',
+        headers: supabaseHeaders
       });
+      if (!delRes.ok) {
+        const errText = await delRes.text();
+        return res.status(500).json({ success: false, error: 'Erro ao excluir no Supabase', details: errText });
+      }
       return res.status(200).json({
         success: true,
-        action: 'soft_delete',
-        message: `Lead "${existingLead.name}" arquivado em Soft Delete com sucesso no funil de ${SELLER_NAME}!`,
-        deleted_lead: softDeleted
+        action: 'delete',
+        message: `Lead "${existingLead.name}" excluído com sucesso do funil de ${SELLER_NAME}!`,
+        deleted_lead: existingLead
       });
     }
 

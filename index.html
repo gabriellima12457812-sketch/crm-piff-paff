@@ -278,76 +278,12 @@
           </button>
         </form>
 
-        <!-- ETAPA 2: Formulário de 2FA Inteligente do Super Admin (Édson) -->
-        <form id="form-saas-2fa" class="space-y-4 hidden">
-          <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 space-y-1">
-            <div class="font-bold text-amber-300 flex items-center gap-1.5">
-              <i class="ph-bold ph-shield-star text-base"></i>
-              <span>Verificação 2FA do Super Administrador (Édson)</span>
-            </div>
-            <p id="login-2fa-desc" class="text-[11px] text-slate-300 leading-relaxed">
-              Novo dispositivo detectado. Digite o código de 6 dígitos enviado para seu E-mail e WhatsApp (válido por 10 minutos).
-            </p>
-            <div id="login-2fa-hint-box" class="hidden mt-2 pt-2 border-t border-amber-500/20 text-[11px] font-mono text-emerald-300"></div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
-              Código de Segurança (6 dígitos)
-            </label>
-            <input
-              type="text"
-              id="login-input-2fa-code"
-              maxlength="6"
-              placeholder="000000"
-              required
-              class="w-full px-4 py-3 bg-slate-950/90 border border-amber-500/40 rounded-xl text-center font-mono text-xl font-extrabold tracking-[0.35em] text-amber-300 placeholder-slate-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
-            />
-          </div>
-
-          <!-- Caixa de seleção marcada por padrão: Lembrar deste dispositivo (Sempre Confiável / Vitalício) -->
-          <label class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800 cursor-pointer hover:border-amber-500/30 transition">
-            <input
-              type="checkbox"
-              id="login-checkbox-remember-device"
-              checked
-              class="mt-0.5 w-4 h-4 rounded accent-emerald-500 cursor-pointer"
-            />
-            <div class="text-xs">
-              <span class="font-bold text-white block">Lembrar deste dispositivo (Sempre Confiável)</span>
-              <span class="text-[11px] text-slate-400">Mantém este computador sempre confiável de forma vitalícia (sem expiração, dispensando o 2FA nos próximos acessos).</span>
-            </div>
-          </label>
-
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              id="btn-cancel-2fa"
-              class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer"
-            >
-              Voltar
-            </button>
-            <button
-              type="submit"
-              id="btn-submit-2fa"
-              class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-slate-950 font-extrabold text-xs sm:text-sm tracking-wide transition shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <i class="ph-bold ph-check-circle text-base"></i>
-              <span>Validar 2FA & Confiar Dispositivo</span>
-            </button>
-          </div>
-        </form>
-
         <!-- Rodapé do Card -->
-        <div class="mt-6 pt-4 border-t border-slate-800/70 text-center space-y-1.5">
+        <div class="mt-6 pt-4 border-t border-slate-800/70 text-center">
           <p class="text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
             <i class="ph-bold ph-shield-check text-emerald-400"></i>
-            <span>Blindagem Soft Delete + Auditoria + RLS Multi-Tenant Ativos</span>
+            <span>Proteção Multi-Tenant ativa via Supabase RLS</span>
           </p>
-          <a href="/setup-admin" class="inline-flex items-center gap-1 text-[11px] text-amber-400/90 hover:text-amber-300 font-semibold transition">
-            <i class="ph-bold ph-key"></i>
-            <span>Autoativação do Super Admin (/setup-admin)</span>
-          </a>
         </div>
       </div>
     </div>
@@ -518,19 +454,12 @@
               <span id="badge-vendas-total" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">5</span>
             </button>
 
-            <!-- ÁREA EXCLUSIVA DE ADMIN: Gestão de Usuários & Base de Resgate -->
-            <div id="nav-group-admin" class="hidden pt-2 border-t border-white/5 space-y-1.5">
+            <!-- ÁREA EXCLUSIVA DE ADMIN: Base de Resgate (Quarentena de Leads) -->
+            <div id="nav-group-admin" class="hidden pt-2 border-t border-white/5">
               <div class="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider px-3 mb-1 flex items-center justify-between">
-                <span class="flex items-center gap-1.5"><i class="ph-bold ph-shield-check text-amber-400"></i> Governança & Admin</span>
+                <span class="flex items-center gap-1.5"><i class="ph-bold ph-shield-check text-amber-400"></i> Admin Exclusivo</span>
                 <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Restrito</span>
               </div>
-              <button data-view="users" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-amber-300 hover:text-white hover:bg-amber-500/15 border border-amber-500/30 bg-amber-500/10">
-                <span class="flex items-center gap-2.5">
-                  <i class="ph-bold ph-users-three text-lg text-amber-400"></i>
-                  <span>Gestão de Usuários</span>
-                </span>
-                <span id="badge-users-total" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-bold">8</span>
-              </button>
               <button data-view="resgate" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-amber-300 hover:text-white hover:bg-amber-500/15 border border-amber-500/20 bg-amber-500/10">
                 <span class="flex items-center gap-2.5">
                   <i class="ph-bold ph-archive-box text-lg text-amber-400"></i>
@@ -637,18 +566,11 @@
             </button>
 
             <!-- ÁREA EXCLUSIVA DE ADMIN (Mobile) -->
-            <div id="nav-group-admin-mobile" class="hidden pt-2 border-t border-white/5 space-y-1.5">
+            <div id="nav-group-admin-mobile" class="hidden pt-2 border-t border-white/5">
               <div class="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider px-3 mb-1 flex items-center justify-between">
-                <span class="flex items-center gap-1.5"><i class="ph-bold ph-shield-check text-amber-400"></i> Governança & Admin</span>
+                <span class="flex items-center gap-1.5"><i class="ph-bold ph-shield-check text-amber-400"></i> Admin Exclusivo</span>
                 <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Restrito</span>
               </div>
-              <button data-view="users" class="nav-btn-mobile w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20">
-                <span class="flex items-center gap-3">
-                  <i class="ph-bold ph-users-three text-xl text-amber-400"></i>
-                  <span>Gestão de Usuários</span>
-                </span>
-                <span id="badge-users-total-mobile" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-bold">8</span>
-              </button>
               <button data-view="resgate" class="nav-btn-mobile w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20">
                 <span class="flex items-center gap-3">
                   <i class="ph-bold ph-archive-box text-xl text-amber-400"></i>
@@ -1653,215 +1575,7 @@
           <!-- Renderizado dinamicamente via renderOrdersList() -->
         </div>
       </section>
-
-      <!-- ======================================================== -->
-      <!-- VIEW: GESTÃO DE USUÁRIOS, AUDITORIA & SOFT DELETE (EDSON) -->
-      <!-- ======================================================== -->
-      <section id="view-users" class="view-content flex-1 p-4 lg:p-6 hidden flex flex-col">
-        <!-- Cabeçalho -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <div class="flex items-center gap-2.5 mb-1">
-              <span class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xl shadow-lg shadow-amber-500/20">
-                <i class="ph-bold ph-users-three"></i>
-              </span>
-              <h1 class="text-2xl font-heading font-extrabold text-white">Gestão de Usuários & Governança Corporativa</h1>
-              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                Super Admin (Édson)
-              </span>
-            </div>
-            <p class="text-xs text-slate-400">
-              Cadastro autônomo de novos funcionários, controle de status com revogação instantânea de sessões, link de autoativação 2FA, lixeira lógica (Soft Delete) e trilha de auditoria.
-            </p>
-          </div>
-
-          <div class="flex items-center gap-2.5 flex-wrap">
-            <button type="button" onclick="handleGenerateEdsonSetupLink()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] text-amber-300 border border-amber-500/30 font-bold text-xs sm:text-sm transition cursor-pointer">
-              <i class="ph-bold ph-link text-base"></i>
-              <span>Gerar Link /setup-admin (Édson)</span>
-            </button>
-            <button type="button" onclick="openNewUserModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-slate-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition active:scale-95 cursor-pointer">
-              <i class="ph-bold ph-user-plus text-base"></i>
-              <span>+ Adicionar Novo Usuário</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Banner de Link de Autoativação (quando gerado) -->
-        <div id="edson-setup-link-banner" class="hidden mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="space-y-1">
-            <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-              <i class="ph-bold ph-key"></i>
-              <span>Link Exclusivo de Autoativação do Super Administrador (Édson):</span>
-            </div>
-            <div id="edson-setup-link-value" class="font-mono text-xs text-white bg-slate-950/80 px-3 py-2 rounded-xl border border-white/10 break-all"></div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button type="button" onclick="copyEdsonSetupLink()" class="px-3.5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition cursor-pointer">
-              Copiar Link
-            </button>
-            <a id="edson-setup-link-anchor" href="/setup-admin" target="_blank" class="px-3.5 py-2 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/20 transition">
-              Abrir Tela
-            </a>
-          </div>
-        </div>
-
-        <!-- KPIs de Governança -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
-          <div class="p-4 rounded-2xl bg-[#101C27] border border-white/10">
-            <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Usuários Ativos</span>
-              <i class="ph-bold ph-users text-emerald-400 text-base"></i>
-            </div>
-            <div id="gov-kpi-active-users" class="text-2xl font-heading font-extrabold text-white">8</div>
-            <div class="text-[11px] text-emerald-400 mt-1">Isolamento RLS Individual</div>
-          </div>
-          <div class="p-4 rounded-2xl bg-[#101C27] border border-amber-500/30">
-            <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Dispositivos Confiáveis 2FA</span>
-              <i class="ph-bold ph-laptop text-amber-400 text-base"></i>
-            </div>
-            <div id="gov-kpi-trusted-devices" class="text-2xl font-heading font-extrabold text-amber-400">0</div>
-            <div class="text-[11px] text-slate-400 mt-1">Sempre confiável (vitalício)</div>
-          </div>
-          <div class="p-4 rounded-2xl bg-[#101C27] border border-rose-500/30">
-            <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Blindagem Soft Delete</span>
-              <i class="ph-bold ph-trash-simple text-rose-400 text-base"></i>
-            </div>
-            <div id="gov-kpi-soft-deleted" class="text-2xl font-heading font-extrabold text-rose-400">0</div>
-            <div class="text-[11px] text-slate-400 mt-1">Nenhum dado é apagado fisicamente</div>
-          </div>
-          <div class="p-4 rounded-2xl bg-[#101C27] border border-cyan-500/30">
-            <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Eventos Auditados</span>
-              <i class="ph-bold ph-shield-check text-cyan-400 text-base"></i>
-            </div>
-            <div id="gov-kpi-audit-logs" class="text-2xl font-heading font-extrabold text-cyan-400">0</div>
-            <div class="text-[11px] text-slate-400 mt-1">Trilha audit_logs ativa</div>
-          </div>
-        </div>
-
-        <!-- TABELA PRINCIPAL: EQUIPE & USUÁRIOS CADASTRADOS -->
-        <div class="rounded-2xl bg-[#0E1722] border border-white/10 overflow-hidden shadow-xl mb-6">
-          <div class="px-5 py-3.5 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <i class="ph-bold ph-identification-badge text-amber-400 text-lg"></i>
-              <h3 class="font-heading font-bold text-sm text-white uppercase tracking-wider">Equipe Comercial & Administradores</h3>
-            </div>
-            <button type="button" onclick="loadAdminGovernanceView()" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 cursor-pointer">
-              <i class="ph-bold ph-arrows-clockwise"></i> Atualizar
-            </button>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-300">
-              <thead class="bg-[#101C27] text-xs uppercase tracking-wider text-slate-400 font-heading border-b border-white/10">
-                <tr>
-                  <th class="py-3.5 px-4 font-bold">Nome</th>
-                  <th class="py-3.5 px-4 font-bold">E-mail</th>
-                  <th class="py-3.5 px-4 font-bold">Telefone / WhatsApp</th>
-                  <th class="py-3.5 px-4 font-bold">Cargo / Papel</th>
-                  <th class="py-3.5 px-4 font-bold">Autenticação 2FA</th>
-                  <th class="py-3.5 px-4 font-bold">Status</th>
-                  <th class="py-3.5 px-4 font-bold text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="admin-users-table-body" class="divide-y divide-white/5 font-sans">
-                <!-- Preenchido via loadAdminGovernanceView() -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- GRID INFERIOR: LIXEIRA SOFT DELETE (RESTAURAÇÃO SUPER ADMIN) & TRILHA DE AUDITORIA (audit_logs) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
-          <!-- Lixeira Lógica (Soft Delete) -->
-          <div class="rounded-2xl bg-[#0E1722] border border-rose-500/25 overflow-hidden shadow-xl flex flex-col">
-            <div class="px-5 py-3.5 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <i class="ph-bold ph-recycle text-rose-400 text-lg"></i>
-                <h3 class="font-heading font-bold text-sm text-white uppercase tracking-wider">Itens Excluídos (Soft Delete - deleted_at)</h3>
-              </div>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold">Exclusivo Super Admin</span>
-            </div>
-            <div id="admin-soft-deleted-container" class="p-4 space-y-2.5 max-h-80 overflow-y-auto text-xs">
-              <!-- Preenchido via loadAdminGovernanceView() -->
-            </div>
-          </div>
-
-          <!-- Trilha de Auditoria (audit_logs) -->
-          <div class="rounded-2xl bg-[#0E1722] border border-cyan-500/25 overflow-hidden shadow-xl flex flex-col">
-            <div class="px-5 py-3.5 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <i class="ph-bold ph-list-magnifying-glass text-cyan-400 text-lg"></i>
-                <h3 class="font-heading font-bold text-sm text-white uppercase tracking-wider">Trilha de Auditoria (audit_logs)</h3>
-              </div>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold">Tempo Real</span>
-            </div>
-            <div id="admin-audit-logs-container" class="p-4 space-y-2 max-h-80 overflow-y-auto text-xs">
-              <!-- Preenchido via loadAdminGovernanceView() -->
-            </div>
-          </div>
-        </div>
-      </section>
     </main>
-  </div>
-
-  <!-- ======================================================== -->
-  <!-- MODAL: ADICIONAR NOVO USUÁRIO / VENDEDOR (PAINEL ÉDSON)   -->
-  <!-- ======================================================== -->
-  <div id="modal-new-user" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-[#101C27] border border-amber-500/40 rounded-2xl shadow-2xl overflow-hidden">
-      <div class="px-6 py-4 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xl">
-            <i class="ph-bold ph-user-plus"></i>
-          </div>
-          <div>
-            <h3 class="font-heading font-bold text-base text-white">Adicionar Novo Funcionário</h3>
-            <p class="text-[11px] text-slate-400">Cadastro imediato com isolamento comercial (sem 2FA para vendedores)</p>
-          </div>
-        </div>
-        <button type="button" onclick="closeNewUserModal()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 cursor-pointer">
-          <i class="ph-bold ph-x text-lg"></i>
-        </button>
-      </div>
-      <form id="form-new-user" onsubmit="handleCreateNewUser(event)" class="p-6 space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Nome Completo *</label>
-          <input type="text" id="new-user-name" required placeholder="Ex: Lucas Martins" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">E-mail Corporativo *</label>
-          <input type="email" id="new-user-email" required placeholder="lucas@piffpaff.com.br" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Telefone / WhatsApp</label>
-            <input type="text" id="new-user-phone" placeholder="(11) 99999-9999" oninput="applyPhoneMask(this)" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Função / Cargo *</label>
-            <select id="new-user-role" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
-              <option value="vendedor" selected>Vendedor Comercial (Restrito)</option>
-              <option value="admin">Administrador</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Senha Inicial Temporária *</label>
-          <input type="text" id="new-user-password" required value="Mudar@2026" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs font-mono text-emerald-300 focus:outline-none focus:border-amber-400" />
-        </div>
-        <div class="pt-2 flex items-center justify-end gap-2.5 border-t border-white/10">
-          <button type="button" onclick="closeNewUserModal()" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition cursor-pointer">
-            Cancelar
-          </button>
-          <button type="submit" id="btn-submit-new-user" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 transition cursor-pointer">
-            Criar Usuário Agora
-          </button>
-        </div>
-      </form>
-    </div>
   </div>
 
   <!-- ======================================================== -->
@@ -4053,9 +3767,8 @@
             }
           }
 
-          const userRole = getSellerRole(user);
-          const isAdminOrOwner = userRole === 'admin' || userRole === 'owner' || ((typeof isOwnerMode === 'function') && isOwnerMode());
-          if (isAdminOrOwner) {
+          const isAdmin = getSellerRole(user) === 'admin';
+          if (isAdmin) {
             navAdmin?.classList.remove('hidden');
             navAdminMobile?.classList.remove('hidden');
           } else {
@@ -4638,11 +4351,11 @@
           }
         }
 
-        // 2. Fallback: REST Direto no Supabase caso API serverless não responda ou para Gabriel/Edson
+        // 2. Fallback: REST Direto no Supabase caso API serverless não responda ou para Gabriel
         if (!cloudLeads && url && key) {
           const queryUrl = (sellerKey === 'edson')
-            ? `${url}/rest/v1/leads?select=*&order=value.desc&limit=2000`
-            : `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc&limit=1000`;
+            ? `${url}/rest/v1/leads?select=*&order=value.desc`
+            : `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc`;
           const res = await fetch(queryUrl, {
             headers: {
               'apikey': key,
@@ -4657,9 +4370,8 @@
 
         if (Array.isArray(cloudLeads)) {
           const deletedIds = new Set(getDeletedLeadIds());
-          // FILTRO ESTRITO DE ISOLAMENTO E SOFT DELETE: cada vendedor visualiza exclusivamente seus próprios leads ativos (deleted_at IS NULL)
+          // FILTRO ESTRITO DE ISOLAMENTO: cada vendedor visualiza exclusivamente seus próprios leads
           const userCloudLeads = cloudLeads.filter(l => {
-            if (l.deleted_at) return false;
             if (deletedIds.has(l.id)) return false;
             return isLeadOfSeller(l, sellerKey);
           });
@@ -5400,32 +5112,11 @@
       }
     }
 
-    async function recordClientAuditEvent(auditAction, resourceType, resourceId, details = {}) {
-      try {
-        await fetch('/api/edson?gov_route=auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'audit',
-            user_id: authUser?.id || null,
-            audit_action: auditAction,
-            resource_type: resourceType,
-            resource_id: resourceId,
-            details: {
-              seller: (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'unknown',
-              ...details
-            }
-          })
-        });
-      } catch (e) {}
-    }
-    window.recordClientAuditEvent = recordClientAuditEvent;
-
     async function deleteLeadFromSupabase(leadId) {
       if (!leadId || !authUser) return;
       const sellerKey = getSellerKey(authUser);
 
-      // 1. Executa SOFT DELETE via API Serverless do vendedor (deleted_at = NOW() + audit_logs)
+      // 1. Tenta deletar via API Serverless do vendedor
       try {
         const apiRes = await fetch(`/api/${sellerKey}`, {
           method: 'POST',
@@ -5436,37 +5127,29 @@
           })
         });
         if (apiRes.ok) {
-          console.log(`[Soft Delete] Lead ${leadId} marcado com deleted_at via /api/${sellerKey}`);
+          console.log(`[Sync] Lead ${leadId} excluído com sucesso via /api/${sellerKey}`);
           return;
         }
       } catch (e) {
-        console.warn(`[Soft Delete] Falha via /api/${sellerKey}, aplicando PATCH deleted_at via fallback:`, e);
+        console.warn(`[Sync] Falha ao deletar via /api/${sellerKey}, usando fallback direto:`, e);
       }
 
-      // 2. Fallback direto no Supabase REST: NUNCA executa DELETE físico! Aplica PATCH com deleted_at = NOW()
+      // 2. Fallback direto no Supabase REST
       const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
       const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       if (!url || !key) return;
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
-      const deletedAtIso = new Date().toISOString();
 
       try {
         await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&user_id=eq.${encodeURIComponent(authUser.id)}`, {
-          method: 'PATCH',
+          method: 'DELETE',
           headers: {
             'apikey': key,
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
-            deleted_at: deletedAtIso,
-            updated_at: deletedAtIso
-          })
+            'Authorization': `Bearer ${authToken}`
+          }
         });
-        recordClientAuditEvent('LEAD_SOFT_DELETE', 'leads', leadId, { deleted_at: deletedAtIso });
       } catch (e) {
-        console.warn('Erro ao aplicar soft delete no Supabase via fallback REST:', e);
+        console.warn('Erro ao deletar lead no Supabase via fallback REST:', e);
       }
     }
 
@@ -5780,7 +5463,6 @@
           if (leadId && targetStage) {
             const lead = leads.find(l => l.id === leadId);
             if (lead && lead.stage !== targetStage) {
-              const prevStage = lead.stage;
               lead.stage = targetStage;
               lead.last_interaction = new Date().toISOString();
               if (targetStage === 'concluidas' && !lead.purchase_date) {
@@ -5789,13 +5471,6 @@
               saveStorage();
               renderKanban();
               syncLeadToSupabase(lead);
-              if (typeof recordClientAuditEvent === 'function') {
-                recordClientAuditEvent('LEAD_STATUS_CHANGE', 'leads', lead.id, {
-                  lead_name: lead.name,
-                  previous_stage: prevStage,
-                  new_stage: targetStage
-                });
-              }
               showToast(`Lead movido para "${targetStage.toUpperCase()}"`, 'success');
             }
           }
@@ -11386,73 +11061,6 @@
         }
       });
 
-      // ==========================================
-      // AUTENTICAÇÃO DIFERENCIADA: VENDEDORES (DIRETO) vs SUPER ADMIN ÉDSON (2FA + DISPOSITIVO CONFIÁVEL)
-      // ==========================================
-      let pending2faChallengeId = null;
-      let pending2faEmail = null;
-
-      document.getElementById('btn-cancel-2fa')?.addEventListener('click', () => {
-        pending2faChallengeId = null;
-        document.getElementById('form-saas-2fa')?.classList.add('hidden');
-        document.getElementById('form-saas-login')?.classList.remove('hidden');
-        document.getElementById('login-error-box')?.classList.add('hidden');
-      });
-
-      document.getElementById('form-saas-2fa')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const code = (document.getElementById('login-input-2fa-code')?.value || '').replace(/\D/g, '');
-        const rememberDevice = document.getElementById('login-checkbox-remember-device')?.checked !== false;
-        const btn = document.getElementById('btn-submit-2fa');
-        const errBox = document.getElementById('login-error-box');
-        const errText = document.getElementById('login-error-text');
-
-        errBox.classList.add('hidden');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-base"></i><span>Validando 2FA...</span>';
-
-        try {
-          const res = await fetch('/api/edson?gov_route=auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'verify_2fa',
-              challenge_id: pending2faChallengeId,
-              email: pending2faEmail || 'edson@piffpaff.com.br',
-              code,
-              remember_device: rememberDevice,
-              device_name: `${navigator.platform || 'Desktop'} • ${navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Browser'}`
-            })
-          });
-          const data = await res.json();
-          if (!res.ok || !data.ok) {
-            errBox.classList.remove('hidden');
-            errText.textContent = data.error || 'Código 2FA inválido ou expirado.';
-            return;
-          }
-
-          if (data.device_trust_token) {
-            localStorage.setItem('piffpaff_device_trust_token', data.device_trust_token);
-          }
-
-          document.getElementById('form-saas-2fa')?.classList.add('hidden');
-          document.getElementById('form-saas-login')?.classList.remove('hidden');
-          switchActiveSeller('edson');
-          showToast(
-            rememberDevice
-              ? '✅ 2FA validado! Dispositivo salvo como confiável permanente para Édson.'
-              : '✅ 2FA validado! Bem-vindo ao Painel Executivo, Édson.',
-            'success'
-          );
-        } catch (err) {
-          errBox.classList.remove('hidden');
-          errText.textContent = 'Falha ao validar código 2FA.';
-        } finally {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="ph-bold ph-check-circle text-base"></i><span>Validar 2FA & Confiar Dispositivo</span>';
-        }
-      });
-
       // Submit do Formulário de Autenticação (Login / Cadastro de Primeiro Acesso)
       document.getElementById('form-saas-login')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -11467,75 +11075,6 @@
         btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-base"></i><span>Processando...</span>';
 
         try {
-          if (authMode !== 'signup') {
-            // 0. Validação na API de Governança (/api/auth): verifica status ativo/inativo, dispositivo confiável e 2FA do Édson
-            try {
-              const savedTrustToken = localStorage.getItem('piffpaff_device_trust_token') || '';
-              const govRes = await fetch('/api/edson?gov_route=auth', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  action: 'login',
-                  email,
-                  password,
-                  device_trust_token: savedTrustToken
-                })
-              });
-              const govData = await govRes.json();
-
-              if (govRes.status === 403 && govData.revoked) {
-                errBox.classList.remove('hidden');
-                errText.textContent = govData.error || 'Conta desativada pelo Super Administrador.';
-                return;
-              }
-
-              if (govRes.ok && govData.ok) {
-                if (govData.requires_2fa_verification) {
-                  // Édson em dispositivo novo/não reconhecido -> Exige 2FA de 6 dígitos
-                  pending2faChallengeId = govData.challenge_id;
-                  pending2faEmail = email;
-                  document.getElementById('form-saas-login')?.classList.add('hidden');
-                  document.getElementById('form-saas-2fa')?.classList.remove('hidden');
-                  const chk = document.getElementById('login-checkbox-remember-device');
-                  if (chk) chk.checked = true; // Marcado por padrão conforme especificação
-                  const hintBox = document.getElementById('login-2fa-hint-box');
-                  if (hintBox && govData.demo_code_hint) {
-                    hintBox.textContent = `Código 2FA disparado (Homologação): ${govData.demo_code_hint}`;
-                    hintBox.classList.remove('hidden');
-                  }
-                  const codeInput = document.getElementById('login-input-2fa-code');
-                  if (codeInput) {
-                    codeInput.value = '';
-                    codeInput.focus();
-                  }
-                  showToast('🔒 Código 2FA de 6 dígitos enviado para E-mail e WhatsApp do Édson.', 'info');
-                  return;
-                }
-
-                // Login direto liberado (vendedor comum sem 2FA OU Édson com dispositivo confiável reconhecido)
-                const sellerKey = govData.user?.seller_key || normalizeSellerKey(email) || 'gabriel';
-                if (govData.user && !SELLER_REGISTRY[sellerKey]) {
-                  SELLER_REGISTRY[sellerKey] = {
-                    id: govData.user.id,
-                    email: govData.user.email,
-                    name: govData.user.name,
-                    prefix: `CRM-${sellerKey.substring(0, 3).toUpperCase()}-`,
-                    role: govData.user.role === 'super_admin' ? 'owner' : govData.user.role
-                  };
-                }
-                switchActiveSeller(sellerKey);
-                if (govData.trusted_device_recognized) {
-                  showToast('🔓 Dispositivo confiável reconhecido! 2FA dispensado para Édson.', 'success');
-                } else {
-                  showToast(`Bem-vindo(a) ao CRM, ${govData.user?.name || SELLER_REGISTRY[sellerKey]?.name || sellerKey}!`, 'success');
-                }
-                return;
-              }
-            } catch (govErr) {
-              console.warn('[Auth Governance Fallback]:', govErr);
-            }
-          }
-
           const client = getSupabaseClient();
           if (!client) throw new Error('Cliente Supabase não inicializado.');
 
@@ -11639,11 +11178,10 @@
           }
         }
 
-        if (viewName === 'resgate' || viewName === 'users') {
+        if (viewName === 'resgate') {
           const role = getSellerRole(authUser);
-          const isAllowedAdmin = role === 'admin' || role === 'owner' || ((typeof isOwnerMode === 'function') && isOwnerMode());
-          if (!isAllowedAdmin) {
-            showToast('Acesso restrito: Área exclusiva para Administradores.', 'error');
+          if (role !== 'admin') {
+            showToast('Acesso restrito: A Base de Resgate é exclusiva para Administradores.', 'error');
             switchView('kanban');
             return;
           }
@@ -11657,7 +11195,7 @@
           if (b.getAttribute('data-view') === viewName) {
             if (viewName === 'instagram') {
               b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-pink-300 bg-pink-500/15 border border-pink-500/30';
-            } else if (viewName === 'resgate' || viewName === 'users') {
+            } else if (viewName === 'resgate') {
               b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-amber-300 bg-amber-500/20 border border-amber-500/40';
             } else if (viewName === 'vendas') {
               b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-emerald-300 bg-emerald-500/15 border border-emerald-500/30';
@@ -11673,7 +11211,7 @@
           if (b.getAttribute('data-view') === viewName) {
             if (viewName === 'instagram') {
               b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-pink-500/15 text-pink-300 border border-pink-500/30';
-            } else if (viewName === 'resgate' || viewName === 'users') {
+            } else if (viewName === 'resgate') {
               b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-amber-500/20 text-amber-300 border border-amber-500/40';
             } else if (viewName === 'vendas') {
               b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
@@ -11704,8 +11242,6 @@
           renderInstagramBoard();
         } else if (viewName === 'resgate') {
           renderQuarantineBoard();
-        } else if (viewName === 'users') {
-          loadAdminGovernanceView();
         } else if (viewName === 'followup') {
           renderFollowupCenter();
         } else if (viewName === 'clients') {
@@ -11720,261 +11256,6 @@
         }
       }
       window.switchView = switchView;
-
-      // ========================================================
-      // MÓDULO DE GESTÃO DE USUÁRIOS, AUDITORIA & SOFT DELETE (PAINEL DO ÉDSON)
-      // ========================================================
-      async function loadAdminGovernanceView() {
-        const tbody = document.getElementById('admin-users-table-body');
-        const softDelCont = document.getElementById('admin-soft-deleted-container');
-        const auditCont = document.getElementById('admin-audit-logs-container');
-        if (!tbody) return;
-
-        try {
-          const res = await fetch('/api/edson?gov_route=admin_users&include_deleted=true');
-          const data = await res.json();
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Erro ao carregar usuários');
-
-          const users = Array.isArray(data.users) ? data.users : [];
-          const devices = Array.isArray(data.trusted_devices) ? data.trusted_devices : [];
-          const softDeleted = Array.isArray(data.soft_deleted_leads) ? data.soft_deleted_leads : [];
-          const logs = Array.isArray(data.audit_logs) ? data.audit_logs : [];
-
-          const activeCount = users.filter(u => u.status === 'active' && !u.deleted_at).length;
-          const kpiUsers = document.getElementById('gov-kpi-active-users');
-          const kpiDevices = document.getElementById('gov-kpi-trusted-devices');
-          const kpiSoft = document.getElementById('gov-kpi-soft-deleted');
-          const kpiAudit = document.getElementById('gov-kpi-audit-logs');
-          const badgeUsers = document.getElementById('badge-users-total');
-          const badgeUsersMob = document.getElementById('badge-users-total-mobile');
-
-          if (kpiUsers) kpiUsers.textContent = String(activeCount);
-          if (kpiDevices) kpiDevices.textContent = String(devices.length);
-          if (kpiSoft) kpiSoft.textContent = String(softDeleted.length);
-          if (kpiAudit) kpiAudit.textContent = String(logs.length);
-          if (badgeUsers) badgeUsers.textContent = String(activeCount);
-          if (badgeUsersMob) badgeUsersMob.textContent = String(activeCount);
-
-          tbody.innerHTML = users.map(u => {
-            const isSuper = u.role === 'super_admin';
-            const isAdmin = u.role === 'admin';
-            const isActive = u.status === 'active' && !u.deleted_at;
-            const roleBadge = isSuper
-              ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">👑 SUPER ADMIN</span>'
-              : (isAdmin
-                  ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">🛡️ ADMIN</span>'
-                  : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-slate-300">💼 VENDEDOR</span>');
-            const twoFaBadge = u.requires_2fa
-              ? '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">🔒 2FA Inteligente Ativo</span>'
-              : '<span class="text-[11px] text-slate-400">Login Direto (Sem 2FA)</span>';
-            const statusBadge = isActive
-              ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">● Ativo</span>'
-              : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">● Inativo / Revogado</span>';
-
-            return `
-              <tr class="hover:bg-white/5 transition">
-                <td class="py-3.5 px-4 font-heading font-bold text-white">${u.name || '-'}</td>
-                <td class="py-3.5 px-4 font-mono text-xs text-slate-300">${u.email || '-'}</td>
-                <td class="py-3.5 px-4 font-mono text-xs text-emerald-400">${u.phone ? formatPhoneBR(u.phone) : 'Não informado'}</td>
-                <td class="py-3.5 px-4">${roleBadge}</td>
-                <td class="py-3.5 px-4">${twoFaBadge}</td>
-                <td class="py-3.5 px-4">${statusBadge}</td>
-                <td class="py-3.5 px-4 text-right">
-                  ${isSuper ? '<span class="text-[11px] text-amber-400 font-semibold">Conta Protegida</span>' : `
-                    <button type="button" onclick="handleToggleUserStatus('${u.id}', '${isActive ? 'inactive' : 'active'}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${isActive ? 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30'}">
-                      ${isActive ? 'Desativar & Revogar Sessão' : 'Reativar Acesso'}
-                    </button>
-                  `}
-                </td>
-              </tr>
-            `;
-          }).join('');
-
-          if (softDelCont) {
-            if (softDeleted.length === 0) {
-              softDelCont.innerHTML = '<div class="py-6 text-center text-slate-500">Nenhum registro na lixeira lógica (deleted_at IS NULL em toda a base).</div>';
-            } else {
-              softDelCont.innerHTML = softDeleted.map(item => `
-                <div class="p-3 rounded-xl bg-[#101C27] border border-rose-500/20 flex items-center justify-between gap-3">
-                  <div>
-                    <div class="font-bold text-white">${item.name || item.id} <span class="text-[10px] font-mono text-rose-300">(${item.id})</span></div>
-                    <div class="text-[11px] text-slate-400">Excluído logicamente em ${new Date(item.deleted_at).toLocaleString('pt-BR')} • Por: ${item.deleted_by || 'vendedor'}</div>
-                  </div>
-                  <button type="button" onclick="handleRestoreDeletedLead('${item.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-xs transition cursor-pointer">
-                    Restaurar
-                  </button>
-                </div>
-              `).join('');
-            }
-          }
-
-          if (auditCont) {
-            if (logs.length === 0) {
-              auditCont.innerHTML = '<div class="py-6 text-center text-slate-500">Nenhum evento registrado ainda.</div>';
-            } else {
-              auditCont.innerHTML = logs.slice(0, 40).map(log => `
-                <div class="p-2.5 rounded-xl bg-[#101C27] border border-white/5 flex items-start justify-between gap-2">
-                  <div>
-                    <span class="font-mono font-bold text-[11px] text-cyan-300">${log.action}</span>
-                    <span class="text-slate-400 text-[11px]"> • ${log.resource_type} (${log.resource_id || '-'})</span>
-                    <div class="text-[10px] text-slate-500 mt-0.5">IP: ${log.ip_address || 'local'} • ${new Date(log.created_at).toLocaleString('pt-BR')}</div>
-                  </div>
-                </div>
-              `).join('');
-            }
-          }
-        } catch (err) {
-          console.error('Erro ao carregar Gestão de Usuários:', err);
-        }
-      }
-      window.loadAdminGovernanceView = loadAdminGovernanceView;
-
-      function openNewUserModal() {
-        document.getElementById('modal-new-user')?.classList.remove('hidden');
-      }
-      window.openNewUserModal = openNewUserModal;
-
-      function closeNewUserModal() {
-        document.getElementById('modal-new-user')?.classList.add('hidden');
-      }
-      window.closeNewUserModal = closeNewUserModal;
-
-      async function handleCreateNewUser(e) {
-        if (e) e.preventDefault();
-        const name = document.getElementById('new-user-name')?.value.trim();
-        const email = document.getElementById('new-user-email')?.value.trim();
-        const phone = document.getElementById('new-user-phone')?.value.trim();
-        const role = document.getElementById('new-user-role')?.value || 'vendedor';
-        const password = document.getElementById('new-user-password')?.value.trim();
-        const btn = document.getElementById('btn-submit-new-user');
-
-        if (!name || !email || !password) return;
-        btn.disabled = true;
-        btn.textContent = 'Cadastrando...';
-
-        try {
-          const res = await fetch('/api/edson?gov_route=admin_users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name,
-              email,
-              phone,
-              role,
-              password,
-              admin_user_id: authUser?.id
-            })
-          });
-          const data = await res.json();
-          if (!res.ok || !data.ok) {
-            showToast(data.error || 'Erro ao criar usuário.', 'error');
-            return;
-          }
-
-          if (data.user) {
-            const sk = data.user.seller_key || normalizeSellerKey(data.user.email) || email.split('@')[0].toLowerCase();
-            SELLER_REGISTRY[sk] = {
-              id: data.user.id,
-              email: data.user.email,
-              name: data.user.name,
-              prefix: `CRM-${sk.substring(0, 3).toUpperCase()}-`,
-              role: data.user.role
-            };
-            DEFAULT_PASSWORDS[sk] = password;
-          }
-
-          closeNewUserModal();
-          document.getElementById('form-new-user')?.reset();
-          showToast(`✅ Usuário "${name}" criado com sucesso (Login direto sem 2FA)!`, 'success');
-          loadAdminGovernanceView();
-        } catch (err) {
-          showToast('Erro de comunicação ao criar usuário.', 'error');
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'Criar Usuário Agora';
-        }
-      }
-      window.handleCreateNewUser = handleCreateNewUser;
-
-      async function handleToggleUserStatus(userId, nextStatus) {
-        try {
-          const res = await fetch(`/api/edson?gov_route=admin_users&action=toggle_status&id=${encodeURIComponent(userId)}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              status: nextStatus,
-              admin_user_id: authUser?.id
-            })
-          });
-          const data = await res.json();
-          if (!res.ok || !data.ok) {
-            showToast(data.error || 'Não foi possível alterar o status.', 'error');
-            return;
-          }
-          showToast(data.message || 'Status atualizado com sucesso!', 'success');
-          loadAdminGovernanceView();
-        } catch (err) {
-          showToast('Erro ao alterar status do usuário.', 'error');
-        }
-      }
-      window.handleToggleUserStatus = handleToggleUserStatus;
-
-      async function handleRestoreDeletedLead(leadId) {
-        try {
-          const res = await fetch('/api/edson?gov_route=admin_users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'restore_lead',
-              lead_id: leadId,
-              admin_user_id: authUser?.id
-            })
-          });
-          const data = await res.json();
-          if (res.ok && data.ok) {
-            const currentDeleted = getDeletedLeadIds().filter(id => id !== leadId);
-            localStorage.setItem('piffpaff_deleted_ids', JSON.stringify(currentDeleted));
-            showToast(`♻️ Lead ${leadId} restaurado com sucesso pelo Super Admin!`, 'success');
-            loadAdminGovernanceView();
-            syncFromSupabase(true);
-          }
-        } catch (err) {
-          showToast('Erro ao restaurar registro.', 'error');
-        }
-      }
-      window.handleRestoreDeletedLead = handleRestoreDeletedLead;
-
-      async function handleGenerateEdsonSetupLink() {
-        try {
-          const res = await fetch('/api/edson?gov_route=setup_admin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'generate_link' })
-          });
-          const data = await res.json();
-          if (res.ok && data.ok) {
-            const banner = document.getElementById('edson-setup-link-banner');
-            const valEl = document.getElementById('edson-setup-link-value');
-            const anchor = document.getElementById('edson-setup-link-anchor');
-            if (banner) banner.classList.remove('hidden');
-            if (valEl) valEl.textContent = data.setup_url;
-            if (anchor) anchor.href = data.setup_path || data.setup_url;
-            showToast('🔑 Link exclusivo /setup-admin gerado para o Édson!', 'success');
-            loadAdminGovernanceView();
-          }
-        } catch (err) {
-          showToast('Erro ao gerar link de autoativação.', 'error');
-        }
-      }
-      window.handleGenerateEdsonSetupLink = handleGenerateEdsonSetupLink;
-
-      function copyEdsonSetupLink() {
-        const val = document.getElementById('edson-setup-link-value')?.textContent;
-        if (!val) return;
-        navigator.clipboard?.writeText(val);
-        showToast('📋 Link /setup-admin copiado para a área de transferência!', 'success');
-      }
-      window.copyEdsonSetupLink = copyEdsonSetupLink;
 
       function openContractForLead(lead) {
         if (!lead) return;
