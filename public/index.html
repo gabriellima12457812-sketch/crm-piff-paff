@@ -4564,7 +4564,16 @@
 
       // 4. Prefixo de CRM geral NUNCA é Instagram (pertence ao Kanban/Carteira Principal de Clientes)
       const idStr = String(l.id || '').toLowerCase();
-      if (idStr.startsWith('crm-gab-') || idStr.startsWith('crm-fel-') || idStr.startsWith('crm-edu-') || idStr.startsWith('crm-may-')) {
+      if (
+        idStr.startsWith('crm-gab-') ||
+        idStr.startsWith('crm-fel-') ||
+        idStr.startsWith('crm-edu-') ||
+        idStr.startsWith('crm-may-') ||
+        idStr.startsWith('crm-bar-') ||
+        idStr.startsWith('crm-rod-') ||
+        idStr.startsWith('crm-kas-') ||
+        idStr.startsWith('crm-eds-')
+      ) {
         return false;
       }
 
@@ -4623,14 +4632,21 @@
         let cloudLeads = null;
 
         // 1. Tenta carregar via API Serverless do vendedor (Autenticação do backend sem bloqueio de RLS anon)
-        // Apenas para vendedores isolados (Rodrigo, Eduardo, Felipe, Mayara, Bárbara, Kasio)
-        if (sellerKey !== 'gabriel' && sellerKey !== 'edson') {
+        // Para todos os vendedores isolados (Rodrigo, Eduardo, Felipe, Mayara, Bárbara, Kasio) e também para Édson (Consolidado)
+        if (sellerKey !== 'gabriel') {
           try {
-            const apiRes = await fetch(`/api/${sellerKey}?channel=todos&limit=1000`);
+            const apiUrl = sellerKey === 'edson'
+              ? '/api/edson?limit=3000'
+              : `/api/${sellerKey}?channel=todos&limit=1000`;
+            const apiRes = await fetch(apiUrl);
             if (apiRes.ok) {
               const apiData = await apiRes.json();
               if (apiData && Array.isArray(apiData.leads)) {
-                cloudLeads = apiData.leads;
+                cloudLeads = apiData.leads.map(l => (sellerKey !== 'edson' ? {
+                  ...l,
+                  user_id: l.user_id || authUser.id,
+                  vendedor_id: l.vendedor_id || sellerKey
+                } : l));
               }
             }
           } catch (e) {
@@ -4667,8 +4683,20 @@
           const cloudInsta = [];
           const cloudWa = [];
 
+          const normalizeKanbanStage = (rawSt) => {
+            const s = String(rawSt || 'novos').toLowerCase().trim();
+            if (s === 'novo' || s === 'novos') return 'novos';
+            if (['abordagem', 'investigacao', 'investigação', 'qualificacao', 'qualificação', 'diagnostico'].includes(s)) return 'investigacao';
+            if (['conversa', 'projetos', 'projeto'].includes(s)) return 'projetos';
+            if (['proposta', 'orcamento', 'orçamento'].includes(s)) return 'proposta';
+            if (['fechamento', 'fechando'].includes(s)) return 'fechamento';
+            if (['concluidas', 'concluida', 'concluídas', 'concluído', 'ganho'].includes(s)) return 'concluidas';
+            return 'novos';
+          };
+
           userCloudLeads.forEach(l => {
-            if (isInstagramLead(l)) {
+            // Apenas Gabriel possui quadro separado de Instagram; para todos os demais vendedores, 100% dos leads ficam no Kanban principal
+            if (sellerKey === 'gabriel' && isInstagramLead(l)) {
               let instaStage = 'novo';
               const st = (l.stage || '').toLowerCase();
               if (st === 'investigacao' || st === 'abordagem') {
@@ -4688,6 +4716,7 @@
             } else {
               cloudWa.push({
                 ...l,
+                stage: normalizeKanbanStage(l.stage),
                 pipeline: 'whatsapp',
                 channel: 'whatsapp'
               });

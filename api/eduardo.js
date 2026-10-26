@@ -798,21 +798,26 @@ export default async function handler(req, res) {
       const isCountOnly = action === 'count' || action === 'contar' || action === 'total' || query.count === 'true';
 
       const compactLead = (l) => ({
+        ...l,
         id: l.id,
         name: l.name,
         phone: l.phone,
         instagram: l.instagram,
-        city: l.city,
+        city: l.city || 'Brasil',
         stage: l.stage,
         stage_label: l.stage_label || l.stage,
-        value: l.value,
-        temperature: l.temperature,
-        priority: l.priority,
-        commercial_line: l.commercial_line,
+        value: Number(l.value) || 0,
+        temperature: l.temperature || 'morno',
+        priority: l.priority || 'MEDIA',
+        commercial_line: l.commercial_line || 'Linha Premium',
         followup_status: l.followup_status || (l.stage === 'novo' ? 'Chamar Hoje' : 'Agendado'),
         followup_date: l.followup_date,
         channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
-        notes: l.notes ? (l.notes.length > 200 ? l.notes.substring(0, 200) + '...' : l.notes) : ''
+        pipeline: l.pipeline || (l.channel === 'instagram' ? 'instagram' : 'whatsapp'),
+        user_id: SELLER_USER_ID,
+        vendedor_id: 'eduardo',
+        categoria: l.categoria || 1,
+        notes: l.notes || ''
       });
 
       const requestedLimit = parseInt(query.limit || body.limit, 10);
