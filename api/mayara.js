@@ -9,7 +9,7 @@ import {
   filterActiveRecords,
   performSoftDeleteLead,
   recordAuditLog
-} from './_governance.js';
+} from '../lib/governance.js';
 
 const SELLER_USER_ID = 'b2222222-2222-2222-2222-222222222222';
 const SELLER_NAME = 'Mayara';

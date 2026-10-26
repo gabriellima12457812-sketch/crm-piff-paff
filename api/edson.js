@@ -12,7 +12,10 @@ import {
   recordAuditLog,
   DEFAULT_SUPABASE_URL,
   DEFAULT_SUPABASE_KEY
-} from './_governance.js';
+} from '../lib/governance.js';
+import authHandler from '../lib/auth.js';
+import setupAdminHandler from '../lib/setup-admin.js';
+import adminUsersHandler from '../lib/admin-users.js';
 
 const OWNER_ID = '99999999-9999-9999-9999-999999999999';
 const OWNER_NAME = 'Édson (Super Administrador)';
@@ -26,11 +29,23 @@ function getSupabaseConfig() {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  const govRoute = String(req.query?.gov_route || '').toLowerCase();
+  const reqUrl = String(req.url || '');
+  if (govRoute === 'auth' || reqUrl.startsWith('/api/auth')) {
+    return authHandler(req, res);
+  }
+  if (govRoute === 'setup_admin' || reqUrl.startsWith('/api/setup-admin')) {
+    return setupAdminHandler(req, res);
+  }
+  if (govRoute === 'admin_users' || reqUrl.startsWith('/api/admin/users')) {
+    return adminUsersHandler(req, res);
   }
 
   try {

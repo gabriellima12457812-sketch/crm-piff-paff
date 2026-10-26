@@ -8,7 +8,7 @@ import {
   filterActiveRecords,
   performSoftDeleteLead,
   recordAuditLog
-} from './_governance.js';
+} from '../lib/governance.js';
 
 const tokenCache = {
   gabriel: { token: null, expiresAt: 0 },

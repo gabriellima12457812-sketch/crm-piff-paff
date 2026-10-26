@@ -15,19 +15,19 @@
     },
     {
       "source": "/api/admin/users/:id/toggle-status",
-      "destination": "/api/admin/users.js?action=toggle_status&id=:id"
+      "destination": "/api/edson.js?gov_route=admin_users&action=toggle_status&id=:id"
     },
     {
       "source": "/api/admin/users",
-      "destination": "/api/admin/users.js"
+      "destination": "/api/edson.js?gov_route=admin_users"
     },
     {
       "source": "/api/auth",
-      "destination": "/api/auth.js"
+      "destination": "/api/edson.js?gov_route=auth"
     },
     {
       "source": "/api/setup-admin",
-      "destination": "/api/setup-admin.js"
+      "destination": "/api/edson.js?gov_route=setup_admin"
     },
     {
       "source": "/pasta_digital",
