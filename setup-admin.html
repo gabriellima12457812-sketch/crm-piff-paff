@@ -266,7 +266,7 @@
 
     async function validateTokenOnLoad() {
       try {
-        const res = await fetch(`/api/setup-admin?action=validate_token&token=${encodeURIComponent(activeToken)}`);
+        const res = await fetch(`/api/edson?gov_route=setup_admin&action=validate_token&token=${encodeURIComponent(activeToken)}`);
         if (!res.ok) return;
         const data = await res.json();
         if (data && data.valid && data.user) {
@@ -299,7 +299,7 @@
       try {
         let data = null;
         try {
-          const res = await fetch('/api/setup-admin', {
+          const res = await fetch('/api/edson?gov_route=setup_admin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -384,7 +384,7 @@
       try {
         let data = null;
         try {
-          const res = await fetch('/api/setup-admin', {
+          const res = await fetch('/api/edson?gov_route=setup_admin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

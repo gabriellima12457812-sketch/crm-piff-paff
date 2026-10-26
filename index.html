@@ -5402,7 +5402,7 @@
 
     async function recordClientAuditEvent(auditAction, resourceType, resourceId, details = {}) {
       try {
-        await fetch('/api/auth', {
+        await fetch('/api/edson?gov_route=auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -11412,7 +11412,7 @@
         btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-base"></i><span>Validando 2FA...</span>';
 
         try {
-          const res = await fetch('/api/auth', {
+          const res = await fetch('/api/edson?gov_route=auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -11471,7 +11471,7 @@
             // 0. Validação na API de Governança (/api/auth): verifica status ativo/inativo, dispositivo confiável e 2FA do Édson
             try {
               const savedTrustToken = localStorage.getItem('piffpaff_device_trust_token') || '';
-              const govRes = await fetch('/api/auth', {
+              const govRes = await fetch('/api/edson?gov_route=auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -11731,7 +11731,7 @@
         if (!tbody) return;
 
         try {
-          const res = await fetch('/api/admin/users?include_deleted=true');
+          const res = await fetch('/api/edson?gov_route=admin_users&include_deleted=true');
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.error || 'Erro ao carregar usuários');
 
@@ -11853,7 +11853,7 @@
         btn.textContent = 'Cadastrando...';
 
         try {
-          const res = await fetch('/api/admin/users', {
+          const res = await fetch('/api/edson?gov_route=admin_users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -11898,7 +11898,7 @@
 
       async function handleToggleUserStatus(userId, nextStatus) {
         try {
-          const res = await fetch(`/api/admin/users/${encodeURIComponent(userId)}/toggle-status`, {
+          const res = await fetch(`/api/edson?gov_route=admin_users&action=toggle_status&id=${encodeURIComponent(userId)}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -11921,7 +11921,7 @@
 
       async function handleRestoreDeletedLead(leadId) {
         try {
-          const res = await fetch('/api/admin/users', {
+          const res = await fetch('/api/edson?gov_route=admin_users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -11946,7 +11946,7 @@
 
       async function handleGenerateEdsonSetupLink() {
         try {
-          const res = await fetch('/api/setup-admin', {
+          const res = await fetch('/api/edson?gov_route=setup_admin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'generate_link' })
