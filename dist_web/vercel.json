@@ -126,7 +126,7 @@
       "destination": "/freelancer.html"
     },
     {
-      "source": "/((?!api/|freelancer|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar|setup-admin).*)",
+      "source": "/((?!api/|freelancer|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar|setup-admin|FORMULARIO_PEDIDO_CARIBE_CHAT).*)",
       "destination": "/index.html"
     }
   ],
