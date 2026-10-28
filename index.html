@@ -3371,7 +3371,32 @@
       kasio:   { id: '77777777-7777-7777-7777-777777777777', email: 'kasio@piffpaff.com.br',   name: 'Kasio',                prefix: 'CRM-KAS-', role: 'vendedor' },
       diana:   { id: '88888888-8888-8888-8888-888888888888', email: 'diana@piffpaff.com',      name: 'Diana',                prefix: 'CRM-DIA-', role: 'vendedor' }
     };
+    try {
+      const savedCustomSellers = JSON.parse(localStorage.getItem('piffpaff_custom_sellers') || '{}');
+      if (savedCustomSellers && typeof savedCustomSellers === 'object') {
+        Object.assign(SELLER_REGISTRY, savedCustomSellers);
+      }
+    } catch (e) {}
     window.SELLER_REGISTRY = SELLER_REGISTRY;
+
+    function registerDynamicSeller(sellerKey, sellerConf) {
+      if (!sellerKey || !sellerConf) return;
+      const sk = String(sellerKey).toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!sk) return;
+      SELLER_REGISTRY[sk] = {
+        id: sellerConf.id || SELLER_REGISTRY[sk]?.id || `usr-${sk}-${Date.now()}`,
+        email: sellerConf.email || SELLER_REGISTRY[sk]?.email || `${sk}@piffpaff.com`,
+        name: sellerConf.name || SELLER_REGISTRY[sk]?.name || (sk.charAt(0).toUpperCase() + sk.slice(1)),
+        prefix: sellerConf.prefix || SELLER_REGISTRY[sk]?.prefix || `CRM-${sk.substring(0, 3).toUpperCase().padEnd(3, 'X')}-`,
+        role: sellerConf.role === 'super_admin' ? 'owner' : (sellerConf.role || SELLER_REGISTRY[sk]?.role || 'vendedor')
+      };
+      try {
+        const saved = JSON.parse(localStorage.getItem('piffpaff_custom_sellers') || '{}');
+        saved[sk] = SELLER_REGISTRY[sk];
+        localStorage.setItem('piffpaff_custom_sellers', JSON.stringify(saved));
+      } catch (e) {}
+    }
+    window.registerDynamicSeller = registerDynamicSeller;
 
     function normalizeSellerKey(raw) {
       if (!raw) return '';
@@ -3386,11 +3411,11 @@
       if (s.includes('rodrigo')) return 'rodrigo';
       if (s.includes('diana')) return 'diana';
       if (s.includes('gabriel')) return 'gabriel';
-      const prefixKey = s.split('@')[0].replace(/[^a-z0-9]/g, '');
-      if (prefixKey && SELLER_REGISTRY[prefixKey]) return prefixKey;
       for (const [k, conf] of Object.entries(SELLER_REGISTRY)) {
         if (conf.email && conf.email.toLowerCase() === s) return k;
       }
+      const prefixKey = s.split('@')[0].replace(/[^a-z0-9]/g, '');
+      if (prefixKey) return prefixKey;
       return '';
     }
     window.normalizeSellerKey = normalizeSellerKey;
@@ -4084,9 +4109,13 @@
             } else if (email.includes('diana')) {
               avatarEl.textContent = 'DI';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-pink-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
-            } else {
+            } else if (email.includes('gabriel')) {
               avatarEl.textContent = 'GL';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
+            } else {
+              const initials = (shortName || email).replace(/[^A-Za-z]/g, '').substring(0, 2).toUpperCase() || 'VD';
+              avatarEl.textContent = initials;
+              avatarEl.className = 'w-6 h-6 rounded-lg bg-cyan-500 text-slate-950 font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
             }
           }
 
@@ -4258,7 +4287,16 @@
 
     function switchActiveSeller(sellerKey) {
       const normalizedKey = normalizeSellerKey(sellerKey) || 'gabriel';
-      const config = SELLER_REGISTRY[normalizedKey] || SELLER_REGISTRY.gabriel;
+      if (!SELLER_REGISTRY[normalizedKey]) {
+        registerDynamicSeller(normalizedKey, {
+          id: `usr-${normalizedKey}`,
+          email: `${normalizedKey}@piffpaff.com`,
+          name: normalizedKey.charAt(0).toUpperCase() + normalizedKey.slice(1),
+          prefix: `CRM-${normalizedKey.substring(0, 3).toUpperCase().padEnd(3, 'X')}-`,
+          role: 'vendedor'
+        });
+      }
+      const config = SELLER_REGISTRY[normalizedKey];
 
       // 1. Persistencia estrita no LocalStorage para sobreviver ao F5
       try {
@@ -4266,6 +4304,8 @@
         localStorage.setItem('piffpaff_active_seller_email', config.email);
         if (normalizedKey === 'edson') {
           localStorage.setItem('piffpaff_is_owner', 'true');
+        } else {
+          localStorage.removeItem('piffpaff_is_owner');
         }
       } catch (e) {}
 
@@ -4287,9 +4327,17 @@
       currentSession = fallbackSession;
       authUser = fallbackSession.user;
 
-      // Sincroniza seletor dropdown do topo
+      // Sincroniza seletor dropdown do topo (garantindo que a option exista antes de selecionar)
       const switcher = document.getElementById('header-seller-switcher');
-      if (switcher) switcher.value = normalizedKey;
+      if (switcher) {
+        if (!Array.from(switcher.options).some(opt => opt.value === normalizedKey)) {
+          const opt = document.createElement('option');
+          opt.value = normalizedKey;
+          opt.textContent = `💼 ${config.name || normalizedKey}`;
+          switcher.appendChild(opt);
+        }
+        switcher.value = normalizedKey;
+      }
 
       // Limpa dados em memória para transição limpa sem mistura de vendedor
       lastSyncedWaJson = '';
@@ -4852,7 +4900,7 @@
           const currentInstaJson = JSON.stringify(cloudInsta);
           const hasDataChanged = (currentWaJson !== lastSyncedWaJson) || (currentInstaJson !== lastSyncedInstaJson);
 
-          if (hasDataChanged && (cloudInsta.length > 0 || cloudWa.length > 0)) {
+          if (hasDataChanged && (sellerKey !== 'gabriel' || cloudInsta.length > 0 || cloudWa.length > 0)) {
             const isInitialLoad = !lastSyncedWaJson && !lastSyncedInstaJson;
             lastSyncedWaJson = currentWaJson;
             lastSyncedInstaJson = currentInstaJson;
@@ -11340,18 +11388,6 @@
       const pillText = document.getElementById('status-supabase-text');
       if (pillText) pillText.textContent = 'Supabase Conectado';
 
-      // Inicialização imediata com os dados para nunca exibir 0 clientes
-      initStorage();
-      initInstagramStorage();
-      renderKanban();
-      updateMetrics();
-      setupDragAndDrop();
-
-      // Sincronização imediata com o novo Supabase em nuvem
-      if (typeof syncFromSupabase === 'function') {
-        syncFromSupabase(true);
-      }
-
       // Vinculação garantida dos cliques nos cards de resumo de Follow-up
       const cardToday = document.getElementById('card-alert-today');
       if (cardToday) {
@@ -11375,7 +11411,7 @@
         });
       }
 
-      // Inicialização do Supabase Client e Verificação de Sessão Multi-Tenant
+      // Inicialização do Supabase Client e Verificação de Sessão Multi-Tenant ANTES de carregar leads locais
       getSupabaseClient();
       checkAuthSession().then(hasSession => {
         if (hasSession) {
@@ -11590,15 +11626,15 @@
                 }
 
                 // Login direto liberado (vendedor comum sem 2FA OU Édson com dispositivo confiável reconhecido)
-                const sellerKey = govData.user?.seller_key || normalizeSellerKey(email) || 'gabriel';
-                if (govData.user && !SELLER_REGISTRY[sellerKey]) {
-                  SELLER_REGISTRY[sellerKey] = {
+                const sellerKey = govData.user?.seller_key || govData.user?.key || normalizeSellerKey(email) || 'gabriel';
+                if (govData.user) {
+                  registerDynamicSeller(sellerKey, {
                     id: govData.user.id,
                     email: govData.user.email,
                     name: govData.user.name,
-                    prefix: `CRM-${sellerKey.substring(0, 3).toUpperCase()}-`,
+                    prefix: govData.user.prefix || `CRM-${sellerKey.substring(0, 3).toUpperCase().padEnd(3, 'X')}-`,
                     role: govData.user.role === 'super_admin' ? 'owner' : govData.user.role
-                  };
+                  });
                 }
                 switchActiveSeller(sellerKey);
                 if (govData.trusted_device_recognized) {
@@ -11972,13 +12008,13 @@
 
           if (data.user) {
             const sk = (data.user.seller_key || data.user.key || normalizeSellerKey(data.user.email) || email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
-            SELLER_REGISTRY[sk] = {
+            registerDynamicSeller(sk, {
               id: data.user.id,
               email: data.user.email,
               name: data.user.name,
-              prefix: data.user.prefix || `CRM-${sk.substring(0, 3).toUpperCase()}-`,
+              prefix: data.user.prefix || `CRM-${sk.substring(0, 3).toUpperCase().padEnd(3, 'X')}-`,
               role: data.user.role
-            };
+            });
             DEFAULT_PASSWORDS[sk] = password;
             localStorage.setItem('piffpaff_pwd_' + sk, password);
 
@@ -11993,7 +12029,10 @@
 
           closeNewUserModal();
           document.getElementById('form-new-user')?.reset();
-          showToast(`✅ Usuário "${name}" criado com sucesso (Login direto sem 2FA)!`, 'success');
+          showToast(
+            data.message || `✅ Usuário "${name}" cadastrado completo (Banco de Dados + API + Instância WhatsApp QR Code)!`,
+            'success'
+          );
           loadAdminGovernanceView();
         } catch (err) {
           showToast('Erro de comunicação ao criar usuário.', 'error');
@@ -12546,8 +12585,15 @@
           } else if (sellerKey === 'felipe') {
             avatarEl.textContent = 'FP';
             avatarEl.className = 'w-10 h-10 rounded-xl bg-indigo-500 text-white font-extrabold flex items-center justify-center text-sm font-heading shadow-md';
-          } else {
+          } else if (sellerKey === 'diana') {
+            avatarEl.textContent = 'DI';
+            avatarEl.className = 'w-10 h-10 rounded-xl bg-pink-500 text-white font-extrabold flex items-center justify-center text-sm font-heading shadow-md';
+          } else if (sellerKey === 'gabriel') {
             avatarEl.textContent = 'GL';
+            avatarEl.className = 'w-10 h-10 rounded-xl bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-sm font-heading shadow-md';
+          } else {
+            const initials = (sellerName || sellerKey).replace(/[^A-Za-z]/g, '').substring(0, 2).toUpperCase() || 'VD';
+            avatarEl.textContent = initials;
             avatarEl.className = 'w-10 h-10 rounded-xl bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-sm font-heading shadow-md';
           }
         }
@@ -12577,6 +12623,45 @@
         }
       }
 
+      async function ensureWhatsAppInstanceExists(sellerKey, evoUrl, evoKey) {
+        try {
+          const createRes = await fetch(`${evoUrl}/instance/create`, {
+            method: 'POST',
+            headers: {
+              'apikey': evoKey,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              instanceName: sellerKey,
+              token: `${sellerKey}-token-2026`,
+              qrcode: true,
+              integration: 'WHATSAPP-BAILEYS'
+            })
+          });
+          const createData = await createRes.json().catch(() => ({}));
+          // Configura webhook em background para capturar mensagens automaticamente
+          fetch(`${evoUrl}/webhook/set/${encodeURIComponent(sellerKey)}`, {
+            method: 'POST',
+            headers: {
+              'apikey': evoKey,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              webhook: {
+                enabled: true,
+                url: 'https://crm-piff-paff-v2.vercel.app/api/n8n-webhook',
+                byEvents: false,
+                base64: false,
+                events: ['MESSAGES_UPSERT']
+              }
+            })
+          }).catch(() => {});
+          return createData;
+        } catch (e) {
+          return null;
+        }
+      }
+
       async function checkCurrentSellerWhatsAppStatus(isManual = false) {
         const sellerKey = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
         const evoUrl = getEvolutionApiUrl();
@@ -12586,8 +12671,14 @@
           const res = await fetch(`${evoUrl}/instance/connectionState/${sellerKey}`, {
             headers: { 'apikey': evoKey }
           });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
+          if (!res.ok) {
+            if (res.status === 404) {
+              await ensureWhatsAppInstanceExists(sellerKey, evoUrl, evoKey);
+            } else {
+              throw new Error(`HTTP ${res.status}`);
+            }
+          }
+          const data = res.ok ? await res.json() : { instance: { state: 'close' } };
           const state = data?.instance?.state || 'close';
           
           updateWhatsAppPill(state);
@@ -12622,7 +12713,7 @@
           const disconnectedBox = document.getElementById('wa-disconnected-state');
           connectedBox?.classList.add('hidden');
           disconnectedBox?.classList.remove('hidden');
-          if (isManual) showToast('Não foi possível conectar ao servidor WhatsApp (Evolution API). Verifique o Docker Desktop.', 'error');
+          if (isManual) showToast('Não foi possível conectar ao servidor WhatsApp (Evolution API).', 'error');
           return 'error';
         }
       }
@@ -12645,19 +12736,37 @@
         stopQrCountdown();
 
         try {
-          const res = await fetch(`${evoUrl}/instance/connect/${sellerKey}`, {
+          let res = await fetch(`${evoUrl}/instance/connect/${sellerKey}`, {
             headers: { 'apikey': evoKey }
           });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
+          let data = null;
 
-          if (data && data.base64) {
-            if (imgEl) imgEl.src = data.base64;
+          // Se a instância ainda não existir na Evolution API (404), cria automaticamente na hora!
+          if (!res.ok) {
+            const created = await ensureWhatsAppInstanceExists(sellerKey, evoUrl, evoKey);
+            if (created && created.qrcode && (created.qrcode.base64 || created.qrcode.code)) {
+              data = created.qrcode;
+            } else {
+              res = await fetch(`${evoUrl}/instance/connect/${sellerKey}`, {
+                headers: { 'apikey': evoKey }
+              });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              data = await res.json();
+            }
+          } else {
+            data = await res.json();
+          }
+
+          const base64Qr = data?.base64 || data?.qrcode?.base64;
+          const rawCodeQr = data?.code || data?.qrcode?.code;
+
+          if (base64Qr) {
+            if (imgEl) imgEl.src = base64Qr;
             loadingEl?.classList.add('hidden');
             wrapperEl?.classList.remove('hidden');
             startQrCountdown();
-          } else if (data && data.code) {
-            if (imgEl) imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(data.code)}`;
+          } else if (rawCodeQr) {
+            if (imgEl) imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(rawCodeQr)}`;
             loadingEl?.classList.add('hidden');
             wrapperEl?.classList.remove('hidden');
             startQrCountdown();

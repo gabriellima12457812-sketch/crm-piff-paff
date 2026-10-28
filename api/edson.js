@@ -59,6 +59,107 @@ export default async function handler(req, res) {
 
     const { state: govState } = await loadGovernanceState();
 
+    // =========================================================================
+    // WEBHOOK UNIVERSAL WHATSAPP EVOLUTION API (/api/n8n-webhook)
+    // Atende Diana e qualquer novo vendedor criado pela conta do Édson!
+    // =========================================================================
+    if (govRoute === 'n8n_webhook' || reqUrl.startsWith('/api/n8n-webhook')) {
+      let whBody = req.body;
+      if (typeof whBody === 'string') {
+        try { whBody = JSON.parse(whBody); } catch (e) { whBody = {}; }
+      }
+      whBody = whBody || {};
+
+      const instanceName = String(whBody.instance || whBody?.data?.instance || req.query?.seller || '').toLowerCase().trim();
+      const msgData = whBody.data || whBody;
+      const remoteJid = String(msgData?.key?.remoteJid || msgData?.remoteJid || '');
+      const fromMe = Boolean(msgData?.key?.fromMe);
+
+      // Ignora grupos, status@broadcast ou sem número
+      if (!instanceName || !remoteJid || remoteJid.includes('@g.us') || remoteJid.includes('status@broadcast')) {
+        return res.status(200).json({ ok: true, ignored: true });
+      }
+
+      const rawPhone = remoteJid.replace(/@.*$/, '').replace(/\D/g, '');
+      if (rawPhone.length < 8) {
+        return res.status(200).json({ ok: true, ignored: true });
+      }
+
+      const pushName = String(msgData?.pushName || '').trim();
+      const textMsg = String(
+        msgData?.message?.conversation ||
+        msgData?.message?.extendedTextMessage?.text ||
+        msgData?.message?.imageMessage?.caption ||
+        ''
+      ).trim();
+
+      const sellerUser = (govState?.users || []).find(
+        u => !u.deleted_at && (u.key === instanceName || u.email.split('@')[0].toLowerCase() === instanceName)
+      );
+      const sellerUserId = sellerUser?.id || (instanceName === 'diana' ? '88888888-8888-8888-8888-888888888888' : OWNER_ID);
+      const sellerPrefix = sellerUser?.prefix || `CRM-${instanceName.substring(0, 3).toUpperCase().padEnd(3, 'X')}-`;
+      const nowIso = new Date().toISOString();
+      const shortPhone8 = rawPhone.slice(-8);
+
+      // Verifica se já existe lead com esse telefone na carteira deste vendedor
+      const checkUrl = `${url}/rest/v1/leads?or=(vendedor_id.eq.${encodeURIComponent(instanceName)},user_id.eq.${encodeURIComponent(sellerUserId)})&phone=ilike.*${encodeURIComponent(shortPhone8)}*&limit=1`;
+      const existingRes = await fetch(checkUrl, { headers });
+      const existingList = existingRes.ok ? ((await existingRes.json()) || []) : [];
+
+      if (Array.isArray(existingList) && existingList.length > 0) {
+        const existingLead = existingList[0];
+        const updatedNotes = textMsg
+          ? `${existingLead.notes || ''}\n[${new Date().toLocaleString('pt-BR')}] ${fromMe ? 'Vendedor' : 'Cliente'}: ${textMsg}`.trim()
+          : (existingLead.notes || '');
+        await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}`, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({
+            last_interaction: nowIso,
+            updated_at: nowIso,
+            notes: updatedNotes.slice(-4000)
+          })
+        });
+        return res.status(200).json({ ok: true, action: 'updated', lead_id: existingLead.id, seller: instanceName });
+      }
+
+      // Cria novo lead automaticamente no Kanban do vendedor
+      const newLeadId = `${sellerPrefix}${rawPhone.slice(-6)}`;
+      const clientName = (!fromMe && pushName && pushName.toLowerCase() !== instanceName)
+        ? pushName
+        : `Cliente WhatsApp (${rawPhone.slice(-4)})`;
+
+      const newLeadPayload = {
+        id: newLeadId,
+        user_id: sellerUserId,
+        vendedor_id: instanceName,
+        name: clientName,
+        phone: rawPhone,
+        city: 'Brasil',
+        stage: 'novos',
+        temperature: 'morno',
+        priority: 'MEDIA',
+        value: 0,
+        channel: 'whatsapp',
+        pipeline: 'whatsapp',
+        notes: textMsg ? `[WhatsApp ${new Date().toLocaleString('pt-BR')}]: ${textMsg}` : 'Lead capturado automaticamente via WhatsApp QR Code.',
+        last_interaction: nowIso,
+        created_at: nowIso,
+        updated_at: nowIso
+      };
+
+      await fetch(`${url}/rest/v1/leads`, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: JSON.stringify(newLeadPayload)
+      });
+
+      return res.status(200).json({ ok: true, action: 'created', lead_id: newLeadId, seller: instanceName });
+    }
+
     // Super Admin Actions: Restaurar itens com Soft Delete ou registrar auditoria
     if (req.method === 'POST' || req.method === 'PATCH') {
       let body = req.body;

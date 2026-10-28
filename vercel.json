@@ -30,6 +30,14 @@
       "destination": "/api/edson?gov_route=setup_admin"
     },
     {
+      "source": "/api/n8n-webhook",
+      "destination": "/api/edson?gov_route=n8n_webhook"
+    },
+    {
+      "source": "/api/vendedor/:seller",
+      "destination": "/api/edson?seller=:seller"
+    },
+    {
       "source": "/pasta_digital",
       "destination": "/pasta_digital.html"
     },
