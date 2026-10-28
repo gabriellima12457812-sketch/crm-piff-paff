@@ -21,7 +21,8 @@
     <div class="flex items-center justify-center gap-2">
       <label class="text-xs text-slate-400 font-semibold uppercase">Vendedor:</label>
       <select id="sel-seller" onchange="loadQrCode()" class="bg-[#121F30] border border-white/10 text-emerald-400 font-bold text-sm px-3 py-1.5 rounded-xl focus:outline-none">
-        <option value="gabriel" selected>Gabriel (47 99986-2448)</option>
+        <option value="gabriel">Gabriel (47 99986-2448)</option>
+        <option value="sebastiao">Sebastião</option>
         <option value="diana">Diana (47 99641-3082)</option>
         <option value="mayara">Mayara (47 99661-0600)</option>
         <option value="barbara">Bárbara (47 99648-7189)</option>
@@ -159,8 +160,38 @@
       }, 1000);
     }
 
-    loadQrCode();
-    startTimer();
+    async function initSellerOptions() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const querySeller = (urlParams.get('vendedor') || urlParams.get('seller') || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const select = document.getElementById('sel-seller');
+
+      try {
+        const res = await fetch('/api/edson?gov_route=admin_users');
+        if (res.ok) {
+          const data = await res.json();
+          const users = data.users || [];
+          users.forEach(u => {
+            if (u.status === 'active' && !u.deleted_at) {
+              const sk = (u.key || u.email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (sk && !Array.from(select.options).some(o => o.value === sk)) {
+                const opt = document.createElement('option');
+                opt.value = sk;
+                opt.textContent = `${u.name || sk}${u.phone ? ` (${u.phone})` : ''}`;
+                select.appendChild(opt);
+              }
+            }
+          });
+        }
+      } catch (e) {}
+
+      if (querySeller && Array.from(select.options).some(o => o.value === querySeller)) {
+        select.value = querySeller;
+      }
+      await loadQrCode();
+      startTimer();
+    }
+
+    initSellerOptions();
   </script>
 </body>
 </html>

@@ -61,6 +61,13 @@ const SELLERS = {
     name: 'Diana',
     leadPrefix: 'CRM-DIA-WA',
     origem: 'WhatsApp Diana'
+  },
+  sebastiao: {
+    user_id: '528bdca6-62a3-4dd5-bc45-0e77e9174e67',
+    vendedor_id: 'sebastiao',
+    name: 'Sebastião',
+    leadPrefix: 'CRM-SEB-WA',
+    origem: 'WhatsApp Sebastião'
   }
 };
 
@@ -332,6 +339,8 @@ export default async function handler(req, res) {
     let seller = SELLERS.gabriel;
     if (rawSeller.includes('diana')) {
       seller = SELLERS.diana;
+    } else if (rawSeller.includes('sebastiao')) {
+      seller = SELLERS.sebastiao;
     } else if (rawSeller.includes('barbara')) {
       seller = SELLERS.barbara;
     } else if (rawSeller.includes('eduardo')) {

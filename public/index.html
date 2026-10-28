@@ -414,6 +414,7 @@
           <option value="rodrigo">⚡ Rodrigo</option>
           <option value="kasio">💼 Kasio</option>
           <option value="diana">💼 Diana</option>
+          <option value="sebastiao">💼 Sebastião</option>
         </select>
       </div>
 
@@ -3373,7 +3374,8 @@
       eduardo: { id: 'd4444444-4444-4444-4444-444444444444', email: 'eduardo@piffpaff.com.br', name: 'Eduardo',      prefix: 'CRM-EDU-', role: 'vendedor' },
       rodrigo: { id: 'e5555555-5555-5555-5555-555555555555', email: 'rodrigo@piffpaff.com.br', name: 'Especialista Rodrigo', prefix: 'CRM-ROD-', role: 'vendedor' },
       kasio:   { id: '77777777-7777-7777-7777-777777777777', email: 'kasio@piffpaff.com.br',   name: 'Kasio',                prefix: 'CRM-KAS-', role: 'vendedor' },
-      diana:   { id: '88888888-8888-8888-8888-888888888888', email: 'diana@piffpaff.com',      name: 'Diana',                prefix: 'CRM-DIA-', role: 'vendedor' }
+      diana:   { id: '88888888-8888-8888-8888-888888888888', email: 'diana@piffpaff.com',      name: 'Diana',                prefix: 'CRM-DIA-', role: 'vendedor' },
+      sebastiao: { id: '528bdca6-62a3-4dd5-bc45-0e77e9174e67', email: 'sebastiao@piffpaff.com.br', name: 'Sebastião', prefix: 'CRM-SEB-', role: 'vendedor' }
     };
     try {
       const savedCustomSellers = JSON.parse(localStorage.getItem('piffpaff_custom_sellers') || '{}');
@@ -3414,6 +3416,7 @@
       if (s.includes('kasio') || s.includes('cassio')) return 'kasio';
       if (s.includes('rodrigo')) return 'rodrigo';
       if (s.includes('diana')) return 'diana';
+      if (s.includes('sebastiao')) return 'sebastiao';
       if (s.includes('gabriel')) return 'gabriel';
       for (const [k, conf] of Object.entries(SELLER_REGISTRY)) {
         if (conf.email && conf.email.toLowerCase() === s) return k;
@@ -3433,7 +3436,8 @@
       eduardo: 'Eduardo@2026',
       rodrigo: 'Rodrigo@2026',
       kasio: 'Kasio@2026',
-      diana: 'Diana@2026'
+      diana: 'Diana@2026',
+      sebastiao: '123456'
     };
 
     function getSellerPassword(sellerKey) {
@@ -11391,6 +11395,33 @@
       }
       const pillText = document.getElementById('status-supabase-text');
       if (pillText) pillText.textContent = 'Supabase Conectado';
+
+      // Sincroniza dinamicamente usuários e vendedores ativos do CRM na inicialização
+      fetch('/api/edson?gov_route=admin_users').then(r => r.json()).then(data => {
+        if (data && Array.isArray(data.users)) {
+          const switcher = document.getElementById('header-seller-switcher');
+          data.users.forEach(u => {
+            if (u.status === 'active' && !u.deleted_at && u.email) {
+              const sk = (u.key || u.email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (sk && !SELLER_REGISTRY[sk]) {
+                SELLER_REGISTRY[sk] = {
+                  id: u.id,
+                  email: u.email,
+                  name: u.name,
+                  prefix: u.prefix || `CRM-${sk.substring(0, 3).toUpperCase().padEnd(3, 'X')}-`,
+                  role: u.role === 'super_admin' ? 'owner' : u.role
+                };
+              }
+              if (switcher && sk && !Array.from(switcher.options).some(opt => opt.value === sk)) {
+                const opt = document.createElement('option');
+                opt.value = sk;
+                opt.textContent = `💼 ${u.name || sk}`;
+                switcher.appendChild(opt);
+              }
+            }
+          });
+        }
+      }).catch(() => {});
 
       // Vinculação garantida dos cliques nos cards de resumo de Follow-up
       const cardToday = document.getElementById('card-alert-today');
