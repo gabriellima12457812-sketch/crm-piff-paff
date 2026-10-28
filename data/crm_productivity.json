@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "0733d69c-387b-43be-88d7-07e7eb3704bd",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-557991483020",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "557991483020",
+        "name": "Rafael Galvao Fonseca",
+        "channel": "whatsapp",
+        "message": "[Áudio recebido do cliente]"
+      },
+      "created_at": "2026-10-28T21:23:19.737Z"
+    },
+    {
       "id": "89c2f559-2ecf-4cb4-b9db-64473057f546",
       "user_id": "88888888-8888-8888-8888-888888888888",
       "lead_id": "CRM-DIA-WA-558391159145",
@@ -72,5 +85,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-28T21:14:08.988Z"
+  "updated_at": "2026-10-28T21:23:19.737Z"
 }
