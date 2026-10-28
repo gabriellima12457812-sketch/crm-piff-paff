@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "ec4580f9-d55a-4f4a-bd6b-f2ed47ce882e",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-557192040237",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "557192040237",
+        "name": "Diego Seixas",
+        "channel": "whatsapp",
+        "message": "Boa tarde"
+      },
+      "created_at": "2026-10-28T20:50:02.413Z"
+    },
+    {
       "id": "6d4a0df3-fa86-4006-9f84-277b39bc12fd",
       "user_id": "gabriel",
       "lead_id": "lead-live-check",
@@ -46,5 +59,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-28T20:33:23.492Z"
+  "updated_at": "2026-10-28T20:50:02.413Z"
 }
