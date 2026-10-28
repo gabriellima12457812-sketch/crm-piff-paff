@@ -30,6 +30,14 @@
       "destination": "/api/edson?gov_route=setup_admin"
     },
     {
+      "source": "/api/n8n-webhook",
+      "destination": "/api/edson?gov_route=n8n_webhook"
+    },
+    {
+      "source": "/api/vendedor/:seller",
+      "destination": "/api/edson?seller=:seller"
+    },
+    {
       "source": "/pasta_digital",
       "destination": "/pasta_digital.html"
     },
@@ -110,7 +118,15 @@
       "destination": "/api/rodrigo.js?action=moveInstagramLeadToWhatsApp"
     },
     {
-      "source": "/((?!api/|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar|setup-admin).*)",
+      "source": "/freelancer",
+      "destination": "/freelancer.html"
+    },
+    {
+      "source": "/freelancer-bc",
+      "destination": "/freelancer.html"
+    },
+    {
+      "source": "/((?!api/|freelancer|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar|setup-admin).*)",
       "destination": "/index.html"
     }
   ],
