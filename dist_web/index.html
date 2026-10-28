@@ -4862,6 +4862,8 @@
                 if (cL.last_interaction) {
                   target.last_interaction = cL.last_interaction;
                 }
+                target.followup_date = cL.followup_date || null;
+                target.followup_status = target.followup_date ? (target.followup_date === formatYMD(new Date()) ? 'Chamar Hoje' : (target.followup_date < formatYMD(new Date()) ? 'Atrasado' : 'Agendado')) : 'Sem Follow-up';
               } else if (cPhone && phoneMap.has(cPhone)) {
                 const target = baseMap.get(phoneMap.get(cPhone));
                 if (target) {
@@ -4871,6 +4873,8 @@
                   if (cL.stage && cL.stage !== 'novos') {
                     target.stage = cL.stage;
                   }
+                  target.followup_date = cL.followup_date || null;
+                  target.followup_status = target.followup_date ? (target.followup_date === formatYMD(new Date()) ? 'Chamar Hoje' : (target.followup_date < formatYMD(new Date()) ? 'Atrasado' : 'Agendado')) : 'Sem Follow-up';
                 }
               }
             });
@@ -6900,33 +6904,51 @@
     }
 
     async function removeFromFollowup(leadId) {
-      let isInsta = false;
-      let lead = (leads || []).find(l => String(l.id) === String(leadId));
-      if (!lead && (typeof instagramLeads !== 'undefined' && instagramLeads)) {
-        lead = instagramLeads.find(l => String(l.id) === String(leadId));
-        if (lead) isInsta = true;
-      }
-      if (!lead) return;
-      if (!confirm(`Deseja tirar "${lead.name}" da lista de follow-up?\n(O cliente continuará cadastrado no CRM, apenas sairá da fila de follow-up).`)) return;
+      if (!leadId) return;
+      const targetId = String(leadId).trim();
+      const allMatches = [];
 
-      lead.followup_date = null;
-      lead.followup_status = 'Sem Follow-up';
-      lead.last_interaction = new Date().toISOString();
-      if (isInsta) {
-        saveInstagramStorage();
-        if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
-      } else {
-        saveStorage();
+      (leads || []).forEach(l => {
+        if (l && (String(l.id) === targetId || (l.phone && targetId.includes(String(l.phone))))) {
+          allMatches.push(l);
+        }
+      });
+      if (typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads)) {
+        instagramLeads.forEach(l => {
+          if (l && (String(l.id) === targetId || (l.phone && targetId.includes(String(l.phone))))) {
+            allMatches.push(l);
+          }
+        });
       }
+
+      const primaryLead = allMatches[0] || (leads || []).find(l => String(l.id) === targetId) || ((typeof instagramLeads !== 'undefined' && instagramLeads) ? instagramLeads.find(l => String(l.id) === targetId) : null);
+      if (!primaryLead && allMatches.length === 0) return;
+
+      const leadName = primaryLead ? primaryLead.name : 'Contato';
+      if (!confirm(`Deseja tirar "${leadName}" da lista de follow-up?\n(O cliente continuará cadastrado no CRM, apenas sairá da fila de follow-up).`)) return;
+
+      allMatches.forEach(l => {
+        l.followup_date = null;
+        l.followup_status = 'Sem Follow-up';
+        l.last_interaction = new Date().toISOString();
+      });
+
+      saveStorage();
+      if (typeof saveInstagramStorage === 'function') saveInstagramStorage();
+      if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
+
       renderFollowupCenter();
       renderClientsTable();
       renderKanban();
-      showToast(`Tirando "${lead.name}" da lista de follow-up...`, 'info');
-      try {
-        await syncLeadToSupabase(lead);
-        showToast(`"${lead.name}" foi tirado da lista de follow-up com sucesso!`, 'success');
-      } catch (e) {
-        console.warn('[Sync] Erro sync nuvem:', e);
+
+      showToast(`"${leadName}" foi tirado da lista de follow-up com sucesso!`, 'success');
+
+      if (primaryLead) {
+        try {
+          await syncLeadToSupabase(primaryLead);
+        } catch (e) {
+          console.warn('[Sync] Erro sync nuvem:', e);
+        }
       }
     }
     window.removeFromFollowup = removeFromFollowup;
