@@ -483,6 +483,15 @@
               <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 font-bold">BI</span>
             </button>
 
+            <!-- Produtividade Comercial & Rastreamento Automático -->
+            <button data-view="productivity" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent group" title="Rastreamento de Chamadas, Inbound e Remarketing Semanal">
+              <span class="flex items-center gap-2.5">
+                <i class="ph-bold ph-phone-call text-lg text-amber-400"></i>
+                <span class="group-hover:text-amber-300 transition">Produtividade</span>
+              </span>
+              <span id="badge-productivity-calls" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/25">Semanal</span>
+            </button>
+
             <button data-view="followup" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:text-white hover:bg-white/5 border border-transparent">
               <span class="flex items-center gap-2.5">
                 <i class="ph-bold ph-clock text-lg"></i>
@@ -622,6 +631,10 @@
             <button data-view="dashboard" class="nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
               <i class="ph-bold ph-chart-donut text-xl text-purple-400"></i>
               <span>Dashboard & Metas</span>
+            </button>
+            <button data-view="productivity" class="nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
+              <i class="ph-bold ph-phone-call text-xl text-amber-400"></i>
+              <span>Produtividade Semanal</span>
             </button>
             <button data-view="followup" class="nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/5">
               <i class="ph-bold ph-clock text-xl"></i>
@@ -1667,6 +1680,191 @@
       </section>
 
       <!-- ======================================================== -->
+      <!-- VIEW: PRODUTIVIDADE COMERCIAL & RASTREAMENTO SEMANAL -->
+      <!-- ======================================================== -->
+      <section id="view-productivity" class="view-content flex-1 p-4 lg:p-6 hidden flex flex-col">
+        <!-- Sub-header de Produtividade -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <div class="flex items-center gap-2.5 mb-1">
+              <span class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl shadow-lg shadow-amber-500/20">
+                <i class="ph-bold ph-phone-call"></i>
+              </span>
+              <h1 class="text-2xl font-heading font-extrabold text-white">Produtividade Comercial</h1>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>100% Automático</span>
+              </span>
+            </div>
+            <p class="text-xs text-slate-400">Rastreamento de ligações telefônicas, contatos inbound e remarketing com consolidação semanal (Segunda a Domingo).</p>
+          </div>
+
+          <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <!-- Navegador de Semanas -->
+            <div class="inline-flex items-center bg-[#14212E] border border-white/10 rounded-xl p-1 gap-1">
+              <button onclick="navigateProductivityWeek(-1)" class="px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="Semana Anterior">
+                <i class="ph-bold ph-caret-left"></i>
+                <span class="hidden sm:inline">Anterior</span>
+              </button>
+              <button onclick="navigateProductivityWeek(0, true)" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition cursor-pointer" title="Semana Atual">
+                Hoje
+              </button>
+              <button onclick="navigateProductivityWeek(1)" class="px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="Próxima Semana">
+                <span class="hidden sm:inline">Próxima</span>
+                <i class="ph-bold ph-caret-right"></i>
+              </button>
+            </div>
+
+            <!-- Seletor de Vendedor -->
+            <div class="relative">
+              <select id="prod-seller-select" onchange="changeProductivitySeller(this.value)" class="bg-[#14212E] border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-amber-400 transition cursor-pointer">
+                <option value="all">💼 Toda a Equipe (Consolidado)</option>
+                <option value="gabriel">Gabriel Lima</option>
+                <option value="felipe">Felipe</option>
+                <option value="mayara">Mayara</option>
+                <option value="barbara">Bárbara</option>
+                <option value="eduardo">Eduardo</option>
+                <option value="rodrigo">Rodrigo</option>
+                <option value="kasio">Kasio</option>
+                <option value="diana">Diana</option>
+              </select>
+            </div>
+
+            <!-- Botão de Atualizar -->
+            <button onclick="loadProductivityDashboard(true)" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition cursor-pointer" title="Atualizar Métricas">
+              <i class="ph-bold ph-arrows-clockwise text-base" id="prod-refresh-icon"></i>
+            </button>
+
+            <!-- Botão de Simulação / Registro Rápido -->
+            <button onclick="openManualCallModal()" class="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer">
+              <i class="ph-bold ph-phone-plus text-sm"></i>
+              <span>Simular Ligação</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner com Período da Semana Atual -->
+        <div class="mb-6 p-4 rounded-2xl bg-gradient-to-r from-[#14212E] via-[#101C27] to-[#14212E] border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-lg">
+              <i class="ph-bold ph-calendar"></i>
+            </span>
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Semana de Produção (Segunda a Domingo)</span>
+              <h3 class="text-sm sm:text-base font-heading font-bold text-white" id="prod-week-range-text">Carregando período...</h3>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs px-3 py-1 rounded-full bg-white/5 text-slate-300 font-medium" id="prod-seller-badge-text">Equipe Comercial</span>
+          </div>
+        </div>
+
+        <!-- 4 CARDS DE KPIS PRINCIPAIS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <!-- CARD 1: TOTAL DE CHAMADAS -->
+          <div class="p-5 rounded-2xl bg-[#14212E] border border-white/5 hover:border-amber-500/30 transition space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold uppercase tracking-wider">
+              <span>Chamadas Realizadas</span>
+              <span class="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center text-base"><i class="ph-bold ph-phone"></i></span>
+            </div>
+            <div class="text-3xl font-heading font-black text-white" id="prod-kpi-total-calls">0</div>
+            <div class="flex items-center gap-2 text-xs pt-1 border-t border-white/5">
+              <span class="text-emerald-400 font-bold" id="prod-kpi-answered-calls">0 atendidas</span>
+              <span class="text-slate-600">•</span>
+              <span class="text-rose-400 font-bold" id="prod-kpi-noanswer-calls">0 não atendidas</span>
+            </div>
+            <div class="text-[11px] text-slate-400 font-medium">
+              Taxa de atendimento: <span class="font-bold text-amber-300" id="prod-kpi-answer-rate">0%</span>
+            </div>
+          </div>
+
+          <!-- CARD 2: TEMPO TOTAL FALADO -->
+          <div class="p-5 rounded-2xl bg-[#14212E] border border-white/5 hover:border-emerald-500/30 transition space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold uppercase tracking-wider">
+              <span>Tempo Total Falado</span>
+              <span class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-base"><i class="ph-bold ph-hourglass-high"></i></span>
+            </div>
+            <div class="text-3xl font-heading font-black text-emerald-400" id="prod-kpi-total-time">0s</div>
+            <div class="flex items-center gap-2 text-xs pt-1 border-t border-white/5 text-slate-400">
+              <span>Duração média:</span>
+              <strong class="text-emerald-300 font-bold" id="prod-kpi-avg-time">0s / ligação</strong>
+            </div>
+            <div class="text-[11px] text-slate-400 font-medium">
+              Apenas chamadas atendidas (>0s)
+            </div>
+          </div>
+
+          <!-- CARD 3: NOVOS CONTATOS INBOUND -->
+          <div class="p-5 rounded-2xl bg-[#14212E] border border-white/5 hover:border-cyan-500/30 transition space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold uppercase tracking-wider">
+              <span>Novos Contatos Inbound</span>
+              <span class="w-8 h-8 rounded-lg bg-cyan-500/15 text-cyan-400 flex items-center justify-center text-base"><i class="ph-bold ph-chat-teardrop-dots"></i></span>
+            </div>
+            <div class="text-3xl font-heading font-black text-cyan-400" id="prod-kpi-inbound-total">0</div>
+            <div class="flex items-center gap-2 text-xs pt-1 border-t border-white/5 text-slate-400">
+              <span>Entrada espontânea de clientes</span>
+            </div>
+            <div class="text-[11px] text-slate-400 font-medium">
+              Média: <strong class="text-cyan-300 font-bold" id="prod-kpi-inbound-avg">0 / dia</strong>
+            </div>
+          </div>
+
+          <!-- CARD 4: AÇÕES DE REMARKETING -->
+          <div class="p-5 rounded-2xl bg-[#14212E] border border-white/5 hover:border-purple-500/30 transition space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold uppercase tracking-wider">
+              <span>Ações de Remarketing</span>
+              <span class="w-8 h-8 rounded-lg bg-purple-500/15 text-purple-400 flex items-center justify-center text-base"><i class="ph-bold ph-arrow-counter-clockwise"></i></span>
+            </div>
+            <div class="text-3xl font-heading font-black text-purple-400" id="prod-kpi-remarketing-total">0</div>
+            <div class="flex items-center gap-2 text-xs pt-1 border-t border-white/5 text-slate-400">
+              <span>Leads inativos há mais de 48h</span>
+            </div>
+            <div class="text-[11px] text-slate-400 font-medium">
+              Reativação proativa da carteira
+            </div>
+          </div>
+        </div>
+
+        <!-- VISÃO SEMANAL DETALHADA: SEGUNDA A DOMINGO (7 COLUNAS DIÁRIAS) -->
+        <div class="space-y-3 mb-8">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <i class="ph-bold ph-calendar-check text-amber-400 text-base"></i>
+              <span>Desempenho Diário da Semana (Segunda a Domingo)</span>
+            </h2>
+            <span class="text-xs text-slate-500">Horário Oficial de Brasília</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3" id="prod-week-days-container">
+            <!-- 7 Cards diários renderizados dinamicamente -->
+          </div>
+        </div>
+
+        <!-- FEED E LINHA DO TEMPO DE CHAMADAS & ATIVIDADES RECENTES -->
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/10">
+            <div>
+              <h2 class="text-base font-heading font-bold text-white flex items-center gap-2">
+                <i class="ph-bold ph-clock-counter-clockwise text-amber-400"></i>
+                <span>Histórico de Chamadas & Ações Registradas</span>
+              </h2>
+              <p class="text-xs text-slate-400">Registro detalhado de ligações, durações e interações com status de atendimento.</p>
+            </div>
+            <div class="inline-flex rounded-xl bg-[#14212E] border border-white/10 p-1 gap-1 text-xs font-semibold">
+              <button onclick="filterProductivityActivityType('all')" id="prod-tab-all" class="px-3 py-1.5 rounded-lg bg-white/10 text-white font-bold transition">Todas</button>
+              <button onclick="filterProductivityActivityType('CALL')" id="prod-tab-calls" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Ligações</button>
+              <button onclick="filterProductivityActivityType('INBOUND_CONTACT')" id="prod-tab-inbound" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Inbound</button>
+              <button onclick="filterProductivityActivityType('REMARKETING')" id="prod-tab-remarketing" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Remarketing</button>
+            </div>
+          </div>
+
+          <div id="prod-activities-container" class="space-y-2.5 pb-12">
+            <!-- Renderizado dinamicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
       <!-- VIEW: GESTÃO DE USUÁRIOS, AUDITORIA & SOFT DELETE (EDSON) -->
       <!-- ======================================================== -->
       <section id="view-users" class="view-content flex-1 p-4 lg:p-6 hidden flex flex-col">
@@ -2129,6 +2327,10 @@
             <i class="ph-bold ph-speaker-high text-base"></i>
             <span>Ouvir Análise</span>
           </button>
+          <button type="button" id="btn-call-lead-detail" onclick="startAutoCallForCurrentLead()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-bold transition active:scale-95 cursor-pointer" title="Iniciar ligação rastreada">
+            <i class="ph-bold ph-phone-outgoing text-base"></i>
+            <span>Ligar</span>
+          </button>
           <a id="detail-wa-link" href="#" target="_blank" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-bold transition active:scale-95">
             <i class="ph-bold ph-whatsapp-logo text-base"></i>
             <span>WhatsApp</span>
@@ -2275,6 +2477,26 @@
             <button id="btn-save-quick-note" class="px-3.5 py-2 rounded-xl bg-[#00D2D3]/20 text-[#00D2D3] hover:bg-[#00D2D3]/30 border border-[#00D2D3]/40 text-xs font-bold transition">
               Adicionar
             </button>
+          </div>
+        </div>
+
+        <!-- RASTREAMENTO AUTOMÁTICO DE CHAMADAS & PRODUTIVIDADE (PIFF-PAFF ENGINE) -->
+        <div class="space-y-3 p-4 rounded-2xl bg-[#0A1118] border border-amber-500/20 shadow-md">
+          <div class="flex items-center justify-between pb-2 border-b border-white/5">
+            <span class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="ph-bold ph-phone-call text-sm"></i> Histórico de Chamadas & Ações Comerciais
+            </span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="startAutoCallForCurrentLead()" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 flex items-center gap-1 transition active:scale-95 cursor-pointer">
+                <i class="ph-bold ph-phone-outgoing"></i> Ligar Agora
+              </button>
+              <button type="button" onclick="openManualCallModal(activeLead)" class="px-2 py-1 text-[11px] font-medium rounded-lg bg-white/5 text-slate-300 hover:text-white border border-white/10 flex items-center gap-1 transition cursor-pointer" title="Registrar ligação externa">
+                <i class="ph-bold ph-plus"></i> Registrar
+              </button>
+            </div>
+          </div>
+          <div id="lead-productivity-timeline" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <p class="text-[11px] text-slate-500 italic py-2">Carregando histórico comercial...</p>
           </div>
         </div>
       </div>
@@ -3348,6 +3570,152 @@
           </button>
           <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/25 transition active:scale-95 flex items-center gap-2 cursor-pointer">
             <span>Adicionar ao Resgate</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: CHAMADA TELEFÔNICA EM TEMPO REAL (PIFF-PAFF TRACKER) -->
+  <!-- ======================================================== -->
+  <div id="modal-active-call" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#101C27] border border-emerald-500/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col p-6 space-y-6 relative animate-in fade-in zoom-in-95 duration-200">
+      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-cyan-400 to-emerald-500 animate-pulse"></div>
+
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-xs font-extrabold uppercase tracking-widest text-emerald-300">Chamada em Andamento</span>
+        </div>
+        <span id="active-call-source-pill" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+          WhatsApp / VoIP
+        </span>
+      </div>
+
+      <div class="text-center space-y-2">
+        <div class="relative inline-block mx-auto">
+          <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 border-2 border-emerald-400 flex items-center justify-center text-3xl text-emerald-300 shadow-xl shadow-emerald-500/20">
+            <i class="ph-bold ph-phone-call animate-bounce"></i>
+          </div>
+          <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-[#101C27] flex items-center justify-center text-xs text-black font-bold">✓</span>
+        </div>
+        <div>
+          <h3 id="active-call-lead-name" class="font-heading font-extrabold text-xl text-white">Carregando Contato...</h3>
+          <p id="active-call-lead-phone" class="font-mono text-xs text-emerald-400 font-bold mt-0.5">(XX) XXXXX-XXXX</p>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-[#0A1118] border border-white/10 text-center space-y-1">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Duração Monitorada em Segundos</span>
+        <div id="active-call-timer-display" class="font-mono font-black text-4xl text-white tracking-wider">00:00:00</div>
+        <p class="text-[11px] text-slate-500">O sistema calcula a duração real exata ao desligar.</p>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Resumo da Ligação (Opcional)</label>
+        <input type="text" id="active-call-note-input" placeholder="Ex: Cliente tem interesse no sofá 2,40m, pediu proposta formal..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0A1118] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button type="button" onclick="endActiveCall(true)" class="py-3 px-4 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+          <i class="ph-bold ph-phone-disconnect text-base"></i>
+          <span>Não Atendeu (0s)</span>
+        </button>
+
+        <button type="button" onclick="endActiveCall(false)" class="py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 text-xs font-extrabold hover:brightness-110 shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+          <i class="ph-bold ph-check-circle text-base"></i>
+          <span>Encerrar Chamada</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: REGISTRO / SIMULAÇÃO DE LIGAÇÃO EXTERNA            -->
+  <!-- ======================================================== -->
+  <div id="modal-manual-call" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-[#101C27] border border-amber-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col p-6 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div class="flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center justify-center text-lg">
+            <i class="ph-bold ph-phone-plus"></i>
+          </span>
+          <div>
+            <h3 class="font-heading font-bold text-white text-base">Registrar / Simular Ligação</h3>
+            <p class="text-[11px] text-slate-400">Rastreamento de produtividade comercial com cálculo de segundos</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeManualCallModal()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition cursor-pointer">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <form id="form-manual-call" onsubmit="submitManualCall(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Cliente / Lead</label>
+          <input type="text" id="manual-call-lead-name" placeholder="Nome do cliente ou empresa" required class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Telefone do Cliente</label>
+            <input type="text" id="manual-call-phone" placeholder="(XX) XXXXX-XXXX" required class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white font-mono placeholder-slate-500 focus:outline-none focus:border-amber-400" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Vendedor Responsável</label>
+            <select id="manual-call-seller" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400 cursor-pointer">
+              <option value="gabriel">Gabriel Lima (Admin)</option>
+              <option value="felipe">Felipe</option>
+              <option value="mayara">Mayara</option>
+              <option value="barbara">Bárbara</option>
+              <option value="eduardo">Eduardo</option>
+              <option value="rodrigo">Rodrigo</option>
+              <option value="kasio">Kasio</option>
+              <option value="diana">Diana</option>
+              <option value="edson">Édson (Diretoria)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Status Atendimento</label>
+            <select id="manual-call-status" onchange="toggleManualCallDuration(this.value)" class="w-full px-3 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400 cursor-pointer">
+              <option value="ANSWERED">🟢 Atendida</option>
+              <option value="NO_ANSWER">🔴 Não Atendida (0s)</option>
+              <option value="BUSY">🟡 Ocupado (0s)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Duração (Segundos)</label>
+            <input type="number" id="manual-call-duration" min="0" value="120" placeholder="Ex: 120 (2 min)" class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-emerald-400 font-bold font-mono focus:outline-none focus:border-amber-400" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Canal de Origem</label>
+            <select id="manual-call-source" class="w-full px-3 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400 cursor-pointer">
+              <option value="WHATSAPP">WhatsApp</option>
+              <option value="VOIP">VoIP / Telefonia</option>
+              <option value="BROWSER">Navegador CRM</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Observações / Desfecho Comercial</label>
+          <textarea id="manual-call-notes" rows="2" placeholder="Ex: Cliente atendeu prontamente, alinhado envio de amostras na sexta-feira..." class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="closeManualCallModal()" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition cursor-pointer">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/25 transition active:scale-95 flex items-center gap-2 cursor-pointer">
+            <i class="ph-bold ph-check"></i>
+            <span>Salvar Registro</span>
           </button>
         </div>
       </form>
@@ -6425,6 +6793,11 @@
         if (modalBody) modalBody.insertBefore(ownerBanner, modalBody.firstChild);
       }
       if (ownerBanner) ownerBanner.style.display = isReadOnly ? 'flex' : 'none';
+
+      // Rastreamento automático de chamadas & ações comerciais do lead
+      if (typeof renderLeadProductivityTimeline === 'function') {
+        renderLeadProductivityTimeline(lead);
+      }
 
       document.getElementById('modal-lead-detail').classList.remove('hidden');
     }
@@ -11987,6 +12360,8 @@
               b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-amber-300 bg-amber-500/20 border border-amber-500/40';
             } else if (viewName === 'vendas') {
               b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-emerald-300 bg-emerald-500/15 border border-emerald-500/30';
+            } else if (viewName === 'productivity') {
+              b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-amber-300 bg-amber-500/20 border border-amber-500/40';
             } else {
               b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-white bg-[#00D2D3]/15 text-[#00D2D3] border border-[#00D2D3]/30';
             }
@@ -12003,6 +12378,8 @@
               b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-amber-500/20 text-amber-300 border border-amber-500/40';
             } else if (viewName === 'vendas') {
               b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+            } else if (viewName === 'productivity') {
+              b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-amber-500/20 text-amber-300 border border-amber-500/40';
             } else {
               b.className = 'nav-btn-mobile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium bg-[#00D2D3]/15 text-[#00D2D3] border border-[#00D2D3]/30';
             }
@@ -12043,6 +12420,8 @@
           renderDashboardCharts();
         } else if (viewName === 'vendas') {
           renderOrdersView();
+        } else if (viewName === 'productivity') {
+          loadProductivityDashboard(false);
         }
       }
       window.switchView = switchView;
@@ -13265,6 +13644,667 @@
           renderArchitectsTable();
         });
       });
+
+      // ==============================================================================
+      // MÓDULO DE PRODUTIVIDADE COMERCIAL, RASTREAMENTO DE CHAMADAS, INBOUND & REMARKETING
+      // ==============================================================================
+
+      let productivityWeekOffset = 0;
+      let productivitySelectedSeller = 'all';
+      let productivityActivityTypeFilter = 'all';
+      let productivityCurrentData = null;
+
+      // Estado da Chamada Ativa em Andamento
+      let activeCallLead = null;
+      let activeCallStartTime = null;
+      let activeCallTimerInterval = null;
+
+      // Inicia chamada monitorada em tempo real para o lead
+      function startAutoCall(lead) {
+        if (!lead) return;
+        activeCallLead = lead;
+        activeCallStartTime = Date.now();
+
+        const nameEl = document.getElementById('active-call-lead-name');
+        const phoneEl = document.getElementById('active-call-lead-phone');
+        const timerEl = document.getElementById('active-call-timer-display');
+        const noteEl = document.getElementById('active-call-note-input');
+
+        if (nameEl) nameEl.textContent = lead.name || 'Lead Sem Nome';
+        if (phoneEl) phoneEl.textContent = lead.phone ? formatPhoneBR(lead.phone) : 'Sem Telefone';
+        if (timerEl) timerEl.textContent = '00:00:00';
+        if (noteEl) noteEl.value = '';
+
+        if (activeCallTimerInterval) clearInterval(activeCallTimerInterval);
+        activeCallTimerInterval = setInterval(() => {
+          if (!activeCallStartTime) return;
+          const elapsedSec = Math.floor((Date.now() - activeCallStartTime) / 1000);
+          const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+          const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+          const secs = String(elapsedSec % 60).padStart(2, '0');
+          if (timerEl) timerEl.textContent = `${hrs}:${mins}:${secs}`;
+        }, 1000);
+
+        const modalActive = document.getElementById('modal-active-call');
+        if (modalActive) modalActive.classList.remove('hidden');
+
+        // Se tiver telefone, abre opcionalmente o WhatsApp Web para chamada
+        if (lead.phone) {
+          const rawPhone = String(lead.phone).replace(/\D/g, '');
+          const waUrl = `https://wa.me/55${rawPhone.replace(/^55/, '')}`;
+          try { window.open(waUrl, '_blank'); } catch (e) {}
+        }
+
+        showToast(`Ligação para "${lead.name}" iniciada. Gravando duração...`, 'info');
+      }
+      window.startAutoCall = startAutoCall;
+
+      function startAutoCallForCurrentLead() {
+        if (typeof activeLead !== 'undefined' && activeLead) {
+          startAutoCall(activeLead);
+        } else {
+          showToast('Nenhum contato selecionado para ligar.', 'warning');
+        }
+      }
+      window.startAutoCallForCurrentLead = startAutoCallForCurrentLead;
+
+      // Encerra chamada em andamento e calcula status e segundos
+      async function endActiveCall(forceNoAnswer = false) {
+        if (activeCallTimerInterval) {
+          clearInterval(activeCallTimerInterval);
+          activeCallTimerInterval = null;
+        }
+
+        const modalActive = document.getElementById('modal-active-call');
+        if (modalActive) modalActive.classList.add('hidden');
+
+        if (!activeCallLead) return;
+
+        const endedAtMs = Date.now();
+        const startedAtMs = activeCallStartTime || (endedAtMs - 1000);
+        let durationSeconds = 0;
+
+        if (!forceNoAnswer) {
+          durationSeconds = Math.max(1, Math.floor((endedAtMs - startedAtMs) / 1000));
+        }
+
+        const status = durationSeconds > 0 ? 'ANSWERED' : 'NO_ANSWER';
+        const sellerKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+        const note = document.getElementById('active-call-note-input')?.value?.trim() || '';
+
+        const callPayload = {
+          userId: sellerKey,
+          leadId: activeCallLead.id || null,
+          callerNumber: 'Comercial Piff-Paff',
+          recipientNumber: activeCallLead.phone || '0000000000',
+          callSource: 'WHATSAPP',
+          status: status,
+          durationSeconds: durationSeconds,
+          startedAt: new Date(startedAtMs).toISOString(),
+          endedAt: new Date(endedAtMs).toISOString(),
+          notes: note
+        };
+
+        // Salva nota no lead se preenchida
+        if (note && activeCallLead) {
+          const timestamp = new Date().toLocaleString('pt-BR');
+          const entry = `[${timestamp}] Ligação (${status === 'ANSWERED' ? durationSeconds + 's' : 'Não Atendida'}): ${note}`;
+          activeCallLead.notes = activeCallLead.notes ? `${activeCallLead.notes}\n\n${entry}` : entry;
+          activeCallLead.last_interaction = new Date().toISOString();
+          if (typeof saveStorage === 'function') saveStorage();
+          if (typeof syncLeadToSupabase === 'function') syncLeadToSupabase(activeCallLead).catch(() => {});
+        }
+
+        showToast(
+          status === 'ANSWERED'
+            ? `Chamada Atendida! Duração: ${formatDurationSecondsClient(durationSeconds)} gravada com sucesso!`
+            : 'Ligação encerrada (0s / Não Atendida registrada)',
+          status === 'ANSWERED' ? 'success' : 'info'
+        );
+
+        // Envia para API backend
+        try {
+          await fetch('/api/edson?gov_route=productivity_call', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(callPayload)
+          });
+        } catch (err) {
+          console.warn('[Productivity] Falha ao enviar para API, registrando localmente:', err);
+        }
+
+        // Atualiza timeline no card do lead se estiver aberto
+        if (typeof renderLeadProductivityTimeline === 'function' && activeCallLead) {
+          renderLeadProductivityTimeline(activeCallLead);
+        }
+
+        // Recarrega dashboard semanal
+        loadProductivityDashboard(true);
+
+        activeCallLead = null;
+        activeCallStartTime = null;
+      }
+      window.endActiveCall = endActiveCall;
+
+      // Formatação amigável de segundos
+      function formatDurationSecondsClient(sec = 0) {
+        const s = Math.max(0, parseInt(sec, 10) || 0);
+        if (s === 0) return '0s';
+        const hours = Math.floor(s / 3600);
+        const mins = Math.floor((s % 3600) / 60);
+        const remSec = s % 60;
+        if (hours > 0) return `${hours}h ${mins}m ${remSec}s`;
+        if (mins > 0) return `${mins}m ${remSec}s`;
+        return `${remSec}s`;
+      }
+      window.formatDurationSecondsClient = formatDurationSecondsClient;
+
+      // Formata status de chamada em badge com cor oficial
+      function getCallStatusBadgeHtml(status, durationSec = 0) {
+        if (status === 'ANSWERED' && durationSec > 0) {
+          return `
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>Chamada Atendida (${formatDurationSecondsClient(durationSec)})</span>
+            </span>
+          `;
+        }
+        return `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+            <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+            <span>0 segundos: Ligação Não Atendida / Caixa</span>
+          </span>
+        `;
+      }
+      window.getCallStatusBadgeHtml = getCallStatusBadgeHtml;
+
+      // Renderiza a linha do tempo de produtividade e chamadas do lead
+      async function renderLeadProductivityTimeline(lead) {
+        const container = document.getElementById('lead-productivity-timeline');
+        if (!container || !lead) return;
+
+        container.innerHTML = '<p class="text-[11px] text-slate-500 italic py-2">Consultando histórico no servidor...</p>';
+
+        try {
+          const res = await fetch(`/api/edson?gov_route=productivity&lead_id=${encodeURIComponent(lead.id || '')}&phone=${encodeURIComponent(lead.phone || '')}`);
+          const data = await res.json();
+
+          const activities = (data && Array.isArray(data.activities)) ? data.activities : [];
+          const calls = (data && Array.isArray(data.calls)) ? data.calls : [];
+
+          // Mescla e ordena por data decrescente
+          const items = [];
+          calls.forEach(c => {
+            items.push({
+              type: 'CALL',
+              timestamp: c.started_at || c.created_at,
+              status: c.status,
+              duration: c.duration_seconds || 0,
+              seller: c.user_id,
+              source: c.call_source || 'WHATSAPP',
+              notes: c.notes || ''
+            });
+          });
+
+          activities.forEach(a => {
+            if (a.activity_type !== 'CALL') {
+              items.push({
+                type: a.activity_type,
+                timestamp: a.created_at,
+                seller: a.user_id,
+                metadata: a.metadata || {}
+              });
+            }
+          });
+
+          items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+          if (items.length === 0) {
+            container.innerHTML = `
+              <div class="p-3 rounded-xl bg-white/5 border border-white/5 text-center text-xs text-slate-400">
+                <i class="ph-bold ph-phone-x text-base block mb-1 text-slate-500"></i>
+                Nenhuma ligação ou interação automática registrada para este lead até o momento.
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = items.map(item => {
+            const timeStr = new Date(item.timestamp).toLocaleString('pt-BR', {
+              day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+            });
+
+            if (item.type === 'CALL') {
+              const isAnswered = item.status === 'ANSWERED' && item.duration > 0;
+              return `
+                <div class="p-2.5 rounded-xl bg-[#14212E] border border-white/5 flex items-center justify-between gap-3 text-xs">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-7 h-7 rounded-lg ${isAnswered ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'} flex items-center justify-center text-sm shrink-0">
+                      <i class="ph-bold ${isAnswered ? 'ph-phone-incoming' : 'ph-phone-slash'}"></i>
+                    </span>
+                    <div class="truncate">
+                      ${getCallStatusBadgeHtml(item.status, item.duration)}
+                      ${item.notes ? `<p class="text-[11px] text-slate-300 mt-0.5 truncate">${item.notes}</p>` : ''}
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="text-[11px] font-mono text-slate-400 block">${timeStr}</span>
+                    <span class="text-[10px] text-amber-300/80 font-bold uppercase">${item.seller || 'Comercial'}</span>
+                  </div>
+                </div>
+              `;
+            } else if (item.type === 'INBOUND_CONTACT') {
+              return `
+                <div class="p-2.5 rounded-xl bg-[#14212E] border border-cyan-500/20 flex items-center justify-between gap-3 text-xs">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-sm shrink-0">
+                      <i class="ph-bold ph-chat-circle-dots"></i>
+                    </span>
+                    <div>
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                        📥 Primeiro Contato Inbound
+                      </span>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="text-[11px] font-mono text-slate-400 block">${timeStr}</span>
+                  </div>
+                </div>
+              `;
+            } else if (item.type === 'REMARKETING') {
+              return `
+                <div class="p-2.5 rounded-xl bg-[#14212E] border border-purple-500/20 flex items-center justify-between gap-3 text-xs">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center text-sm shrink-0">
+                      <i class="ph-bold ph-arrow-counter-clockwise"></i>
+                    </span>
+                    <div>
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                        🎯 Ação de Remarketing (>48h)
+                      </span>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="text-[11px] font-mono text-slate-400 block">${timeStr}</span>
+                    <span class="text-[10px] text-purple-300/80 font-bold uppercase">${item.seller || 'Vendedor'}</span>
+                  </div>
+                </div>
+              `;
+            }
+          }).join('');
+        } catch (err) {
+          container.innerHTML = '<p class="text-[11px] text-rose-400 py-1">Erro ao carregar histórico comercial.</p>';
+        }
+      }
+      window.renderLeadProductivityTimeline = renderLeadProductivityTimeline;
+
+      // ==============================================================================
+      // CARREGAMENTO DO DASHBOARD SEMANAL DE PRODUTIVIDADE (SEGUNDA A DOMINGO)
+      // ==============================================================================
+
+      async function loadProductivityDashboard(forceRefresh = false) {
+        const refreshIcon = document.getElementById('prod-refresh-icon');
+        if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+        try {
+          const seller = productivitySelectedSeller || 'all';
+          const offset = productivityWeekOffset || 0;
+          const url = `/api/edson?gov_route=productivity&seller=${encodeURIComponent(seller)}&weekOffset=${offset}`;
+
+          const res = await fetch(url);
+          const data = await res.json();
+          productivityCurrentData = data;
+
+          renderProductivityDashboardUI(data);
+        } catch (err) {
+          console.error('Erro ao carregar dashboard de produtividade:', err);
+          showToast('Erro ao carregar métricas de produtividade.', 'error');
+        } finally {
+          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+        }
+      }
+      window.loadProductivityDashboard = loadProductivityDashboard;
+
+      function renderProductivityDashboardUI(data) {
+        if (!data) return;
+
+        // Período da Semana
+        const rangeEl = document.getElementById('prod-week-range-text');
+        if (rangeEl && data.week) {
+          const monParts = data.week.monday.split('-');
+          const sunParts = data.week.sunday.split('-');
+          rangeEl.textContent = `De Segunda-feira (${monParts[2]}/${monParts[1]}) a Domingo (${sunParts[2]}/${sunParts[1]}/${sunParts[0]})`;
+        }
+
+        // Badge do Vendedor
+        const sellerBadge = document.getElementById('prod-seller-badge-text');
+        if (sellerBadge) {
+          const sellerName = (typeof SELLER_REGISTRY !== 'undefined' && SELLER_REGISTRY[productivitySelectedSeller]?.name)
+            ? SELLER_REGISTRY[productivitySelectedSeller].name
+            : (productivitySelectedSeller === 'all' ? 'Toda a Equipe Comercial' : productivitySelectedSeller);
+          sellerBadge.textContent = sellerName;
+        }
+
+        // KPIs
+        const totals = data.totals || {};
+        const kpiCalls = document.getElementById('prod-kpi-total-calls');
+        const kpiAnswered = document.getElementById('prod-kpi-answered-calls');
+        const kpiNoAnswer = document.getElementById('prod-kpi-noanswer-calls');
+        const kpiAnswerRate = document.getElementById('prod-kpi-answer-rate');
+        const kpiTotalTime = document.getElementById('prod-kpi-total-time');
+        const kpiAvgTime = document.getElementById('prod-kpi-avg-time');
+        const kpiInbound = document.getElementById('prod-kpi-inbound-total');
+        const kpiInboundAvg = document.getElementById('prod-kpi-inbound-avg');
+        const kpiRemarketing = document.getElementById('prod-kpi-remarketing-total');
+
+        if (kpiCalls) kpiCalls.textContent = totals.totalCalls || 0;
+        if (kpiAnswered) kpiAnswered.textContent = `${totals.answeredCalls || 0} atendidas`;
+        if (kpiNoAnswer) kpiNoAnswer.textContent = `${totals.noAnswerCalls || 0} não atendidas`;
+        if (kpiAnswerRate) kpiAnswerRate.textContent = `${totals.answerRatePercent || 0}%`;
+        if (kpiTotalTime) kpiTotalTime.textContent = totals.formattedTotalTime || '0s';
+        if (kpiAvgTime) kpiAvgTime.textContent = `${totals.formattedAvgTime || '0s'} / ligação`;
+        if (kpiInbound) kpiInbound.textContent = totals.totalInbound || 0;
+        if (kpiInboundAvg) kpiInboundAvg.textContent = `${((totals.totalInbound || 0) / 7).toFixed(1)} / dia`;
+        if (kpiRemarketing) kpiRemarketing.textContent = totals.totalRemarketing || 0;
+
+        // Renderiza Colunas dos 7 Dias da Semana
+        renderProductivityWeekDays(data.days || []);
+
+        // Renderiza Feed de Atividades
+        renderProductivityActivitiesFeed(data.recentActivities || []);
+      }
+      window.renderProductivityDashboardUI = renderProductivityDashboardUI;
+
+      // Renderiza os 7 cartões diários de Segunda a Domingo
+      function renderProductivityWeekDays(days = []) {
+        const container = document.getElementById('prod-week-days-container');
+        if (!container) return;
+
+        const todayYmd = new Date().toISOString().split('T')[0];
+
+        container.innerHTML = days.map(d => {
+          const isToday = d.date === todayYmd;
+          const dateParts = d.date.split('-');
+          const displayDate = `${dateParts[2]}/${dateParts[1]}`;
+
+          return `
+            <div class="p-3.5 rounded-2xl ${isToday ? 'bg-gradient-to-b from-[#14212E] to-[#162738] border-2 border-amber-400 shadow-xl shadow-amber-500/10' : 'bg-[#14212E] border border-white/5'} flex flex-col justify-between space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-xs font-black uppercase tracking-wider ${isToday ? 'text-amber-400 font-extrabold' : 'text-slate-200'}">${d.shortName}</span>
+                  <span class="text-[11px] font-mono text-slate-400 block">${displayDate}</span>
+                </div>
+                ${isToday ? '<span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black uppercase">Hoje</span>' : ''}
+              </div>
+
+              <!-- Ligações do dia -->
+              <div class="p-2 rounded-xl bg-[#0A1118] border border-white/5 space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-slate-400 flex items-center gap-1">
+                    <i class="ph-bold ph-phone text-amber-400"></i> Ligações:
+                  </span>
+                  <strong class="text-white font-bold">${d.callsTotal || 0}</strong>
+                </div>
+                <div class="flex items-center justify-between text-[11px] text-slate-400">
+                  <span class="text-emerald-400 font-semibold">${d.callsAnswered || 0} atendidas</span>
+                  <span class="text-rose-400 font-semibold">${d.callsNoAnswer || 0} n/a</span>
+                </div>
+              </div>
+
+              <!-- Inbound e Remarketing do dia -->
+              <div class="grid grid-cols-2 gap-1.5 text-center">
+                <div class="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                  <span class="text-[9px] font-bold text-cyan-300 block uppercase">Inbound</span>
+                  <strong class="text-xs text-white font-bold">${d.inboundContacts || 0}</strong>
+                </div>
+                <div class="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                  <span class="text-[9px] font-bold text-purple-300 block uppercase">Remark.</span>
+                  <strong class="text-xs text-white font-bold">${d.remarketingCount || 0}</strong>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      window.renderProductivityWeekDays = renderProductivityWeekDays;
+
+      // Renderiza Feed de Atividades Recentes
+      function renderProductivityActivitiesFeed(activities = []) {
+        const container = document.getElementById('prod-activities-container');
+        if (!container) return;
+
+        let filtered = activities;
+        if (productivityActivityTypeFilter !== 'all') {
+          filtered = activities.filter(a => a.activity_type === productivityActivityTypeFilter);
+        }
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div class="p-6 rounded-2xl bg-[#14212E] border border-white/5 text-center text-sm text-slate-400">
+              <i class="ph-bold ph-clock-counter-clockwise text-2xl block mb-2 text-slate-500"></i>
+              Nenhuma atividade registrada para o filtro selecionado nesta semana.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = filtered.map(act => {
+          const timeStr = new Date(act.created_at).toLocaleString('pt-BR', {
+            weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+          });
+
+          const meta = act.metadata || {};
+          const sellerName = (typeof SELLER_REGISTRY !== 'undefined' && SELLER_REGISTRY[act.user_id]?.name)
+            ? SELLER_REGISTRY[act.user_id].name
+            : (act.user_id || 'Comercial');
+
+          if (act.activity_type === 'CALL') {
+            const isAnswered = meta.status === 'ANSWERED' && (meta.duration_seconds > 0);
+            return `
+              <div class="p-3.5 rounded-2xl bg-[#14212E] border border-white/5 hover:border-amber-500/20 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl ${isAnswered ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'} flex items-center justify-center text-base shrink-0">
+                    <i class="ph-bold ${isAnswered ? 'ph-phone-call' : 'ph-phone-slash'}"></i>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      ${getCallStatusBadgeHtml(meta.status, meta.duration_seconds)}
+                      <span class="text-slate-400 font-mono text-[11px]">${meta.recipient_number ? formatPhoneBR(meta.recipient_number) : ''}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-300 mt-1">
+                      Canal: <strong class="text-amber-300">${meta.call_source || 'WHATSAPP'}</strong> • Vendedor: <strong class="text-white">${sellerName}</strong>
+                    </p>
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <span class="text-xs font-mono text-slate-400">${timeStr}</span>
+                </div>
+              </div>
+            `;
+          } else if (act.activity_type === 'INBOUND_CONTACT') {
+            return `
+              <div class="p-3.5 rounded-2xl bg-[#14212E] border border-cyan-500/20 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-base shrink-0">
+                    <i class="ph-bold ph-chat-teardrop-dots"></i>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                        📥 Novo Contato Inbound
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-slate-300 mt-1">
+                      Lead espontâneo • Atribuído a: <strong class="text-cyan-300">${sellerName}</strong>
+                    </p>
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <span class="text-xs font-mono text-slate-400">${timeStr}</span>
+                </div>
+              </div>
+            `;
+          } else if (act.activity_type === 'REMARKETING') {
+            return `
+              <div class="p-3.5 rounded-2xl bg-[#14212E] border border-purple-500/20 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center text-base shrink-0">
+                    <i class="ph-bold ph-arrow-counter-clockwise"></i>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                        🎯 Ação de Remarketing (>48h)
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-slate-300 mt-1">
+                      Disparo para lead inativo • Executado por: <strong class="text-purple-300">${sellerName}</strong>
+                    </p>
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <span class="text-xs font-mono text-slate-400">${timeStr}</span>
+                </div>
+              </div>
+            `;
+          }
+        }).join('');
+      }
+      window.renderProductivityActivitiesFeed = renderProductivityActivitiesFeed;
+
+      // Navegação da semana
+      function navigateProductivityWeek(delta, isCurrent = false) {
+        if (isCurrent) {
+          productivityWeekOffset = 0;
+        } else {
+          productivityWeekOffset += delta;
+        }
+        loadProductivityDashboard(true);
+      }
+      window.navigateProductivityWeek = navigateProductivityWeek;
+
+      // Troca de Vendedor no filtro
+      function changeProductivitySeller(sellerKey) {
+        productivitySelectedSeller = sellerKey;
+        loadProductivityDashboard(true);
+      }
+      window.changeProductivitySeller = changeProductivitySeller;
+
+      // Filtro de Atividades por tipo
+      function filterProductivityActivityType(type) {
+        productivityActivityTypeFilter = type;
+        const tabs = ['all', 'calls', 'inbound', 'remarketing'];
+        tabs.forEach(t => {
+          const btn = document.getElementById(`prod-tab-${t}`);
+          if (btn) {
+            const matches = (t === 'all' && type === 'all') ||
+              (t === 'calls' && type === 'CALL') ||
+              (t === 'inbound' && type === 'INBOUND_CONTACT') ||
+              (t === 'remarketing' && type === 'REMARKETING');
+            if (matches) {
+              btn.className = 'px-3 py-1.5 rounded-lg bg-white/10 text-white font-bold transition';
+            } else {
+              btn.className = 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+            }
+          }
+        });
+
+        if (productivityCurrentData) {
+          renderProductivityActivitiesFeed(productivityCurrentData.recentActivities || []);
+        }
+      }
+      window.filterProductivityActivityType = filterProductivityActivityType;
+
+      // Modal de Ligação Manual / Externa
+      function openManualCallModal(lead = null) {
+        const modal = document.getElementById('modal-manual-call');
+        if (!modal) return;
+
+        const nameInput = document.getElementById('manual-call-lead-name');
+        const phoneInput = document.getElementById('manual-call-phone');
+        const sellerSelect = document.getElementById('manual-call-seller');
+
+        if (lead) {
+          if (nameInput) nameInput.value = lead.name || '';
+          if (phoneInput) phoneInput.value = lead.phone ? formatPhoneBR(lead.phone) : '';
+        } else {
+          if (nameInput) nameInput.value = '';
+          if (phoneInput) phoneInput.value = '';
+        }
+
+        if (sellerSelect) {
+          const curKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+          sellerSelect.value = curKey;
+        }
+
+        modal.classList.remove('hidden');
+      }
+      window.openManualCallModal = openManualCallModal;
+
+      function closeManualCallModal() {
+        const modal = document.getElementById('modal-manual-call');
+        if (modal) modal.classList.add('hidden');
+      }
+      window.closeManualCallModal = closeManualCallModal;
+
+      function toggleManualCallDuration(status) {
+        const durationInput = document.getElementById('manual-call-duration');
+        if (!durationInput) return;
+        if (status === 'NO_ANSWER' || status === 'BUSY') {
+          durationInput.value = 0;
+          durationInput.disabled = true;
+          durationInput.classList.add('opacity-50');
+        } else {
+          if (parseInt(durationInput.value, 10) === 0) durationInput.value = 120;
+          durationInput.disabled = false;
+          durationInput.classList.remove('opacity-50');
+        }
+      }
+      window.toggleManualCallDuration = toggleManualCallDuration;
+
+      async function submitManualCall(e) {
+        e.preventDefault();
+        const name = document.getElementById('manual-call-lead-name')?.value?.trim();
+        const phone = document.getElementById('manual-call-phone')?.value?.trim();
+        const seller = document.getElementById('manual-call-seller')?.value || 'gabriel';
+        const status = document.getElementById('manual-call-status')?.value || 'ANSWERED';
+        const durationSec = status === 'NO_ANSWER' ? 0 : (parseInt(document.getElementById('manual-call-duration')?.value, 10) || 0);
+        const source = document.getElementById('manual-call-source')?.value || 'WHATSAPP';
+        const notes = document.getElementById('manual-call-notes')?.value?.trim() || '';
+
+        const matchedLead = leads.find(l => (l.name && l.name.toLowerCase() === (name || '').toLowerCase()) || (phone && l.phone && l.phone.includes(phone.replace(/\D/g, ''))));
+
+        const payload = {
+          userId: seller,
+          leadId: matchedLead?.id || null,
+          callerNumber: 'Comercial Piff-Paff',
+          recipientNumber: phone || '0000000000',
+          callSource: source,
+          status: status,
+          durationSeconds: durationSec,
+          startedAt: new Date(Date.now() - (durationSec * 1000)).toISOString(),
+          endedAt: new Date().toISOString(),
+          notes: notes
+        };
+
+        try {
+          await fetch('/api/edson?gov_route=productivity_call', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          showToast(`Ligação gravada: ${status === 'ANSWERED' ? formatDurationSecondsClient(durationSec) : '0s (Não Atendida)'}`, 'success');
+        } catch (err) {
+          showToast('Erro ao gravar ligação.', 'error');
+        }
+
+        closeManualCallModal();
+        loadProductivityDashboard(true);
+        if (matchedLead && typeof renderLeadProductivityTimeline === 'function') {
+          renderLeadProductivityTimeline(matchedLead);
+        }
+      }
+      window.submitManualCall = submitManualCall;
     });
   </script>
   <!-- ======================================================== -->

@@ -13,6 +13,12 @@ import {
   DEFAULT_SUPABASE_URL,
   DEFAULT_SUPABASE_KEY
 } from '../lib/governance.js';
+import {
+  getWeeklyProductivityData,
+  recordCallEvent,
+  recordInboundContact,
+  recordRemarketingAction
+} from '../lib/productivity.js';
 import authHandler from '../lib/auth.js';
 import setupAdminHandler from '../lib/setup-admin.js';
 import adminUsersHandler from '../lib/admin-users.js';
@@ -46,6 +52,56 @@ export default async function handler(req, res) {
   }
   if (govRoute === 'admin_users' || reqUrl.startsWith('/api/admin/users')) {
     return adminUsersHandler(req, res);
+  }
+
+  // ==============================================================================
+  // MÓDULO DE PRODUTIVIDADE & RASTREAMENTO AUTOMÁTICO DE CHAMADAS / AÇÕES
+  // ==============================================================================
+  if (govRoute === 'productivity' || reqUrl.startsWith('/api/productivity')) {
+    try {
+      const weekOffset = parseInt(req.query?.weekOffset || '0', 10) || 0;
+      const sellerKey = req.query?.seller || null;
+      let targetUserId = null;
+      if (sellerKey && sellerKey !== 'all' && sellerKey !== 'edson') {
+        const { state: govState } = await loadGovernanceState();
+        const matchingUser = (govState?.users || []).find(u => u.key === sellerKey || u.id === sellerKey);
+        if (matchingUser) targetUserId = matchingUser.id;
+      }
+      const data = await getWeeklyProductivityData({ userId: targetUserId, sellerKey, weekOffset });
+      return res.status(200).json({ success: true, ...data });
+    } catch (err) {
+      console.error('[Productivity API Error]:', err);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  if (govRoute === 'productivity_call') {
+    try {
+      const body = req.body || {};
+      const result = await recordCallEvent(body);
+      return res.status(200).json({ success: true, ...result });
+    } catch (err) {
+      console.error('[RecordCall Error]:', err);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  if (govRoute === 'productivity_activity') {
+    try {
+      const body = req.body || {};
+      let result;
+      if (body.activity_type === 'INBOUND_CONTACT') {
+        result = await recordInboundContact(body);
+      } else if (body.activity_type === 'REMARKETING') {
+        result = await recordRemarketingAction(body);
+      } else {
+        result = await recordInboundContact(body);
+      }
+      return res.status(200).json({ success: true, activity: result });
+    } catch (err) {
+      console.error('[RecordActivity Error]:', err);
+      return res.status(500).json({ success: false, error: err.message });
+    }
   }
 
   try {

@@ -4,6 +4,12 @@
 // Suporta: Gabriel Lima, Felipe, Mayara, Eduardo e Rodrigo
 // ==============================================================================
 
+import {
+  recordCallEvent,
+  recordInboundContact,
+  recordRemarketingAction
+} from '../lib/productivity.js';
+
 // Mapeamento Oficial de Vendedores no Supabase CRM
 const SELLERS = {
   gabriel: {
@@ -355,6 +361,35 @@ export default async function handler(req, res) {
       seller = SELLERS.kasio;
     } else if (SELLERS[rawSeller]) {
       seller = SELLERS[rawSeller];
+    }
+
+    // =======================================================================
+    // CAPTURA AUTOMÁTICA DE CHAMADAS TELEFÔNICAS / WHATSAPP (CALL:ENDED / VOIP)
+    // =======================================================================
+    const eventName = String(body.event || body.type || query.event || '').toLowerCase();
+    if (eventName === 'call' || eventName === 'call:ended' || eventName === 'calls' || body.call || body.data?.call) {
+      const callData = body.call || body.data?.call || body;
+      const callerNumber = cleanPhone(callData.caller || callData.from || body.from || body.caller || '');
+      const recipientNumber = cleanPhone(callData.recipient || callData.to || body.to || body.recipient || '');
+      const startedAt = callData.started_at || callData.startTime || body.started_at || new Date().toISOString();
+      const endedAt = callData.ended_at || callData.endTime || body.ended_at || new Date().toISOString();
+      let durationSeconds = callData.duration_seconds || callData.duration || body.duration_seconds;
+      if (typeof durationSeconds !== 'number') {
+        durationSeconds = Math.max(0, Math.floor((new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000));
+      }
+      const status = durationSeconds > 0 ? 'ANSWERED' : 'NO_ANSWER';
+      const callResult = await recordCallEvent({
+        userId: seller.user_id,
+        callerNumber,
+        recipientNumber,
+        callSource: callData.source || 'WHATSAPP',
+        status,
+        durationSeconds,
+        recordingUrl: callData.recording_url || body.recording_url || null,
+        startedAt,
+        endedAt
+      });
+      return res.status(200).json({ success: true, message: 'Chamada registrada com sucesso.', call: callResult.call });
     }
 
     // =======================================================================
@@ -871,6 +906,44 @@ export default async function handler(req, res) {
       }
     } catch (errHist) {
       console.warn('[Webhook] Aviso ao gravar historico_interacoes:', errHist);
+    }
+
+    // =======================================================================
+    // 6.1 RASTREAMENTO AUTOMÁTICO DE ATIVIDADES: INBOUND E REMARKETING
+    // =======================================================================
+    try {
+      if (!isFromMe) {
+        // Mensagem recebida do cliente: contato inbound
+        if (!existingLead || resultAction === 'insert') {
+          await recordInboundContact({
+            userId: seller.user_id,
+            leadId: finalLead ? finalLead.id : null,
+            phone: phoneDigits,
+            name: clientName,
+            channel: 'whatsapp',
+            message: extractedText
+          });
+        }
+      } else {
+        // Mensagem enviada pelo vendedor: verificar se é ação de remarketing (>48h)
+        if (existingLead && existingLead.last_interaction) {
+          const lastIntTime = new Date(existingLead.last_interaction).getTime();
+          const diffHours = (Date.now() - lastIntTime) / (1000 * 3600);
+          if (diffHours >= 48) {
+            await recordRemarketingAction({
+              userId: seller.user_id,
+              leadId: finalLead ? finalLead.id : null,
+              phone: phoneDigits,
+              name: clientName,
+              channel: 'whatsapp',
+              message: extractedText,
+              hoursInactive: Math.round(diffHours)
+            });
+          }
+        }
+      }
+    } catch (errProd) {
+      console.warn('[Productivity Activity Auto-Record Warning]:', errProd);
     }
 
     // =======================================================================
