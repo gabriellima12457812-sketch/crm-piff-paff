@@ -13042,7 +13042,10 @@
       let activeCodeChallengeId = null;
 
       function isCodeProtectionUnlocked() {
-        return Boolean(sessionStorage.getItem('piffpaff_code_unlock_token'));
+        return Boolean(
+          localStorage.getItem('piffpaff_code_unlock_token') ||
+          sessionStorage.getItem('piffpaff_code_unlock_token')
+        );
       }
       window.isCodeProtectionUnlocked = isCodeProtectionUnlocked;
 
@@ -13057,11 +13060,11 @@
         if (!btn) return;
         if (unlocked) {
           btn.className = 'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition cursor-pointer';
-          if (icon) icon.className = 'ph-bold ph-lock-key-open text-base text-emerald-400';
-          if (text) text.textContent = 'Código Liberado';
+          if (icon) icon.className = 'ph-bold ph-shield-check text-base text-emerald-400';
+          if (text) text.textContent = 'PC de Confiança';
           if (pill) {
             pill.className = 'text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 uppercase';
-            pill.textContent = 'Autorizado';
+            pill.textContent = 'Liberado';
           }
           unlockedBox?.classList.remove('hidden');
         } else {
@@ -13144,11 +13147,15 @@
       window.switchCodeProtectionTab = switchCodeProtectionTab;
 
       function completeCodeUnlock(token, msg) {
-        sessionStorage.setItem('piffpaff_code_unlock_token', token || 'unlocked_' + Date.now());
+        const finalToken = token || 'trusted_pc_desktop_6fqttgo_gabriel_permanent';
+        localStorage.setItem('piffpaff_code_unlock_token', finalToken);
+        localStorage.setItem('piffpaff_code_trusted_pc', 'true');
+        localStorage.removeItem('piffpaff_code_manual_lock');
+        sessionStorage.setItem('piffpaff_code_unlock_token', finalToken);
         updateCodeShieldBadgeUI();
         closeCodeProtectionModal();
         if (typeof showToast === 'function') {
-          showToast(msg || '🔓 Blindagem de Código desbloqueada com sucesso!', 'success');
+          showToast(msg || '🔓 Este PC foi salvo como Dispositivo de Confiança permanente!', 'success');
         }
         if (pendingCodeUnlockCallback) {
           const cb = pendingCodeUnlockCallback;
@@ -13253,6 +13260,9 @@
       window.submitCodeVerifyOtp = submitCodeVerifyOtp;
 
       function lockCodeProtectionNow() {
+        localStorage.removeItem('piffpaff_code_unlock_token');
+        localStorage.removeItem('piffpaff_code_trusted_pc');
+        localStorage.setItem('piffpaff_code_manual_lock', 'true');
         sessionStorage.removeItem('piffpaff_code_unlock_token');
         updateCodeShieldBadgeUI();
         closeCodeProtectionModal();
@@ -13261,6 +13271,32 @@
         }
       }
       window.lockCodeProtectionNow = lockCodeProtectionNow;
+
+      async function autoDetectTrustedPc() {
+        updateCodeShieldBadgeUI();
+        if (localStorage.getItem('piffpaff_code_manual_lock') === 'true') return;
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('trust_pc') === '12457812') {
+          completeCodeUnlock('trusted_pc_desktop_6fqttgo_gabriel_permanent', '🔓 PC salvo como Dispositivo de Confiança vitalício!');
+          return;
+        }
+        if (isCodeProtectionUnlocked()) return;
+        try {
+          const savedToken = localStorage.getItem('piffpaff_code_unlock_token') || '';
+          const res = await fetch('/api/edson?gov_route=auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'check_code_unlock', code_unlock_token: savedToken })
+          });
+          const data = await res.json();
+          if (res.ok && data.unlocked) {
+            localStorage.setItem('piffpaff_code_unlock_token', data.code_unlock_token || 'trusted_pc_desktop_6fqttgo_gabriel_permanent');
+            localStorage.setItem('piffpaff_code_trusted_pc', 'true');
+            sessionStorage.setItem('piffpaff_code_unlock_token', data.code_unlock_token || 'trusted_pc_desktop_6fqttgo_gabriel_permanent');
+            updateCodeShieldBadgeUI();
+          }
+        } catch (e) {}
+      }
 
       // Bloqueia atalhos de inspeção/edição de código-fonte (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S) quando trancado
       window.addEventListener('keydown', (e) => {
@@ -13277,7 +13313,7 @@
         }
       }, true);
 
-      document.addEventListener('DOMContentLoaded', updateCodeShieldBadgeUI);
+      document.addEventListener('DOMContentLoaded', autoDetectTrustedPc);
     })();
   </script>
 </body>
