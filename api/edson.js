@@ -109,21 +109,46 @@ export default async function handler(req, res) {
       if (action === 'upsert' && body.id) {
         const updatePayload = { ...body };
         delete updatePayload.action;
-        updatePayload.updated_at = new Date().toISOString();
-        await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(body.id)}`, {
+        const nowIso = new Date().toISOString();
+        updatePayload.updated_at = nowIso;
+
+        const patchRes = await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(body.id)}`, {
           method: 'PATCH',
           headers,
           body: JSON.stringify(updatePayload)
         });
+        let updatedRows = [];
+        if (patchRes.ok) {
+          try { updatedRows = await patchRes.json(); } catch (e) {}
+        }
+        // Se o lead ainda não existia no Supabase (ex: novo lead criado por vendedora Diana), faz INSERT!
+        if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
+          const insertPayload = {
+            created_at: nowIso,
+            stage: 'prospeccao',
+            value: 0,
+            priority: 'MEDIA',
+            ...updatePayload
+          };
+          await fetch(`${url}/rest/v1/leads`, {
+            method: 'POST',
+            headers: {
+              ...headers,
+              Prefer: 'resolution=merge-duplicates,return=representation'
+            },
+            body: JSON.stringify(insertPayload)
+          });
+        }
+
         await recordAuditLog({
           req,
-          user_id: OWNER_ID,
+          user_id: body.user_id || OWNER_ID,
           action: 'LEAD_STATUS_CHANGE',
           resource_type: 'lead',
           resource_id: body.id,
-          details: { stage: body.stage, value: body.value, updated_by: OWNER_NAME }
+          details: { stage: body.stage, value: body.value, updated_by: body.vendedor_id || OWNER_NAME }
         });
-        return res.status(200).json({ success: true, message: 'Lead atualizado pelo Super Administrador.' });
+        return res.status(200).json({ ok: true, success: true, message: 'Lead sincronizado com sucesso.' });
       }
     }
 
@@ -133,7 +158,14 @@ export default async function handler(req, res) {
 
     let baseQueryUrl = `${url}/rest/v1/leads?select=*&order=value.desc`;
     if (targetSeller !== 'all' && targetSeller !== 'todos') {
-      baseQueryUrl += `&vendedor_id=eq.${encodeURIComponent(targetSeller)}`;
+      const matchedUser = (govState?.users || []).find(
+        u => !u.deleted_at && (u.key === targetSeller || u.id === targetSeller)
+      );
+      if (matchedUser && matchedUser.id) {
+        baseQueryUrl += `&or=(vendedor_id.eq.${encodeURIComponent(targetSeller)},user_id.eq.${encodeURIComponent(matchedUser.id)})`;
+      } else {
+        baseQueryUrl += `&vendedor_id=eq.${encodeURIComponent(targetSeller)}`;
+      }
     }
 
     const [respPage1, respPage2] = await Promise.all([

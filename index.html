@@ -413,6 +413,7 @@
           <option value="eduardo">🎯 Eduardo</option>
           <option value="rodrigo">⚡ Rodrigo</option>
           <option value="kasio">💼 Kasio</option>
+          <option value="diana">💼 Diana</option>
         </select>
       </div>
 
@@ -1017,6 +1018,9 @@
                 </button>
                 <button type="button" onclick="filterEdsonView('barbara')" id="edson-btn-barbara" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
                   💎 Bárbara
+                </button>
+                <button type="button" onclick="filterEdsonView('diana')" id="edson-btn-diana" class="edson-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                  💼 Diana
                 </button>
               </div>
             </div>
@@ -3349,7 +3353,7 @@
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-semibold bg-[#14212E] border border-white/10"></div>
 
   <!-- BANCO DE DADOS OFICIAL ANTIGO (131 LEADS) -->
-  <script src="leads_data.js?v=909_official_20261015"></script>
+  <script src="leads_data.js?v=906_official_20261028"></script>
 
   <!-- JAVASCRIPT MASTER: LOGIC, PARSER, DRAG & DROP, TTS, CSV -->
   <script>
@@ -3364,7 +3368,8 @@
       felipe:  { id: 'c3333333-3333-3333-3333-333333333333', email: 'felipe@piffpaff.com.br',  name: 'Felipe',       prefix: 'CRM-FEL-', role: 'vendedor' },
       eduardo: { id: 'd4444444-4444-4444-4444-444444444444', email: 'eduardo@piffpaff.com.br', name: 'Eduardo',      prefix: 'CRM-EDU-', role: 'vendedor' },
       rodrigo: { id: 'e5555555-5555-5555-5555-555555555555', email: 'rodrigo@piffpaff.com.br', name: 'Especialista Rodrigo', prefix: 'CRM-ROD-', role: 'vendedor' },
-      kasio:   { id: '77777777-7777-7777-7777-777777777777', email: 'kasio@piffpaff.com.br',   name: 'Kasio',                prefix: 'CRM-KAS-', role: 'vendedor' }
+      kasio:   { id: '77777777-7777-7777-7777-777777777777', email: 'kasio@piffpaff.com.br',   name: 'Kasio',                prefix: 'CRM-KAS-', role: 'vendedor' },
+      diana:   { id: '88888888-8888-8888-8888-888888888888', email: 'diana@piffpaff.com',      name: 'Diana',                prefix: 'CRM-DIA-', role: 'vendedor' }
     };
     window.SELLER_REGISTRY = SELLER_REGISTRY;
 
@@ -3379,7 +3384,13 @@
       if (s.includes('eduardo')) return 'eduardo';
       if (s.includes('kasio') || s.includes('cassio')) return 'kasio';
       if (s.includes('rodrigo')) return 'rodrigo';
+      if (s.includes('diana')) return 'diana';
       if (s.includes('gabriel')) return 'gabriel';
+      const prefixKey = s.split('@')[0].replace(/[^a-z0-9]/g, '');
+      if (prefixKey && SELLER_REGISTRY[prefixKey]) return prefixKey;
+      for (const [k, conf] of Object.entries(SELLER_REGISTRY)) {
+        if (conf.email && conf.email.toLowerCase() === s) return k;
+      }
       return '';
     }
     window.normalizeSellerKey = normalizeSellerKey;
@@ -3392,7 +3403,8 @@
       felipe: 'Felipe@2026',
       eduardo: 'Eduardo@2026',
       rodrigo: 'Rodrigo@2026',
-      kasio: 'Kasio@2026'
+      kasio: 'Kasio@2026',
+      diana: 'Diana@2026'
     };
 
     function getSellerPassword(sellerKey) {
@@ -3781,12 +3793,19 @@
     let currentTempFilter = 'all';
     let currentClientsStageTab = 'all';
 
+    const PERMANENT_DEDUP_IDS = [
+      'CRM-GAB-0010-c185-4',
+      'CRM-GAB-0010-c191-4',
+      'CRM-GAB-0010-c131-2'
+    ];
+
     function getDeletedLeadIds() {
       try {
         const stored = localStorage.getItem('piffpaff_deleted_ids');
-        return stored ? JSON.parse(stored) : [];
+        const arr = stored ? JSON.parse(stored) : [];
+        return Array.from(new Set([...(Array.isArray(arr) ? arr : []), ...PERMANENT_DEDUP_IDS]));
       } catch (e) {
-        return [];
+        return [...PERMANENT_DEDUP_IDS];
       }
     }
 
@@ -3961,6 +3980,10 @@
       if (email.includes('barbara')) return 'Especialista Bárbara';
       if (email.includes('eduardo')) return 'Eduardo (Vendedor)';
       if (email.includes('rodrigo')) return 'Especialista Rodrigo (Vendedor)';
+      if (email.includes('kasio')) return 'Kasio (Vendedor)';
+      if (email.includes('diana')) return 'Diana (Vendedora)';
+      const sk = normalizeSellerKey(email);
+      if (sk && SELLER_REGISTRY[sk]?.name) return SELLER_REGISTRY[sk].name;
       return user.email.split('@')[0];
     }
 
@@ -4058,6 +4081,9 @@
             } else if (email.includes('kasio')) {
               avatarEl.textContent = 'KS';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-teal-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
+            } else if (email.includes('diana')) {
+              avatarEl.textContent = 'DI';
+              avatarEl.className = 'w-6 h-6 rounded-lg bg-pink-500 text-white font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
             } else {
               avatarEl.textContent = 'GL';
               avatarEl.className = 'w-6 h-6 rounded-lg bg-[#00D2D3] text-black font-extrabold flex items-center justify-center text-[11px] shadow-sm font-heading';
@@ -4360,7 +4386,7 @@
       currentEdsonFilterSeller = sellerKey;
       
       // Atualiza botões visuais
-      const sellers = ['all', 'gabriel', 'rodrigo', 'kasio', 'eduardo', 'mayara', 'felipe', 'barbara'];
+      const sellers = ['all', 'gabriel', 'rodrigo', 'kasio', 'eduardo', 'mayara', 'felipe', 'barbara', 'diana'];
       sellers.forEach(s => {
         const btn = document.getElementById(`edson-btn-${s}`);
         if (!btn) return;
@@ -4576,6 +4602,7 @@
       // 4. Prefixo de CRM geral NUNCA é Instagram (pertence ao Kanban/Carteira Principal de Clientes)
       const idStr = String(l.id || '').toLowerCase();
       if (
+        idStr.startsWith('crm-') ||
         idStr.startsWith('crm-gab-') ||
         idStr.startsWith('crm-fel-') ||
         idStr.startsWith('crm-edu-') ||
@@ -4583,6 +4610,7 @@
         idStr.startsWith('crm-bar-') ||
         idStr.startsWith('crm-rod-') ||
         idStr.startsWith('crm-kas-') ||
+        idStr.startsWith('crm-dia-') ||
         idStr.startsWith('crm-eds-')
       ) {
         return false;
@@ -4626,6 +4654,7 @@
     // ==========================================
     // 2.1 SINCRONIZAÇÃO EM NUVEM (API SAAS / SUPABASE COM ISOLAMENTO STRICT)
     // ==========================================
+    const STATIC_SELLER_ENDPOINTS = ['gabriel', 'felipe', 'mayara', 'barbara', 'eduardo', 'rodrigo', 'kasio'];
     let lastSyncedWaJson = '';
     let lastSyncedInstaJson = '';
     async function syncFromSupabase(silent = false) {
@@ -4643,12 +4672,14 @@
         let cloudLeads = null;
 
         // 1. Tenta carregar via API Serverless do vendedor (Autenticação do backend sem bloqueio de RLS anon)
-        // Para todos os vendedores isolados (Rodrigo, Eduardo, Felipe, Mayara, Bárbara, Kasio) e também para Édson (Consolidado)
+        // Para todos os vendedores isolados (Rodrigo, Eduardo, Felipe, Mayara, Bárbara, Kasio, Diana e novos) e também para Édson (Consolidado)
         if (sellerKey !== 'gabriel') {
           try {
             const apiUrl = sellerKey === 'edson'
               ? '/api/edson?limit=3000'
-              : `/api/${sellerKey}?channel=todos&limit=1000`;
+              : (STATIC_SELLER_ENDPOINTS.includes(sellerKey)
+                  ? `/api/${sellerKey}?channel=todos&limit=1000`
+                  : `/api/edson?seller=${encodeURIComponent(sellerKey)}&limit=1000`);
             const apiRes = await fetch(apiUrl);
             if (apiRes.ok) {
               const apiData = await apiRes.json();
@@ -4661,7 +4692,7 @@
               }
             }
           } catch (e) {
-            console.warn(`[Sync] Falha ao consultar /api/${sellerKey}, usando fallback direto:`, e);
+            console.warn(`[Sync] Falha ao consultar API de ${sellerKey}, usando fallback direto:`, e);
           }
         }
 
@@ -5318,7 +5349,10 @@
 
       // 1. Tenta salvar via API Serverless do vendedor (Autenticação do backend grava 100% no Supabase sem erro RLS)
       try {
-        const apiRes = await fetch(`/api/${sellerKey}`, {
+        const targetEndpoint = STATIC_SELLER_ENDPOINTS.includes(sellerKey)
+          ? `/api/${sellerKey}`
+          : `/api/edson?seller=${encodeURIComponent(sellerKey)}`;
+        const apiRes = await fetch(targetEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -5327,11 +5361,11 @@
           })
         });
         if (apiRes.ok) {
-          console.log(`[Sync] Lead ${lead.name} sincronizado com sucesso via /api/${sellerKey}`);
+          console.log(`[Sync] Lead ${lead.name} sincronizado com sucesso via ${targetEndpoint}`);
           return;
         }
       } catch (e) {
-        console.warn(`[Sync] Falha ao enviar para /api/${sellerKey}, usando fallback direto:`, e);
+        console.warn(`[Sync] Falha ao enviar para API de ${sellerKey}, usando fallback direto:`, e);
       }
 
       // 2. Fallback direto no Supabase REST
@@ -5402,7 +5436,10 @@
 
       // 1. Tenta salvar via API Serverless do vendedor
       try {
-        const apiRes = await fetch(`/api/${sellerKey}`, {
+        const targetEndpoint = STATIC_SELLER_ENDPOINTS.includes(sellerKey)
+          ? `/api/${sellerKey}`
+          : `/api/edson?seller=${encodeURIComponent(sellerKey)}`;
+        const apiRes = await fetch(targetEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -5411,11 +5448,11 @@
           })
         });
         if (apiRes.ok) {
-          console.log(`[Sync] Novo lead ${lead.name} cadastrado com sucesso via /api/${sellerKey}`);
+          console.log(`[Sync] Novo lead ${lead.name} cadastrado com sucesso via ${targetEndpoint}`);
           return;
         }
       } catch (e) {
-        console.warn(`[Sync] Falha ao cadastrar via /api/${sellerKey}, usando fallback direto:`, e);
+        console.warn(`[Sync] Falha ao cadastrar via API de ${sellerKey}, usando fallback direto:`, e);
       }
 
       // 2. Fallback direto no Supabase REST
@@ -11780,6 +11817,28 @@
           const softDeleted = Array.isArray(data.soft_deleted_leads) ? data.soft_deleted_leads : [];
           const logs = Array.isArray(data.audit_logs) ? data.audit_logs : [];
 
+          const switcher = document.getElementById('header-seller-switcher');
+          users.forEach(u => {
+            if (u.status === 'active' && !u.deleted_at && u.email) {
+              const sk = (u.key || u.email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (sk && !SELLER_REGISTRY[sk]) {
+                SELLER_REGISTRY[sk] = {
+                  id: u.id,
+                  email: u.email,
+                  name: u.name,
+                  prefix: u.prefix || `CRM-${sk.substring(0, 3).toUpperCase()}-`,
+                  role: u.role === 'super_admin' ? 'owner' : u.role
+                };
+              }
+              if (switcher && sk && !Array.from(switcher.options).some(opt => opt.value === sk)) {
+                const opt = document.createElement('option');
+                opt.value = sk;
+                opt.textContent = `💼 ${u.name}`;
+                switcher.appendChild(opt);
+              }
+            }
+          });
+
           const activeCount = users.filter(u => u.status === 'active' && !u.deleted_at).length;
           const kpiUsers = document.getElementById('gov-kpi-active-users');
           const kpiDevices = document.getElementById('gov-kpi-trusted-devices');
@@ -11912,15 +11971,24 @@
           }
 
           if (data.user) {
-            const sk = data.user.seller_key || normalizeSellerKey(data.user.email) || email.split('@')[0].toLowerCase();
+            const sk = (data.user.seller_key || data.user.key || normalizeSellerKey(data.user.email) || email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
             SELLER_REGISTRY[sk] = {
               id: data.user.id,
               email: data.user.email,
               name: data.user.name,
-              prefix: `CRM-${sk.substring(0, 3).toUpperCase()}-`,
+              prefix: data.user.prefix || `CRM-${sk.substring(0, 3).toUpperCase()}-`,
               role: data.user.role
             };
             DEFAULT_PASSWORDS[sk] = password;
+            localStorage.setItem('piffpaff_pwd_' + sk, password);
+
+            const switcher = document.getElementById('header-seller-switcher');
+            if (switcher && !Array.from(switcher.options).some(opt => opt.value === sk)) {
+              const opt = document.createElement('option');
+              opt.value = sk;
+              opt.textContent = `💼 ${data.user.name}`;
+              switcher.appendChild(opt);
+            }
           }
 
           closeNewUserModal();
