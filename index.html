@@ -567,12 +567,19 @@
 
       <!-- Footer / Settings -->
       <div class="pt-4 border-t border-white/10 space-y-2">
+        <button type="button" id="btn-code-shield-badge" onclick="openCodeProtectionModal()" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition cursor-pointer">
+          <span class="flex items-center gap-2">
+            <i id="icon-code-shield" class="ph-bold ph-lock-key text-base text-rose-400"></i>
+            <span id="text-code-shield">Código Blindado</span>
+          </span>
+          <span id="pill-code-shield" class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-200 uppercase">Protegido</span>
+        </button>
         <button id="btn-open-settings" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition">
           <i class="ph-bold ph-gear text-lg"></i>
           <span>Configurações & API</span>
         </button>
         <div class="text-[10px] text-slate-500 text-center">
-          PIFF PAFF PRO v2.4 • Offline Ready
+          PIFF PAFF PRO v2.4 • Código Blindado
         </div>
       </div>
     </aside>
@@ -3549,9 +3556,13 @@
     }
     window.submitSellerAuthPrompt = submitSellerAuthPrompt;
 
-    function handleChangePassword(e) {
-      if (e) e.preventDefault();
-      const currentSellerKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+      function handleChangePassword(e) {
+        if (e) e.preventDefault();
+        if (typeof isCodeProtectionUnlocked === 'function' && !isCodeProtectionUnlocked()) {
+          openCodeProtectionModal(() => handleChangePassword(null));
+          return;
+        }
+        const currentSellerKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
       const curPwd = (document.getElementById('input-current-password')?.value || '').trim();
       const newPwd = (document.getElementById('input-new-password')?.value || '').trim();
       const confPwd = (document.getElementById('input-confirm-password')?.value || '').trim();
@@ -12747,8 +12758,12 @@
       document.getElementById('status-supabase-pill')?.addEventListener('click', () => openSettingsModal('supabase'));
       document.getElementById('btn-close-settings')?.addEventListener('click', closeSettingsModal);
 
-      // Salvar credenciais Supabase e Evolution URL
+      // Salvar credenciais Supabase e Evolution URL (Protegido pela Camada de Blindagem de Código)
       document.getElementById('btn-save-settings')?.addEventListener('click', () => {
+        if (typeof isCodeProtectionUnlocked === 'function' && !isCodeProtectionUnlocked()) {
+          openCodeProtectionModal(() => document.getElementById('btn-save-settings')?.click());
+          return;
+        }
         const url = document.getElementById('cfg-supabase-url')?.value.trim();
         const key = document.getElementById('cfg-supabase-key')?.value.trim();
         const evo = document.getElementById('cfg-evolution-url')?.value.trim();
@@ -12770,6 +12785,10 @@
       }, 1500);
 
       document.getElementById('btn-reset-demo').addEventListener('click', () => {
+        if (typeof isCodeProtectionUnlocked === 'function' && !isCodeProtectionUnlocked()) {
+          openCodeProtectionModal(() => document.getElementById('btn-reset-demo')?.click());
+          return;
+        }
         if (confirm('Deseja alternar para os 6 dados de demonstração iniciais?')) {
           leads = [...DEFAULT_LEADS];
           saveStorage();
@@ -12885,6 +12904,382 @@
       </form>
     </div>
   </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: CAMADA DE PROTEÇÃO DE CÓDIGO & SISTEMA (GABRIEL)   -->
+  <!-- ======================================================== -->
+  <div id="modal-code-protection" class="fixed inset-0 z-[70] bg-black/90 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#101C27] border border-rose-500/40 rounded-2xl shadow-2xl p-6 space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl border border-rose-500/40">
+            <i class="ph-bold ph-shield-warning"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-bold text-white text-base">Blindagem de Código & Sistema</h3>
+            <p class="text-[11px] text-rose-300">Alteração bloqueada para usuários não autorizados</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeCodeProtectionModal()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition cursor-pointer">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-slate-200 leading-relaxed">
+        <strong class="text-rose-300 block mb-0.5">🔒 Proteção Anti-Alteração Ativa:</strong>
+        Ninguém pode alterar o código ou configurações críticas deste CRM sem validar <strong>uma das 3 credenciais oficiais</strong> abaixo.
+      </div>
+
+      <!-- Abas dos 3 Métodos de Desbloqueio -->
+      <div class="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-[#0A1118] border border-white/10">
+        <button type="button" id="tab-code-pwd" onclick="switchCodeProtectionTab('password')" class="py-2 px-2 rounded-lg text-xs font-bold bg-rose-500 text-white transition cursor-pointer flex items-center justify-center gap-1">
+          <i class="ph-bold ph-key"></i>
+          <span>Senha</span>
+        </button>
+        <button type="button" id="tab-code-phone" onclick="switchCodeProtectionTab('whatsapp')" class="py-2 px-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer flex items-center justify-center gap-1">
+          <i class="ph-bold ph-whatsapp-logo"></i>
+          <span>WhatsApp</span>
+        </button>
+        <button type="button" id="tab-code-email" onclick="switchCodeProtectionTab('email')" class="py-2 px-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer flex items-center justify-center gap-1">
+          <i class="ph-bold ph-envelope"></i>
+          <span>E-mail</span>
+        </button>
+      </div>
+
+      <!-- OPÇÃO 1: SENHA MESTRA -->
+      <form id="form-code-unlock-password" onsubmit="submitCodeUnlockPassword(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase mb-1.5">Senha Mestra de Código:</label>
+          <input
+            type="password"
+            id="input-code-master-pwd"
+            required
+            placeholder="Digite a senha de proteção do código"
+            class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 font-mono"
+          />
+        </div>
+        <button type="submit" id="btn-submit-code-pwd" class="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-heading font-bold text-xs transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
+          <i class="ph-bold ph-lock-key-open text-sm"></i>
+          <span>Desbloquear com Senha Mestra</span>
+        </button>
+      </form>
+
+      <!-- OPÇÃO 2: VERIFICAÇÃO WHATSAPP (47999158919) -->
+      <div id="box-code-unlock-whatsapp" class="space-y-3 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase mb-1.5">Número Autorizado (WhatsApp):</label>
+          <input
+            type="tel"
+            id="input-code-master-phone"
+            value="47999158919"
+            placeholder="47999158919"
+            class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-sm text-emerald-300 font-mono focus:outline-none focus:border-emerald-400"
+          />
+          <p class="text-[11px] text-slate-400 mt-1">Exclusivo para o número <strong class="text-emerald-300">(47) 99915-8919</strong>.</p>
+        </div>
+        <button type="button" id="btn-send-code-whatsapp" onclick="requestCodeUnlockOtp('whatsapp')" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-heading font-bold text-xs transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
+          <i class="ph-bold ph-whatsapp-logo text-sm"></i>
+          <span>Enviar Código para (47) 99915-8919</span>
+        </button>
+      </div>
+
+      <!-- OPÇÃO 3: VERIFICAÇÃO E-MAIL (gabriellima_1@hotmail.com) -->
+      <div id="box-code-unlock-email" class="space-y-3 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase mb-1.5">E-mail Autorizado:</label>
+          <input
+            type="email"
+            id="input-code-master-email"
+            value="gabriellima_1@hotmail.com"
+            placeholder="gabriellima_1@hotmail.com"
+            class="w-full px-3.5 py-2.5 bg-[#0A1118] border border-white/10 rounded-xl text-sm text-cyan-300 font-mono focus:outline-none focus:border-cyan-400"
+          />
+          <p class="text-[11px] text-slate-400 mt-1">Exclusivo para <strong class="text-cyan-300">gabriellima_1@hotmail.com</strong>.</p>
+        </div>
+        <button type="button" id="btn-send-code-email" onclick="requestCodeUnlockOtp('email')" class="w-full py-2.5 rounded-xl bg-[#00D2D3] hover:bg-[#00D2D3]/85 text-slate-950 font-heading font-bold text-xs transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
+          <i class="ph-bold ph-paper-plane-tilt text-sm"></i>
+          <span>Enviar Código para gabriellima_1@hotmail.com</span>
+        </button>
+      </div>
+
+      <!-- CAMPO DE VALIDAÇÃO DO CÓDIGO 6 DÍGITOS (WHATSAPP / E-MAIL) -->
+      <form id="form-code-verify-otp" onsubmit="submitCodeVerifyOtp(event)" class="space-y-3 hidden pt-2 border-t border-white/10">
+        <div>
+          <label class="block text-xs font-bold text-amber-300 uppercase mb-1.5">Digite o Código de 6 Dígitos Recebido:</label>
+          <input
+            type="text"
+            id="input-code-otp-digits"
+            maxlength="6"
+            placeholder="000000"
+            class="w-full px-4 py-2.5 bg-[#0A1118] border border-amber-500/40 rounded-xl text-center font-mono text-lg font-extrabold tracking-[0.35em] text-amber-300 focus:outline-none focus:border-amber-400"
+          />
+        </div>
+        <button type="submit" id="btn-verify-code-otp" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-heading font-bold text-xs transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
+          <i class="ph-bold ph-check-circle text-sm"></i>
+          <span>Confirmar Código & Liberar Alteração</span>
+        </button>
+      </form>
+
+      <div id="code-protection-feedback" class="hidden p-2.5 rounded-xl text-xs flex items-center gap-2"></div>
+
+      <div id="box-code-already-unlocked" class="hidden pt-2 border-t border-white/10 flex items-center justify-between">
+        <span class="text-xs text-emerald-300 font-bold flex items-center gap-1.5">
+          <i class="ph-bold ph-lock-key-open"></i> Sessão Autorizada
+        </span>
+        <button type="button" onclick="lockCodeProtectionNow()" class="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold cursor-pointer">
+          Trancar Código Agora
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // CAMADA DE PROTEÇÃO DE CÓDIGO & SISTEMA (12457812 | 47999158919 | gabriellima_1@hotmail.com)
+    // ============================================================================
+    (function () {
+      let pendingCodeUnlockCallback = null;
+      let activeCodeChallengeId = null;
+
+      function isCodeProtectionUnlocked() {
+        return Boolean(sessionStorage.getItem('piffpaff_code_unlock_token'));
+      }
+      window.isCodeProtectionUnlocked = isCodeProtectionUnlocked;
+
+      function updateCodeShieldBadgeUI() {
+        const btn = document.getElementById('btn-code-shield-badge');
+        const icon = document.getElementById('icon-code-shield');
+        const text = document.getElementById('text-code-shield');
+        const pill = document.getElementById('pill-code-shield');
+        const unlockedBox = document.getElementById('box-code-already-unlocked');
+        const unlocked = isCodeProtectionUnlocked();
+
+        if (!btn) return;
+        if (unlocked) {
+          btn.className = 'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition cursor-pointer';
+          if (icon) icon.className = 'ph-bold ph-lock-key-open text-base text-emerald-400';
+          if (text) text.textContent = 'Código Liberado';
+          if (pill) {
+            pill.className = 'text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 uppercase';
+            pill.textContent = 'Autorizado';
+          }
+          unlockedBox?.classList.remove('hidden');
+        } else {
+          btn.className = 'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition cursor-pointer';
+          if (icon) icon.className = 'ph-bold ph-lock-key text-base text-rose-400';
+          if (text) text.textContent = 'Código Blindado';
+          if (pill) {
+            pill.className = 'text-[10px] px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-200 uppercase';
+            pill.textContent = 'Protegido';
+          }
+          unlockedBox?.classList.add('hidden');
+        }
+      }
+      window.updateCodeShieldBadgeUI = updateCodeShieldBadgeUI;
+
+      function showCodeFeedback(msg, isError = true) {
+        const box = document.getElementById('code-protection-feedback');
+        if (!box) return;
+        box.classList.remove('hidden');
+        if (isError) {
+          box.className = 'p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2';
+          box.innerHTML = '<i class="ph-bold ph-warning-circle text-rose-400 text-sm shrink-0"></i><span>' + msg + '</span>';
+        } else {
+          box.className = 'p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2';
+          box.innerHTML = '<i class="ph-bold ph-check-circle text-emerald-400 text-sm shrink-0"></i><span>' + msg + '</span>';
+        }
+      }
+
+      function openCodeProtectionModal(onSuccessCallback = null) {
+        pendingCodeUnlockCallback = typeof onSuccessCallback === 'function' ? onSuccessCallback : null;
+        const modal = document.getElementById('modal-code-protection');
+        if (!modal) return;
+        document.getElementById('code-protection-feedback')?.classList.add('hidden');
+        const pwdInput = document.getElementById('input-code-master-pwd');
+        if (pwdInput) pwdInput.value = '';
+        updateCodeShieldBadgeUI();
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => pwdInput?.focus(), 80);
+      }
+      window.openCodeProtectionModal = openCodeProtectionModal;
+
+      function closeCodeProtectionModal() {
+        const modal = document.getElementById('modal-code-protection');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+      window.closeCodeProtectionModal = closeCodeProtectionModal;
+
+      function switchCodeProtectionTab(tab) {
+        const tPwd = document.getElementById('tab-code-pwd');
+        const tPhone = document.getElementById('tab-code-phone');
+        const tEmail = document.getElementById('tab-code-email');
+        const fPwd = document.getElementById('form-code-unlock-password');
+        const bPhone = document.getElementById('box-code-unlock-whatsapp');
+        const bEmail = document.getElementById('box-code-unlock-email');
+        const fOtp = document.getElementById('form-code-verify-otp');
+
+        [tPwd, tPhone, tEmail].forEach(b => {
+          if (b) b.className = 'py-2 px-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer flex items-center justify-center gap-1';
+        });
+        fPwd?.classList.add('hidden');
+        bPhone?.classList.add('hidden');
+        bEmail?.classList.add('hidden');
+        fOtp?.classList.add('hidden');
+        document.getElementById('code-protection-feedback')?.classList.add('hidden');
+
+        if (tab === 'password') {
+          if (tPwd) tPwd.className = 'py-2 px-2 rounded-lg text-xs font-bold bg-rose-500 text-white transition cursor-pointer flex items-center justify-center gap-1';
+          fPwd?.classList.remove('hidden');
+        } else if (tab === 'whatsapp') {
+          if (tPhone) tPhone.className = 'py-2 px-2 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 transition cursor-pointer flex items-center justify-center gap-1';
+          bPhone?.classList.remove('hidden');
+        } else if (tab === 'email') {
+          if (tEmail) tEmail.className = 'py-2 px-2 rounded-lg text-xs font-bold bg-[#00D2D3] text-slate-950 transition cursor-pointer flex items-center justify-center gap-1';
+          bEmail?.classList.remove('hidden');
+        }
+      }
+      window.switchCodeProtectionTab = switchCodeProtectionTab;
+
+      function completeCodeUnlock(token, msg) {
+        sessionStorage.setItem('piffpaff_code_unlock_token', token || 'unlocked_' + Date.now());
+        updateCodeShieldBadgeUI();
+        closeCodeProtectionModal();
+        if (typeof showToast === 'function') {
+          showToast(msg || '🔓 Blindagem de Código desbloqueada com sucesso!', 'success');
+        }
+        if (pendingCodeUnlockCallback) {
+          const cb = pendingCodeUnlockCallback;
+          pendingCodeUnlockCallback = null;
+          cb();
+        }
+      }
+
+      async function submitCodeUnlockPassword(e) {
+        if (e) e.preventDefault();
+        const pwd = (document.getElementById('input-code-master-pwd')?.value || '').trim();
+        if (!pwd) return;
+
+        // Validação instantânea local + registro de auditoria no servidor
+        if (pwd === '12457812') {
+          try {
+            const res = await fetch('/api/edson?gov_route=auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'request_code_unlock', method: 'password', password: pwd })
+            });
+            const data = await res.json();
+            completeCodeUnlock(data.code_unlock_token || 'master_12457812', '🔓 Código desbloqueado via Senha Mestra (12457812)!');
+          } catch (err) {
+            completeCodeUnlock('master_12457812', '🔓 Código desbloqueado via Senha Mestra!');
+          }
+          return;
+        }
+
+        showCodeFeedback('Acesso Negado! Apenas a senha autorizada (ou verificação via 47999158919 / gabriellima_1@hotmail.com) pode alterar o código.', true);
+      }
+      window.submitCodeUnlockPassword = submitCodeUnlockPassword;
+
+      async function requestCodeUnlockOtp(method) {
+        const phone = (document.getElementById('input-code-master-phone')?.value || '').replace(/\D/g, '');
+        const email = (document.getElementById('input-code-master-email')?.value || '').trim().toLowerCase();
+
+        if (method === 'whatsapp' && phone !== '47999158919' && phone !== '5547999158919') {
+          showCodeFeedback('Número não autorizado! Apenas o número (47) 99915-8919 tem permissão.', true);
+          return;
+        }
+        if (method === 'email' && email !== 'gabriellima_1@hotmail.com') {
+          showCodeFeedback('E-mail não autorizado! Apenas gabriellima_1@hotmail.com tem permissão.', true);
+          return;
+        }
+
+        try {
+          showCodeFeedback('Enviando código de 6 dígitos...', false);
+          const res = await fetch('/api/edson?gov_route=auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'request_code_unlock',
+              method,
+              phone: '47999158919',
+              email: 'gabriellima_1@hotmail.com'
+            })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            showCodeFeedback(data.error || 'Falha ao enviar código de verificação.', true);
+            return;
+          }
+          activeCodeChallengeId = data.challenge_id || null;
+          document.getElementById('form-code-verify-otp')?.classList.remove('hidden');
+          document.getElementById('input-code-otp-digits')?.focus();
+          showCodeFeedback(data.message || 'Código enviado com sucesso! Digite abaixo para liberar.', false);
+        } catch (err) {
+          showCodeFeedback('Erro de conexão ao solicitar código de segurança.', true);
+        }
+      }
+      window.requestCodeUnlockOtp = requestCodeUnlockOtp;
+
+      async function submitCodeVerifyOtp(e) {
+        if (e) e.preventDefault();
+        const code = (document.getElementById('input-code-otp-digits')?.value || '').replace(/\D/g, '');
+        if (code.length !== 6) {
+          showCodeFeedback('Digite os 6 dígitos do código de verificação.', true);
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/edson?gov_route=auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'verify_code_unlock',
+              challenge_id: activeCodeChallengeId,
+              code
+            })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            showCodeFeedback(data.error || 'Código inválido ou expirado.', true);
+            return;
+          }
+          completeCodeUnlock(data.code_unlock_token, data.message);
+        } catch (err) {
+          showCodeFeedback('Erro ao validar código de verificação.', true);
+        }
+      }
+      window.submitCodeVerifyOtp = submitCodeVerifyOtp;
+
+      function lockCodeProtectionNow() {
+        sessionStorage.removeItem('piffpaff_code_unlock_token');
+        updateCodeShieldBadgeUI();
+        closeCodeProtectionModal();
+        if (typeof showToast === 'function') {
+          showToast('🔒 Código e Configurações trancados novamente!', 'info');
+        }
+      }
+      window.lockCodeProtectionNow = lockCodeProtectionNow;
+
+      // Bloqueia atalhos de inspeção/edição de código-fonte (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S) quando trancado
+      window.addEventListener('keydown', (e) => {
+        if (isCodeProtectionUnlocked()) return;
+        const key = (e.key || '').toUpperCase();
+        const isF12 = e.key === 'F12' || e.keyCode === 123;
+        const isDevTools = (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(key));
+        const isViewSourceOrSave = (e.ctrlKey && ['U', 'S'].includes(key));
+        if (isF12 || isDevTools || isViewSourceOrSave) {
+          e.preventDefault();
+          e.stopPropagation();
+          openCodeProtectionModal();
+          return false;
+        }
+      }, true);
+
+      document.addEventListener('DOMContentLoaded', updateCodeShieldBadgeUI);
+    })();
+  </script>
 </body>
 </html>
 
