@@ -22,9 +22,11 @@
       <label class="text-xs text-slate-400 font-semibold uppercase">Vendedor:</label>
       <select id="sel-seller" onchange="loadQrCode()" class="bg-[#121F30] border border-white/10 text-emerald-400 font-bold text-sm px-3 py-1.5 rounded-xl focus:outline-none">
         <option value="gabriel" selected>Gabriel (47 99986-2448)</option>
+        <option value="diana">Diana (47 99641-3082)</option>
         <option value="mayara">Mayara (47 99661-0600)</option>
         <option value="barbara">Bárbara (47 99648-7189)</option>
         <option value="rodrigo">Rodrigo</option>
+        <option value="kasio">Kasio</option>
         <option value="felipe">Felipe</option>
         <option value="eduardo">Eduardo</option>
       </select>
@@ -104,17 +106,36 @@
       if (isConnected) return;
 
       try {
-        const res = await fetch(`${EVO_URL}/instance/connect/${seller}`, {
+        let res = await fetch(`${EVO_URL}/instance/connect/${seller}`, {
           headers: { 'apikey': API_KEY }
         });
-        const data = await res.json();
+        let data = {};
+        if (!res.ok) {
+          const createRes = await fetch(`${EVO_URL}/instance/create`, {
+            method: 'POST',
+            headers: { 'apikey': API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              instanceName: seller,
+              token: `${seller}-token-2026`,
+              qrcode: true,
+              integration: 'WHATSAPP-BAILEYS'
+            })
+          });
+          const created = await createRes.json().catch(() => ({}));
+          data = created.qrcode || created || {};
+        } else {
+          data = await res.json();
+        }
 
-        if (data.base64) {
-          img.src = data.base64;
+        const b64 = data.base64 || data.qrcode?.base64;
+        const code = data.code || data.qrcode?.code;
+
+        if (b64) {
+          img.src = b64;
           loading.classList.add('hidden');
           img.classList.remove('hidden');
-        } else if (data.code) {
-          img.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(data.code)}`;
+        } else if (code) {
+          img.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(code)}`;
           loading.classList.add('hidden');
           img.classList.remove('hidden');
         } else {

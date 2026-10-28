@@ -2856,12 +2856,16 @@
               Mensagens recebidas no seu número entram em tempo real no seu funil comercial e são assistidas pela Inteligência Artificial.
             </p>
           </div>
-          <div class="pt-2 flex items-center justify-center gap-2">
-            <button type="button" onclick="checkCurrentSellerWhatsAppStatus(true)" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition">
+          <div class="pt-2 flex flex-wrap items-center justify-center gap-2">
+            <button type="button" id="btn-sync-wa-chats" onclick="syncWhatsAppConversations()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer">
+              <i class="ph-bold ph-cloud-arrow-down text-base"></i>
+              <span>Puxar Conversas do WhatsApp</span>
+            </button>
+            <button type="button" onclick="checkCurrentSellerWhatsAppStatus(true)" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
               <i class="ph-bold ph-arrows-clockwise text-sm"></i>
               <span>Verificar Status</span>
             </button>
-            <button type="button" onclick="disconnectCurrentSellerWhatsApp()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold flex items-center gap-1.5 transition">
+            <button type="button" onclick="disconnectCurrentSellerWhatsApp()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
               <i class="ph-bold ph-power text-sm"></i>
               <span>Desconectar WhatsApp</span>
             </button>
@@ -12696,6 +12700,10 @@
             }
             stopQrCountdown();
             if (isManual) showToast('WhatsApp verificado: Conectado e ativo! ✅', 'success');
+            // Se o vendedor conectou e sua carteira local ainda estiver vazia, sincroniza conversas automaticamente
+            if (sellerKey !== 'gabriel' && (!leads || leads.length === 0)) {
+              syncWhatsAppConversations(true);
+            }
           } else {
             connectedBox?.classList.add('hidden');
             disconnectedBox?.classList.remove('hidden');
@@ -12925,6 +12933,40 @@
         }
       }
       window.disconnectCurrentSellerWhatsApp = disconnectCurrentSellerWhatsApp;
+
+      async function syncWhatsAppConversations(silent = false) {
+        const sellerKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+        const sellerName = (typeof getSellerName === 'function') ? getSellerName(authUser) : 'Vendedor';
+        const btn = document.getElementById('btn-sync-wa-chats');
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-base"></i><span>Puxando Conversas...</span>';
+        }
+        if (!silent) showToast(`📥 Puxando conversas do WhatsApp de ${sellerName}...`, 'info');
+
+        try {
+          const res = await fetch(`/api/n8n-webhook?action=sync_whatsapp&seller=${encodeURIComponent(sellerKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'sync_whatsapp', seller: sellerKey })
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            if (!silent) showToast(`✅ ${data.message || 'Conversas sincronizadas com sucesso!'}`, 'success');
+            await syncFromSupabase(true);
+          } else {
+            if (!silent) showToast(data.error || 'Não foi possível sincronizar conversas do WhatsApp.', 'warning');
+          }
+        } catch (err) {
+          if (!silent) showToast('Erro ao sincronizar conversas do WhatsApp.', 'error');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph-bold ph-cloud-arrow-down text-base"></i><span>Puxar Conversas do WhatsApp</span>';
+          }
+        }
+      }
+      window.syncWhatsAppConversations = syncWhatsAppConversations;
 
       // Eventos dos botões de abrir configurações
       document.getElementById('btn-open-settings')?.addEventListener('click', () => openSettingsModal('whatsapp'));

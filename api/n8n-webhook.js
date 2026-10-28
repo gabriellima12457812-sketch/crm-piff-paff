@@ -54,6 +54,13 @@ const SELLERS = {
     name: 'Kasio',
     leadPrefix: 'CRM-KAS-WA',
     origem: 'WhatsApp Kasio'
+  },
+  diana: {
+    user_id: '88888888-8888-8888-8888-888888888888',
+    vendedor_id: 'diana',
+    name: 'Diana',
+    leadPrefix: 'CRM-DIA-WA',
+    origem: 'WhatsApp Diana'
   }
 };
 
@@ -308,6 +315,168 @@ export default async function handler(req, res) {
     }
     body = body || {};
 
+    const query = req.query || {};
+    const action = String(body.action || query.action || '').toLowerCase();
+
+    // 1.3 Identificação do Vendedor de Destino (Gabriel, Felipe, Mayara, Eduardo, Rodrigo, Kasio ou Diana)
+    const rawSeller = (
+      body.vendedor_id ||
+      body.vendedor ||
+      body.instance ||
+      query.seller ||
+      query.vendedor ||
+      query.instance ||
+      ''
+    ).toString().toLowerCase();
+
+    let seller = SELLERS.gabriel;
+    if (rawSeller.includes('diana')) {
+      seller = SELLERS.diana;
+    } else if (rawSeller.includes('barbara')) {
+      seller = SELLERS.barbara;
+    } else if (rawSeller.includes('eduardo')) {
+      seller = SELLERS.eduardo;
+    } else if (rawSeller.includes('mayara')) {
+      seller = SELLERS.mayara;
+    } else if (rawSeller.includes('felipe')) {
+      seller = SELLERS.felipe;
+    } else if (rawSeller.includes('rodrigo')) {
+      seller = SELLERS.rodrigo;
+    } else if (rawSeller.includes('kasio')) {
+      seller = SELLERS.kasio;
+    } else if (SELLERS[rawSeller]) {
+      seller = SELLERS[rawSeller];
+    }
+
+    // =======================================================================
+    // 0. AÇÃO ESPECIAL: SINCRONIZAR CONVERSAS E CONTATOS DO WHATSAPP (IMPORT INICIAL)
+    // =======================================================================
+    if (action === 'sync_whatsapp' || action === 'sync_contacts' || action === 'sync') {
+      const evoUrl = process.env.EVOLUTION_SERVER_URL || 'https://piffpaff-evolution-api.onrender.com';
+      const evoKey = process.env.EVOLUTION_API_KEY || 'PiffPaffEvoSecretKey2026!';
+      const targetSellerKey = seller.vendedor_id;
+
+      // 1. Busca contatos salvos da instância
+      let contacts = [];
+      try {
+        const cRes = await fetch(`${evoUrl}/chat/findContacts/${targetSellerKey}`, {
+          method: 'POST',
+          headers: { apikey: evoKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        if (cRes.ok) contacts = (await cRes.json()) || [];
+      } catch (ce) {}
+
+      // 2. Busca conversas recentes da instância
+      let chats = [];
+      try {
+        const chRes = await fetch(`${evoUrl}/chat/findChats/${targetSellerKey}`, {
+          method: 'POST',
+          headers: { apikey: evoKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        if (chRes.ok) chats = (await chRes.json()) || [];
+      } catch (che) {}
+
+      const contactMap = new Map();
+      contacts.forEach(c => {
+        if (!c.remoteJid || c.remoteJid.includes('@g.us') || c.remoteJid.includes('@lid') || c.remoteJid.includes('broadcast')) return;
+        const phone = c.remoteJid.replace(/@.*$/, '').replace(/\D/g, '');
+        if (phone.length >= 8) {
+          contactMap.set(phone, {
+            phone,
+            name: c.pushName || '',
+            updatedAt: c.updatedAt || c.createdAt || new Date().toISOString()
+          });
+        }
+      });
+
+      chats.forEach(ch => {
+        const alt = ch.lastMessage?.key?.remoteJidAlt;
+        const jid = ch.remoteJid || '';
+        let phone = '';
+        if (alt && alt.includes('@s.whatsapp.net')) {
+          phone = alt.replace(/@.*$/, '').replace(/\D/g, '');
+        } else if (jid.includes('@s.whatsapp.net')) {
+          phone = jid.replace(/@.*$/, '').replace(/\D/g, '');
+        }
+        if (phone.length >= 8) {
+          const existing = contactMap.get(phone) || { phone };
+          const lastMsgText = ch.lastMessage?.message?.conversation || ch.lastMessage?.message?.extendedTextMessage?.text || '';
+          contactMap.set(phone, {
+            ...existing,
+            name: existing.name || ch.pushName || '',
+            lastText: lastMsgText,
+            updatedAt: ch.updatedAt || existing.updatedAt || new Date().toISOString()
+          });
+        }
+      });
+
+      const leadsToUpsert = [];
+      const nowIso = new Date().toISOString();
+      for (const [phone, item] of contactMap.entries()) {
+        const leadId = `${seller.leadPrefix}-${phone}`;
+        const cleanName = item.name && item.name.trim().length > 1
+          ? item.name.trim()
+          : `Cliente WhatsApp (${phone.slice(-4)})`;
+
+        leadsToUpsert.push({
+          id: leadId,
+          user_id: seller.user_id,
+          vendedor_id: seller.vendedor_id,
+          name: cleanName,
+          phone: phone,
+          city: 'Brasil',
+          stage: 'novos',
+          etapa_kanban: 'Novos',
+          categoria: 1,
+          origem: 'WhatsApp API',
+          channel: 'whatsapp',
+          pipeline: 'whatsapp',
+          temperature: 'morno',
+          priority: 'MEDIA',
+          value: 0,
+          notes: item.lastText ? `[Última mensagem WhatsApp]: ${item.lastText}` : `Contato importado do WhatsApp de ${seller.name}.`,
+          last_interaction: item.updatedAt || nowIso,
+          created_at: nowIso,
+          updated_at: nowIso
+        });
+      }
+
+      // Upsert em lotes no Supabase
+      const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ukuaujxvdziiaxxuuidw.supabase.co').replace(/\/$/, '');
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
+      let insertedCount = 0;
+
+      const chunkSize = 50;
+      for (let i = 0; i < leadsToUpsert.length; i += chunkSize) {
+        const batch = leadsToUpsert.slice(i, i + chunkSize);
+        try {
+          const upRes = await fetch(`${supabaseUrl}/rest/v1/leads`, {
+            method: 'POST',
+            headers: {
+              apikey: serviceKey,
+              Authorization: `Bearer ${serviceKey}`,
+              'Content-Type': 'application/json',
+              Prefer: 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify(batch)
+          });
+          if (upRes.ok) insertedCount += batch.length;
+        } catch (upe) {}
+      }
+
+      return res.status(200).json({
+        ok: true,
+        success: true,
+        seller: seller.vendedor_id,
+        seller_name: seller.name,
+        total_contacts_found: contactMap.size,
+        total_leads_upserted: insertedCount,
+        message: `${insertedCount} contatos e conversas do WhatsApp sincronizados com sucesso na carteira de ${seller.name}!`
+      });
+    }
+
     // =======================================================================
     // 1. SUPORTE NATIVO EVOLUTION API v2 (messages.upsert) & N8N
     // =======================================================================
@@ -325,31 +494,6 @@ export default async function handler(req, res) {
         ignored: true,
         reason: 'Mensagem de grupo ou status broadcast ignorada'
       });
-    }
-
-    // 1.3 Identificação do Vendedor de Destino (Gabriel, Felipe, Mayara, Eduardo ou Rodrigo)
-    const rawSeller = (
-      body.vendedor_id ||
-      body.vendedor ||
-      body.instance ||
-      req.query?.seller ||
-      req.query?.instance ||
-      ''
-    ).toString().toLowerCase();
-
-    let seller = SELLERS.gabriel;
-    if (rawSeller.includes('barbara')) {
-      seller = SELLERS.barbara;
-    } else if (rawSeller.includes('eduardo')) {
-      seller = SELLERS.eduardo;
-    } else if (rawSeller.includes('mayara')) {
-      seller = SELLERS.mayara;
-    } else if (rawSeller.includes('felipe')) {
-      seller = SELLERS.felipe;
-    } else if (rawSeller.includes('rodrigo')) {
-      seller = SELLERS.rodrigo;
-    } else if (rawSeller.includes('kasio')) {
-      seller = SELLERS.kasio;
     }
 
     // 1.4 Extração de Texto da Mensagem (suporta todos os formatos WhatsApp)
