@@ -2292,8 +2292,12 @@ export default async function handler(req, res) {
       if (!resultData) resultData = payload;
     }
 
+    const finalFollowupStatus = (targetFollowupDate === null) ? 'Sem Follow-up' : cadence.followup_status;
+    const finalFollowupReason = (targetFollowupDate === null) ? 'Sem follow-up programado.' : cadence.reason;
     const actionText = existingLead ? (stage ? 'reorganizado' : 'atualizado') : 'inserido';
-    const followupMsg = `Follow-up: ${payload.followup_date} (${cadence.followup_status}). ${cadence.reason}`;
+    const followupMsg = (targetFollowupDate === null)
+      ? 'Follow-up desmarcado (Sem Follow-up).'
+      : `Follow-up: ${payload.followup_date} (${finalFollowupStatus}). ${finalFollowupReason}`;
 
     return res.status(200).json({
       success: true,
@@ -2301,11 +2305,11 @@ export default async function handler(req, res) {
       channel: isInstagram ? 'instagram' : 'whatsapp',
       funnel: isInstagram ? 'Leads Instagram (Prospecção)' : 'Negociações WhatsApp (Fechamento)',
       followup_date: payload.followup_date,
-      followup_status: cadence.followup_status,
-      followup_reason: cadence.reason,
+      followup_status: finalFollowupStatus,
+      followup_reason: finalFollowupReason,
       message: `Lead "${resultData?.name}" ${actionText} com sucesso no funil ${isInstagram ? 'Leads Instagram' : 'Negociações WhatsApp'} de ${SELLER_NAME}! ${followupMsg}`,
       seller: SELLER_NAME,
-      lead: { ...resultData, followup_status: cadence.followup_status }
+      lead: { ...resultData, followup_status: finalFollowupStatus }
     });
   } catch (err) {
     console.error('Erro interno /api/gabriel:', err);

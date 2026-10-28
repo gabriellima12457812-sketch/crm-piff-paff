@@ -3358,7 +3358,7 @@
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-semibold bg-[#14212E] border border-white/10"></div>
 
   <!-- BANCO DE DADOS OFICIAL ANTIGO (131 LEADS) -->
-  <script src="leads_data.js?v=906_official_20261028"></script>
+  <script src="leads_data.js?v=910_clean_followup_20261028"></script>
 
   <!-- JAVASCRIPT MASTER: LOGIC, PARSER, DRAG & DROP, TTS, CSV -->
   <script>
@@ -3730,7 +3730,8 @@
         advance_probability: 'alta',
         priority: 'MAXIMA',
         commercial_line: 'Linha Premium',
-        followup_date: new Date().toISOString().split('T')[0],
+        followup_date: null,
+        followup_status: 'Sem Follow-up',
         last_interaction: new Date().toISOString(),
         notes: '[03/09 11:20] Luciana: Já mostrei pro meu marido e vamos fechar. Consegue manter os 10% no Pix e entregar até o dia 20?'
       },
@@ -3858,6 +3859,58 @@
       return 'piffpaff_leads_anon';
     }
 
+    function sanitizeFollowupList(leadList) {
+      if (!Array.isArray(leadList)) return leadList;
+      let removedList = [];
+      try {
+        removedList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+      } catch (e) {}
+
+      const cleanPhoneDigits = (phone) => {
+        if (!phone) return '';
+        let d = String(phone).replace(/\D/g, '');
+        if (d.startsWith('55') && d.length >= 12) d = d.substring(2);
+        return d;
+      };
+
+      const normalizeName = (name) => {
+        if (!name) return '';
+        return String(name).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      };
+
+      leadList.forEach(l => {
+        if (!l) return;
+        const id = String(l.id || '');
+        const rootId = id.replace(/-c\d+-\d+|-exact\d+-\d+/, '');
+        const phone = cleanPhoneDigits(l.phone);
+        const name = normalizeName(l.name);
+
+        let shouldRemove = false;
+        // Blindagem estrita e permanente: Luciana Soares Bezerra (CRM-GAB-0002 / 63999847517)
+        if (id.includes('CRM-GAB-0002') || name === 'luciana soares bezerra' || (phone && phone === '63999847517')) {
+          shouldRemove = true;
+        }
+
+        // Registros removidos da fila de follow-up pelo usuário
+        if (!shouldRemove && Array.isArray(removedList) && removedList.length > 0) {
+          if (removedList.includes(id) || (rootId && removedList.includes(rootId))) {
+            shouldRemove = true;
+          } else if (phone && phone.length >= 8 && removedList.some(r => r.length >= 8 && (r === phone || (phone.length >= 10 && phone.endsWith(r.slice(-8)))))) {
+            shouldRemove = true;
+          } else if (name && name.length >= 3 && removedList.includes(name)) {
+            shouldRemove = true;
+          }
+        }
+
+        if (shouldRemove) {
+          l.followup_date = null;
+          l.followup_status = 'Sem Follow-up';
+        }
+      });
+      return leadList;
+    }
+    window.sanitizeFollowupList = sanitizeFollowupList;
+
     function initStorage() {
       const deletedIds = new Set(getDeletedLeadIds());
       const storageKey = getStorageKey();
@@ -3875,13 +3928,18 @@
             if (isGabriel && (parsed.length < 800 || (baseLeadsCheck && baseLeadsCheck.length > parsed.length))) {
               if (baseLeadsCheck && baseLeadsCheck.length > 0) {
                 leads = baseLeadsCheck.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'));
+                sanitizeFollowupList(leads);
                 saveStorage();
                 return;
               }
             }
             // Filtra estritamente apenas os leads deste vendedor ativo
             leads = parsed.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, sellerKey));
-            if (leads.length > 0) return;
+            if (leads.length > 0) {
+              sanitizeFollowupList(leads);
+              saveStorage();
+              return;
+            }
           }
         } catch (e) {
           console.warn('Erro ao carregar do localStorage:', e);
@@ -3893,6 +3951,7 @@
         const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
         if (baseLeads && baseLeads.length > 0) {
           leads = baseLeads.filter(l => !deletedIds.has(l.id));
+          sanitizeFollowupList(leads);
           return;
         }
       }
@@ -3907,6 +3966,7 @@
       const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
       if (baseLeads && baseLeads.length > 0) {
         leads = baseLeads.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'));
+        sanitizeFollowupList(leads);
         saveStorage();
         return;
       }
@@ -3915,6 +3975,7 @@
     }
 
     function saveStorage() {
+      if (Array.isArray(leads)) sanitizeFollowupList(leads);
       localStorage.setItem(getStorageKey(), JSON.stringify(leads));
       updateMetrics();
     }
@@ -4907,6 +4968,9 @@
             cloudWa.push(...Array.from(edsonMap.values()));
             edsonConsolidatedRawLeads = [...cloudWa];
           }
+
+          sanitizeFollowupList(cloudWa);
+          sanitizeFollowupList(cloudInsta);
 
           const currentWaJson = JSON.stringify(cloudWa);
           const currentInstaJson = JSON.stringify(cloudInsta);
@@ -6570,6 +6634,14 @@
     function renderFollowupCenter() {
       const todayStr = formatYMD(new Date());
 
+      // Higienização automática: garante que nenhum lead removido apareça
+      if (typeof sanitizeFollowupList === 'function') {
+        sanitizeFollowupList(leads);
+        if (typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads)) {
+          sanitizeFollowupList(instagramLeads);
+        }
+      }
+
       // Une os leads de WhatsApp e Instagram para que NENHUM lead do Felipe (ou outros) fique de fora
       const allFunnelLeads = [...(leads || []), ...(instagramLeads || [])].filter(l => l && l.stage !== 'concluidas' && l.stage !== 'concluida');
 
@@ -6826,112 +6898,93 @@
     }
     window.scrollToFollowupTop = scrollToFollowupTop;
 
-    async function postponeLead(leadId, days) {
-      let isInsta = false;
-      let lead = (leads || []).find(l => String(l.id) === String(leadId));
-      if (!lead && (typeof instagramLeads !== 'undefined' && instagramLeads)) {
-        lead = instagramLeads.find(l => String(l.id) === String(leadId));
-        if (lead) isInsta = true;
-      }
-      if (lead) {
-        const newDate = addDays(days);
-        const todayStr = formatYMD(new Date());
-        lead.followup_date = newDate;
-        lead.last_interaction = new Date().toISOString();
-        if (newDate === todayStr) {
-          lead.followup_status = 'Chamar Hoje';
-        } else if (newDate < todayStr) {
-          lead.followup_status = 'Atrasado';
-        } else {
-          lead.followup_status = 'Agendado';
-        }
-        if (isInsta) {
-          saveInstagramStorage();
-          if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
-        } else {
-          saveStorage();
-        }
-        renderFollowupCenter();
-        renderClientsTable();
-        renderKanban();
-        showToast(`Follow-up adiado para ${formatDateBR(newDate)}. Sincronizando...`, 'info');
-        try {
-          await syncLeadToSupabase(lead);
-          showToast(`Follow-up salvo na nuvem com sucesso!`, 'success');
-        } catch (e) {
-          console.warn('[Sync] Erro sync nuvem:', e);
-        }
-      }
-    }
-
-    async function postponeLeadCustom(leadId, customDate) {
-      if (!customDate) return;
-      let isInsta = false;
-      let lead = (leads || []).find(l => String(l.id) === String(leadId));
-      if (!lead && (typeof instagramLeads !== 'undefined' && instagramLeads)) {
-        lead = instagramLeads.find(l => String(l.id) === String(leadId));
-        if (lead) isInsta = true;
-      }
-      if (lead) {
-        const todayStr = formatYMD(new Date());
-        lead.followup_date = customDate;
-        lead.last_interaction = new Date().toISOString();
-        if (customDate === todayStr) {
-          lead.followup_status = 'Chamar Hoje';
-        } else if (customDate < todayStr) {
-          lead.followup_status = 'Atrasado';
-        } else {
-          lead.followup_status = 'Agendado';
-        }
-        if (isInsta) {
-          saveInstagramStorage();
-          if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
-        } else {
-          saveStorage();
-        }
-        renderFollowupCenter();
-        renderClientsTable();
-        renderKanban();
-        const formatted = formatDateBR(customDate);
-        showToast(`Follow-up agendado para ${formatted}!`, 'success');
-        try {
-          await syncLeadToSupabase(lead);
-          showToast(`Follow-up para ${formatted} salvo na nuvem!`, 'success');
-        } catch (e) {
-          console.warn('[Sync] Erro sync nuvem:', e);
-        }
-      }
-    }
-
-    async function removeFromFollowup(leadId) {
-      if (!leadId) return;
+    function findMatchingLeadGroup(leadId) {
+      if (!leadId) return { primaryLead: null, matches: [] };
       const targetId = String(leadId).trim();
+
+      const cleanPhoneDigits = (phone) => {
+        if (!phone) return '';
+        let d = String(phone).replace(/\D/g, '');
+        if (d.startsWith('55') && d.length >= 12) d = d.substring(2);
+        return d;
+      };
+
+      const normalizeName = (name) => {
+        if (!name) return '';
+        return String(name).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      };
+
+      let primary = (leads || []).find(l => l && String(l.id) === targetId);
+      if (!primary && typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads)) {
+        primary = instagramLeads.find(l => l && String(l.id) === targetId);
+      }
+
+      const targetRootId = targetId.replace(/-c\d+-\d+|-exact\d+-\d+/, '');
+      const targetPhone = primary ? cleanPhoneDigits(primary.phone) : (targetId.match(/^\d+$/) ? cleanPhoneDigits(targetId) : '');
+      const targetName = primary ? normalizeName(primary.name) : '';
+
+      const matchedSet = new Set();
       const allMatches = [];
 
-      (leads || []).forEach(l => {
-        if (l && (String(l.id) === targetId || (l.phone && targetId.includes(String(l.phone))))) {
+      const checkAndAdd = (l) => {
+        if (!l || !l.id || matchedSet.has(l.id)) return;
+        const lId = String(l.id);
+        const lRootId = lId.replace(/-c\d+-\d+|-exact\d+-\d+/, '');
+        const lPhone = cleanPhoneDigits(l.phone);
+        const lName = normalizeName(l.name);
+
+        let isMatch = false;
+        if (lId === targetId) isMatch = true;
+        else if (targetRootId && (lId === targetRootId || lRootId === targetRootId)) isMatch = true;
+        else if (targetPhone && targetPhone.length >= 8 && lPhone && (lPhone === targetPhone || (targetPhone.length >= 10 && lPhone.endsWith(targetPhone.slice(-8))))) isMatch = true;
+        else if (targetName && targetName.length >= 3 && lName && (lName === targetName)) isMatch = true;
+
+        if (isMatch) {
+          matchedSet.add(l.id);
           allMatches.push(l);
+          if (!primary) primary = l;
         }
-      });
+      };
+
+      (leads || []).forEach(checkAndAdd);
       if (typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads)) {
-        instagramLeads.forEach(l => {
-          if (l && (String(l.id) === targetId || (l.phone && targetId.includes(String(l.phone))))) {
-            allMatches.push(l);
-          }
-        });
+        instagramLeads.forEach(checkAndAdd);
       }
 
-      const primaryLead = allMatches[0] || (leads || []).find(l => String(l.id) === targetId) || ((typeof instagramLeads !== 'undefined' && instagramLeads) ? instagramLeads.find(l => String(l.id) === targetId) : null);
-      if (!primaryLead && allMatches.length === 0) return;
+      return { primaryLead: primary || allMatches[0], matches: allMatches };
+    }
+    window.findMatchingLeadGroup = findMatchingLeadGroup;
 
-      const leadName = primaryLead ? primaryLead.name : 'Contato';
-      if (!confirm(`Deseja tirar "${leadName}" da lista de follow-up?\n(O cliente continuará cadastrado no CRM, apenas sairá da fila de follow-up).`)) return;
+    async function postponeLead(leadId, days) {
+      const { primaryLead, matches } = findMatchingLeadGroup(leadId);
+      if (!primaryLead && matches.length === 0) return;
+      const newDate = addDays(days);
+      const todayStr = formatYMD(new Date());
+      const newStatus = (newDate === todayStr) ? 'Chamar Hoje' : (newDate < todayStr ? 'Atrasado' : 'Agendado');
 
-      allMatches.forEach(l => {
-        l.followup_date = null;
-        l.followup_status = 'Sem Follow-up';
+      matches.forEach(l => {
+        l.followup_date = newDate;
+        l.followup_status = newStatus;
         l.last_interaction = new Date().toISOString();
       });
+
+      // Remove da blacklist se reagendado pelo usuário
+      try {
+        let removedList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+        const cleanPhoneDigits = (p) => String(p || '').replace(/\D/g, '');
+        const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : '';
+        const targetNormName = (primaryLead?.name || '').toLowerCase().trim();
+        const rootId = String(primaryLead?.id || leadId).replace(/-c\d+-\d+|-exact\d+-\d+/, '');
+
+        removedList = removedList.filter(item => {
+          if (matches.some(m => m.id === item)) return false;
+          if (item === rootId) return false;
+          if (targetCleanPhone && item === targetCleanPhone) return false;
+          if (targetNormName && item === targetNormName) return false;
+          return true;
+        });
+        localStorage.setItem('piffpaff_removed_followups', JSON.stringify(removedList));
+      } catch (e) {}
 
       saveStorage();
       if (typeof saveInstagramStorage === 'function') saveInstagramStorage();
@@ -6941,14 +6994,110 @@
       renderClientsTable();
       renderKanban();
 
-      showToast(`"${leadName}" foi tirado da lista de follow-up com sucesso!`, 'success');
+      showToast(`Follow-up adiado para ${formatDateBR(newDate)}. Sincronizando...`, 'info');
+      try {
+        const syncPromises = matches.map(m => syncLeadToSupabase(m));
+        await Promise.allSettled(syncPromises);
+      } catch (e) {}
+    }
+    window.postponeLead = postponeLead;
 
-      if (primaryLead) {
-        try {
-          await syncLeadToSupabase(primaryLead);
-        } catch (e) {
-          console.warn('[Sync] Erro sync nuvem:', e);
-        }
+    async function postponeLeadCustom(leadId, customDate) {
+      if (!customDate) return;
+      const { primaryLead, matches } = findMatchingLeadGroup(leadId);
+      if (!primaryLead && matches.length === 0) return;
+      const todayStr = formatYMD(new Date());
+      const newStatus = (customDate === todayStr) ? 'Chamar Hoje' : (customDate < todayStr ? 'Atrasado' : 'Agendado');
+
+      matches.forEach(l => {
+        l.followup_date = customDate;
+        l.followup_status = newStatus;
+        l.last_interaction = new Date().toISOString();
+      });
+
+      // Remove da blacklist se reagendado pelo usuário
+      try {
+        let removedList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+        const cleanPhoneDigits = (p) => String(p || '').replace(/\D/g, '');
+        const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : '';
+        const targetNormName = (primaryLead?.name || '').toLowerCase().trim();
+        const rootId = String(primaryLead?.id || leadId).replace(/-c\d+-\d+|-exact\d+-\d+/, '');
+
+        removedList = removedList.filter(item => {
+          if (matches.some(m => m.id === item)) return false;
+          if (item === rootId) return false;
+          if (targetCleanPhone && item === targetCleanPhone) return false;
+          if (targetNormName && item === targetNormName) return false;
+          return true;
+        });
+        localStorage.setItem('piffpaff_removed_followups', JSON.stringify(removedList));
+      } catch (e) {}
+
+      saveStorage();
+      if (typeof saveInstagramStorage === 'function') saveInstagramStorage();
+      if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
+
+      renderFollowupCenter();
+      renderClientsTable();
+      renderKanban();
+
+      const formatted = formatDateBR(customDate);
+      showToast(`Follow-up agendado para ${formatted}!`, 'success');
+      try {
+        const syncPromises = matches.map(m => syncLeadToSupabase(m));
+        await Promise.allSettled(syncPromises);
+      } catch (e) {}
+    }
+    window.postponeLeadCustom = postponeLeadCustom;
+
+    async function removeFromFollowup(leadId) {
+      if (!leadId) return;
+      const { primaryLead, matches } = findMatchingLeadGroup(leadId);
+      if (!primaryLead && matches.length === 0) return;
+
+      const leadName = primaryLead ? primaryLead.name : 'Contato';
+
+      // 1. Zera follow-up em todas as duplicatas/clones e variantes do cliente
+      matches.forEach(l => {
+        l.followup_date = null;
+        l.followup_status = 'Sem Follow-up';
+        l.last_interaction = new Date().toISOString();
+      });
+
+      // 2. Registra na blacklist persistente de follow-up
+      try {
+        const removedList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+        const cleanPhoneDigits = (p) => String(p || '').replace(/\D/g, '');
+        const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : '';
+        const targetNormName = (primaryLead?.name || '').toLowerCase().trim();
+        const rootId = String(primaryLead?.id || leadId).replace(/-c\d+-\d+|-exact\d+-\d+/, '');
+
+        matches.forEach(m => {
+          if (m.id && !removedList.includes(m.id)) removedList.push(m.id);
+        });
+        if (rootId && !removedList.includes(rootId)) removedList.push(rootId);
+        if (targetCleanPhone && targetCleanPhone.length >= 8 && !removedList.includes(targetCleanPhone)) removedList.push(targetCleanPhone);
+        if (targetNormName && targetNormName.length >= 3 && !removedList.includes(targetNormName)) removedList.push(targetNormName);
+        localStorage.setItem('piffpaff_removed_followups', JSON.stringify(removedList));
+      } catch (e) {}
+
+      // 3. Persistência local imediata e atualização instantânea do DOM
+      saveStorage();
+      if (typeof saveInstagramStorage === 'function') saveInstagramStorage();
+      if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
+
+      renderFollowupCenter();
+      renderClientsTable();
+      renderKanban();
+
+      showToast(`"${leadName}" tirado da lista de follow-up com sucesso!`, 'success');
+
+      // 4. Sincroniza em nuvem no Supabase e na API do vendedor
+      try {
+        const syncPromises = matches.map(m => syncLeadToSupabase(m));
+        await Promise.allSettled(syncPromises);
+      } catch (e) {
+        console.warn('[Sync] Erro sync follow-up:', e);
       }
     }
     window.removeFromFollowup = removeFromFollowup;
@@ -9730,16 +9879,21 @@
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
             instagramLeads = parsed.filter(l => isLeadOfSeller(l, 'gabriel'));
+            sanitizeFollowupList(instagramLeads);
+            saveInstagramStorage();
           } else {
             instagramLeads = [...defaultLeads];
+            sanitizeFollowupList(instagramLeads);
             saveInstagramStorage();
           }
         } else {
           instagramLeads = [...defaultLeads];
+          sanitizeFollowupList(instagramLeads);
           saveInstagramStorage();
         }
       } catch (e) {
         instagramLeads = [...defaultLeads];
+        sanitizeFollowupList(instagramLeads);
       }
       renderInstagramBoard();
     }
@@ -9747,6 +9901,9 @@
 
     function saveInstagramStorage() {
       try {
+        if (Array.isArray(instagramLeads) && typeof sanitizeFollowupList === 'function') {
+          sanitizeFollowupList(instagramLeads);
+        }
         const key = getInstagramStorageKey();
         localStorage.setItem(key, JSON.stringify(instagramLeads));
       } catch (e) {
