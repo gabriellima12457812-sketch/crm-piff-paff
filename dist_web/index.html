@@ -12700,10 +12700,6 @@
             }
             stopQrCountdown();
             if (isManual) showToast('WhatsApp verificado: Conectado e ativo! ✅', 'success');
-            // Se o vendedor conectou e sua carteira local ainda estiver vazia, sincroniza conversas automaticamente
-            if (sellerKey !== 'gabriel' && (!leads || leads.length === 0)) {
-              syncWhatsAppConversations(true);
-            }
           } else {
             connectedBox?.classList.add('hidden');
             disconnectedBox?.classList.remove('hidden');
