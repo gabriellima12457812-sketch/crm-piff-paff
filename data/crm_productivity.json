@@ -1,5 +1,37 @@
 {
-  "calls": [],
-  "activities": [],
-  "updated_at": "2026-10-28T20:25:56.285Z"
+  "calls": [
+    {
+      "id": "5c3aa95f-8599-46c9-bae0-793cd70c3c79",
+      "user_id": "gabriel",
+      "lead_id": "lead-live-check",
+      "caller_number": "47999158919",
+      "recipient_number": "11988887777",
+      "call_source": "WHATSAPP",
+      "status": "ANSWERED",
+      "duration_seconds": 84,
+      "recording_url": null,
+      "started_at": "2026-10-28T20:31:35.741Z",
+      "ended_at": "2026-10-28T20:32:59.741Z",
+      "created_at": "2026-10-28T20:33:01.274Z"
+    }
+  ],
+  "activities": [
+    {
+      "id": "200f9164-ba79-44ac-9bf3-327237456ff4",
+      "user_id": "gabriel",
+      "lead_id": "lead-live-check",
+      "activity_type": "CALL",
+      "metadata": {
+        "call_id": "5c3aa95f-8599-46c9-bae0-793cd70c3c79",
+        "duration_seconds": 84,
+        "status": "ANSWERED",
+        "caller_number": "47999158919",
+        "recipient_number": "11988887777",
+        "call_source": "WHATSAPP",
+        "recording_url": null
+      },
+      "created_at": "2026-10-28T20:33:01.274Z"
+    }
+  ],
+  "updated_at": "2026-10-28T20:33:01.274Z"
 }
