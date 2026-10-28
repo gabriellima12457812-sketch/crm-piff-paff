@@ -2224,9 +2224,18 @@ export default async function handler(req, res) {
 
     // Se o lead acabou de entrar e a data for hoje/passada (já que falou hoje), entra para o dia seguinte (+1 dia)
     const todayStr = formatYMD(new Date());
-    let targetFollowupDate = followup_date || cadence.followup_date;
-    if (!existingLead && targetFollowupDate <= todayStr) {
-      targetFollowupDate = addDays(1);
+    let targetFollowupDate;
+    if (followup_date === null || followup_date === '' || followup_status === 'Sem Follow-up') {
+      targetFollowupDate = null;
+    } else if (followup_date) {
+      targetFollowupDate = followup_date;
+    } else if (!existingLead) {
+      targetFollowupDate = cadence.followup_date;
+      if (targetFollowupDate <= todayStr) {
+        targetFollowupDate = addDays(1);
+      }
+    } else {
+      targetFollowupDate = existingLead.followup_date || null;
     }
     payload.followup_date = targetFollowupDate;
     // NOTA: NÃO enviar followup_status para o Supabase (coluna não existe na tabela leads)

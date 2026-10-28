@@ -6570,11 +6570,9 @@
       const allFunnelLeads = [...(leads || []), ...(instagramLeads || [])].filter(l => l && l.stage !== 'concluidas' && l.stage !== 'concluida');
 
       allFunnelLeads.forEach(l => {
-        // Se o lead não tem nenhuma data de follow-up definida no cadastro e não foi retirado da lista, inicializa como amanhã (+1 dia)
-        if (!l.followup_date && l.followup_status !== 'Sem Follow-up') {
-          l.followup_date = addDays(1);
-          l.followup_status = 'Próximo Contato (Amanhã)';
-        } else if (l.followup_date && (!l.followup_status || l.followup_status === 'Atrasado' || l.followup_status === 'Chamar Hoje' || l.followup_status === 'Agendado')) {
+        if (!l.followup_date) {
+          l.followup_status = 'Sem Follow-up';
+        } else {
           if (l.followup_date === todayStr) {
             l.followup_status = 'Chamar Hoje';
           } else if (l.followup_date < todayStr) {
@@ -6931,6 +6929,7 @@
         console.warn('[Sync] Erro sync nuvem:', e);
       }
     }
+    window.removeFromFollowup = removeFromFollowup;
 
     // ==========================================
     // QUICK ACTIONS FOLLOW-UP & REAGENDAMENTO
