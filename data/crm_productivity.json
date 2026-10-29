@@ -32,6 +32,20 @@
   ],
   "activities": [
     {
+      "id": "d85ab7b1-08f3-4153-ab8c-abb17b4d35bd",
+      "user_id": "bbbbbbbb-9999-4999-a999-999999999999",
+      "lead_id": "CRM-ROD-WA-556798079796",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "556798079796",
+        "name": "Lead WhatsApp 9796",
+        "channel": "whatsapp",
+        "message": "Bom dia ☀️ \nTudo bem???\nsou a Yasmim, faço parte do time da Caribe Móveis de Luxo.",
+        "hours_inactive": 219
+      },
+      "created_at": "2026-10-29T16:11:13.893Z"
+    },
+    {
       "id": "d7fef95f-c101-40fa-86b0-6e1cc45db4a4",
       "user_id": "bbbbbbbb-9999-4999-a999-999999999999",
       "lead_id": "CRM-YAS-WA-553599276786",
@@ -524,5 +538,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T16:09:15.717Z"
+  "updated_at": "2026-10-29T16:11:13.893Z"
 }
