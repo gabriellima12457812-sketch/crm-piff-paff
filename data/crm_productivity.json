@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "3bb749ad-1f85-45b5-8a75-54a46daa0d37",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-557488243007",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "557488243007",
+        "name": "divacarvalhopinto",
+        "channel": "whatsapp",
+        "message": "Quais são os materiais utilizados?"
+      },
+      "created_at": "2026-10-29T14:03:49.428Z"
+    },
+    {
       "id": "376491ac-2eb4-4a22-bcd9-ac2f1ef3571e",
       "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
       "lead_id": "CRM-SEB-WA-553197970925",
@@ -465,5 +478,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T14:00:24.597Z"
+  "updated_at": "2026-10-29T14:03:49.428Z"
 }
