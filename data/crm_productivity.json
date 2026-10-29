@@ -17,6 +17,20 @@
   ],
   "activities": [
     {
+      "id": "52ab9b68-5cb0-471a-824a-90fda8241337",
+      "user_id": "a1111111-1111-1111-1111-111111111111",
+      "lead_id": "insta-1789179893717-gntpb",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "559591362123",
+        "name": "Lead WhatsApp 2123",
+        "channel": "whatsapp",
+        "message": "As 14:00 te ligo então",
+        "hours_inactive": 816
+      },
+      "created_at": "2026-10-29T13:11:13.171Z"
+    },
+    {
       "id": "5fb15196-df90-47e8-a816-70e79f1b4bf0",
       "user_id": "77777777-7777-7777-7777-777777777777",
       "lead_id": "CRM-KAS-WA-557991452806",
@@ -412,5 +426,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:03:48.026Z"
+  "updated_at": "2026-10-29T13:11:13.171Z"
 }
