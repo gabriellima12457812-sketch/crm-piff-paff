@@ -1,6 +1,21 @@
 {
   "calls": [
     {
+      "id": "c9a773c0-0e0c-441b-b0e2-f9c7d617b57c",
+      "external_call_id": "009C32843318769885C4E89DC21D1C99",
+      "user_id": "felipe",
+      "lead_id": null,
+      "caller_number": "55989311152188",
+      "recipient_number": "554797674120",
+      "call_source": "WHATSAPP",
+      "status": "ANSWERED",
+      "duration_seconds": 0,
+      "recording_url": null,
+      "started_at": "2026-10-29T16:05:40.000Z",
+      "ended_at": "2026-10-29T16:05:40.000Z",
+      "created_at": "2026-10-29T16:05:41.264Z"
+    },
+    {
       "id": "ac447157-6537-4529-afe5-5f5b26d6e8b5",
       "user_id": "gabriel",
       "lead_id": "CRM-GAB-WA-5524999730231",
@@ -16,6 +31,23 @@
     }
   ],
   "activities": [
+    {
+      "id": "935ef17b-ee36-4dcb-8b17-c35be95a0d4a",
+      "user_id": "felipe",
+      "lead_id": null,
+      "activity_type": "CALL",
+      "metadata": {
+        "call_id": "c9a773c0-0e0c-441b-b0e2-f9c7d617b57c",
+        "external_call_id": "009C32843318769885C4E89DC21D1C99",
+        "duration_seconds": 0,
+        "status": "ANSWERED",
+        "caller_number": "55989311152188",
+        "recipient_number": "554797674120",
+        "call_source": "WHATSAPP",
+        "recording_url": null
+      },
+      "created_at": "2026-10-29T16:05:41.264Z"
+    },
     {
       "id": "30fad033-491b-4947-b8ae-881875b0b1cd",
       "user_id": "c3333333-3333-3333-3333-333333333333",
@@ -479,5 +511,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T16:05:29.013Z"
+  "updated_at": "2026-10-29T16:05:41.264Z"
 }
