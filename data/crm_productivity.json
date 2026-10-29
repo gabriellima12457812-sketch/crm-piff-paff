@@ -17,6 +17,20 @@
   ],
   "activities": [
     {
+      "id": "30fad033-491b-4947-b8ae-881875b0b1cd",
+      "user_id": "c3333333-3333-3333-3333-333333333333",
+      "lead_id": "CRM-FEL-WA-556596990402",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "556596990402",
+        "name": "Lead WhatsApp 0402",
+        "channel": "whatsapp",
+        "message": "Boa tarde Vinicius",
+        "hours_inactive": 314
+      },
+      "created_at": "2026-10-29T16:05:29.013Z"
+    },
+    {
       "id": "2a4fc925-522c-4e89-a6fe-24d4a76edc90",
       "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
       "lead_id": "CRM-SEB-WA-557588088582",
@@ -465,5 +479,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T15:32:49.033Z"
+  "updated_at": "2026-10-29T16:05:29.013Z"
 }
