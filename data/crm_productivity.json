@@ -1,6 +1,62 @@
 {
   "calls": [
     {
+      "id": "4470a031-355b-4229-ab4d-a6bcd45c85ac",
+      "user_id": "rodrigo",
+      "lead_id": null,
+      "caller_number": "169569687728165",
+      "recipient_number": "169569687728165",
+      "call_source": "WHATSAPP",
+      "status": "NO_ANSWER",
+      "duration_seconds": 0,
+      "recording_url": null,
+      "started_at": "2026-10-29T12:58:35.000Z",
+      "ended_at": "2026-10-29T12:58:35.000Z",
+      "created_at": "2026-10-29T12:58:36.546Z"
+    },
+    {
+      "id": "f9aba995-8a61-482b-a0dd-4fa4b8388b05",
+      "user_id": "rodrigo",
+      "lead_id": null,
+      "caller_number": "169569687728165",
+      "recipient_number": "169569687728165",
+      "call_source": "WHATSAPP",
+      "status": "NO_ANSWER",
+      "duration_seconds": 0,
+      "recording_url": null,
+      "started_at": "2026-10-29T12:58:36.000Z",
+      "ended_at": "2026-10-29T12:58:36.000Z",
+      "created_at": "2026-10-29T12:58:36.239Z"
+    },
+    {
+      "id": "6909f043-4b3a-4513-abe4-f175118e96f2",
+      "user_id": "rodrigo",
+      "lead_id": null,
+      "caller_number": "169569687728165",
+      "recipient_number": "169569687728165",
+      "call_source": "WHATSAPP",
+      "status": "NO_ANSWER",
+      "duration_seconds": 0,
+      "recording_url": null,
+      "started_at": "2026-10-29T12:58:35.000Z",
+      "ended_at": "2026-10-29T12:58:35.000Z",
+      "created_at": "2026-10-29T12:58:36.044Z"
+    },
+    {
+      "id": "d1d7a938-2ee8-4e32-9362-47093dce4951",
+      "user_id": "rodrigo",
+      "lead_id": null,
+      "caller_number": "169569687728165",
+      "recipient_number": "169569687728165",
+      "call_source": "WHATSAPP",
+      "status": "NO_ANSWER",
+      "duration_seconds": 0,
+      "recording_url": null,
+      "started_at": "2026-10-29T12:58:35.000Z",
+      "ended_at": "2026-10-29T12:58:35.000Z",
+      "created_at": "2026-10-29T12:58:35.860Z"
+    },
+    {
       "id": "16ec8216-4436-4e6e-a157-903f4c97a9b4",
       "user_id": "rodrigo",
       "lead_id": null,
@@ -170,6 +226,70 @@
     }
   ],
   "activities": [
+    {
+      "id": "abe860cc-6cb3-4989-af26-c16ce8b5f6d3",
+      "user_id": "rodrigo",
+      "lead_id": null,
+      "activity_type": "CALL",
+      "metadata": {
+        "call_id": "4470a031-355b-4229-ab4d-a6bcd45c85ac",
+        "duration_seconds": 0,
+        "status": "NO_ANSWER",
+        "caller_number": "169569687728165",
+        "recipient_number": "169569687728165",
+        "call_source": "WHATSAPP",
+        "recording_url": null
+      },
+      "created_at": "2026-10-29T12:58:36.546Z"
+    },
+    {
+      "id": "ff5e5d2f-ade3-4c32-9487-c16ad7d9f619",
+      "user_id": "rodrigo",
+      "lead_id": null,
+      "activity_type": "CALL",
+      "metadata": {
+        "call_id": "f9aba995-8a61-482b-a0dd-4fa4b8388b05",
+        "duration_seconds": 0,
+        "status": "NO_ANSWER",
+        "caller_number": "169569687728165",
+        "recipient_number": "169569687728165",
+        "call_source": "WHATSAPP",
+        "recording_url": null
+      },
+      "created_at": "2026-10-29T12:58:36.239Z"
+    },
+    {
+      "id": "113df1f4-4a9a-4a65-85df-9e54884e2b2c",
+      "user_id": "rodrigo",
+      "lead_id": null,
+      "activity_type": "CALL",
+      "metadata": {
+        "call_id": "6909f043-4b3a-4513-abe4-f175118e96f2",
+        "duration_seconds": 0,
+        "status": "NO_ANSWER",
+        "caller_number": "169569687728165",
+        "recipient_number": "169569687728165",
+        "call_source": "WHATSAPP",
+        "recording_url": null
+      },
+      "created_at": "2026-10-29T12:58:36.044Z"
+    },
+    {
+      "id": "ef576a93-8676-403f-a26e-4902f0e10c7d",
+      "user_id": "rodrigo",
+      "lead_id": null,
+      "activity_type": "CALL",
+      "metadata": {
+        "call_id": "d1d7a938-2ee8-4e32-9362-47093dce4951",
+        "duration_seconds": 0,
+        "status": "NO_ANSWER",
+        "caller_number": "169569687728165",
+        "recipient_number": "169569687728165",
+        "call_source": "WHATSAPP",
+        "recording_url": null
+      },
+      "created_at": "2026-10-29T12:58:35.860Z"
+    },
     {
       "id": "f5ed1ab4-6c3f-476c-a4f2-b748b4b58bd8",
       "user_id": "rodrigo",
@@ -689,5 +809,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:58:35.352Z"
+  "updated_at": "2026-10-29T12:58:36.546Z"
 }
