@@ -32,6 +32,19 @@
   ],
   "activities": [
     {
+      "id": "d7fef95f-c101-40fa-86b0-6e1cc45db4a4",
+      "user_id": "bbbbbbbb-9999-4999-a999-999999999999",
+      "lead_id": "CRM-YAS-WA-553599276786",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "553599276786",
+        "name": "Maria Jaqueline",
+        "channel": "whatsapp",
+        "message": "Certinho"
+      },
+      "created_at": "2026-10-29T16:09:15.717Z"
+    },
+    {
       "id": "935ef17b-ee36-4dcb-8b17-c35be95a0d4a",
       "user_id": "felipe",
       "lead_id": null,
@@ -511,5 +524,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T16:05:41.264Z"
+  "updated_at": "2026-10-29T16:09:15.717Z"
 }
