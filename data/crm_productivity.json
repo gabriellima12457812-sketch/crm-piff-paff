@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "61e8c23a-cee0-464a-a192-fa1eee3738bd",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-553899587612",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "553899587612",
+        "name": "Marcos Júnio",
+        "channel": "whatsapp",
+        "message": "Olá Eduardo, vim através do Site e gostaria de mais informações!"
+      },
+      "created_at": "2026-10-29T11:39:13.196Z"
+    },
+    {
       "id": "ac02d7f6-20d4-4a10-93bd-20cc854b257c",
       "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
       "lead_id": "CRM-SEB-WA-555499979727",
@@ -280,5 +293,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T11:37:41.638Z"
+  "updated_at": "2026-10-29T11:39:13.196Z"
 }
