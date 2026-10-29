@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "2d9501c5-7754-4db3-8220-e9b64325e7eb",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-554796913636",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "554796913636",
+        "name": "Hayde",
+        "channel": "whatsapp",
+        "message": "Poderia me enviar mais  informações ?"
+      },
+      "created_at": "2026-10-29T10:51:14.917Z"
+    },
+    {
       "id": "165fb1a2-4a2a-4880-bd67-501c3c1647ef",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-558586274749",
@@ -150,5 +163,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T10:50:43.448Z"
+  "updated_at": "2026-10-29T10:51:14.917Z"
 }
