@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "adb2a9b1-485e-4f91-aa7a-a791cb15564b",
+      "user_id": "88888888-8888-8888-8888-888888888888",
+      "lead_id": "CRM-DIA-WA-554899089945",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "554899089945",
+        "name": "Beatriz",
+        "channel": "whatsapp",
+        "message": "Bom dia"
+      },
+      "created_at": "2026-10-29T11:36:32.135Z"
+    },
+    {
       "id": "981c6ef6-2068-4e52-b249-3a3066925ea2",
       "user_id": "77777777-7777-7777-7777-777777777777",
       "lead_id": "CRM-KAS-WA-556699652693",
@@ -254,5 +267,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T11:29:52.663Z"
+  "updated_at": "2026-10-29T11:36:32.135Z"
 }
