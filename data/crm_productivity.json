@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "21262f75-1f0d-4b20-98d0-7065fb25c38b",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-557181037105",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "557181037105",
+        "name": "Valéria Pimentel",
+        "channel": "whatsapp",
+        "message": "Poderia me enviar mais  informações ?"
+      },
+      "created_at": "2026-10-29T13:54:23.037Z"
+    },
+    {
       "id": "625eb954-6c8d-42f9-8a24-84f3af35ad82",
       "user_id": "a1111111-1111-1111-1111-111111111111",
       "lead_id": "CRM-GAB-WA-554796583495",
@@ -413,5 +426,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:52:46.966Z"
+  "updated_at": "2026-10-29T13:54:23.037Z"
 }
