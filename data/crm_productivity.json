@@ -1,6 +1,21 @@
 {
   "calls": [
     {
+      "id": "7308eb2b-9211-4a8d-9d7d-933d615e7a4a",
+      "external_call_id": null,
+      "user_id": "gabriel",
+      "lead_id": null,
+      "caller_number": "554796890192",
+      "recipient_number": "554796890192",
+      "call_source": "WEB",
+      "status": "NO_ANSWER",
+      "duration_seconds": 0,
+      "recording_url": null,
+      "started_at": "2026-10-29T14:13:25.743Z",
+      "ended_at": "2026-10-29T14:13:25.743Z",
+      "created_at": "2026-10-29T14:13:25.743Z"
+    },
+    {
       "id": "ac447157-6537-4529-afe5-5f5b26d6e8b5",
       "user_id": "gabriel",
       "lead_id": "CRM-GAB-WA-5524999730231",
@@ -16,6 +31,23 @@
     }
   ],
   "activities": [
+    {
+      "id": "d8555223-597c-47a2-9f01-3469a19e625a",
+      "user_id": "gabriel",
+      "lead_id": null,
+      "activity_type": "CALL",
+      "metadata": {
+        "call_id": "7308eb2b-9211-4a8d-9d7d-933d615e7a4a",
+        "external_call_id": null,
+        "duration_seconds": 0,
+        "status": "NO_ANSWER",
+        "caller_number": "554796890192",
+        "recipient_number": "554796890192",
+        "call_source": "WEB",
+        "recording_url": null
+      },
+      "created_at": "2026-10-29T14:13:25.743Z"
+    },
     {
       "id": "3a694bfe-12d2-4904-bccf-ede7924d26d7",
       "user_id": "a1111111-1111-1111-1111-111111111111",
@@ -492,5 +524,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T14:11:52.680Z"
+  "updated_at": "2026-10-29T14:13:25.743Z"
 }
