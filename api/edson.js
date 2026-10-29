@@ -328,7 +328,7 @@ export default async function handler(req, res) {
 
     const targetSeller = req.query.seller || req.query.vendedor || 'all';
     const includeDeleted = req.query.include_deleted === 'true';
-    const limit = parseInt(req.query.limit || '3000', 10);
+    const limit = parseInt(req.query.limit || '5000', 10);
 
     let baseQueryUrl = `${url}/rest/v1/leads?select=*&order=value.desc`;
     if (targetSeller !== 'all' && targetSeller !== 'todos') {
@@ -342,19 +342,19 @@ export default async function handler(req, res) {
       }
     }
 
-    const [respPage1, respPage2] = await Promise.all([
-      fetch(`${baseQueryUrl}&offset=0&limit=1000`, { headers }),
-      limit > 1000 ? fetch(`${baseQueryUrl}&offset=1000&limit=1000`, { headers }) : Promise.resolve(null)
-    ]);
-
-    if (!respPage1.ok) {
-      const errText = await respPage1.text();
-      return res.status(500).json({ success: false, error: 'Erro ao consultar Supabase', details: errText });
+    // Paginação paralela completa: consulta todas as páginas de 1000 do Supabase (até 6.000 leads)
+    const maxPages = Math.min(6, Math.max(1, Math.ceil(limit / 1000)));
+    const pagePromises = [];
+    for (let p = 0; p < maxPages; p++) {
+      pagePromises.push(
+        fetch(`${baseQueryUrl}&offset=${p * 1000}&limit=1000`, { headers })
+          .then(r => r.ok ? r.json() : [])
+          .catch(() => [])
+      );
     }
 
-    const page1Leads = (await respPage1.json()) || [];
-    const page2Leads = (respPage2 && respPage2.ok) ? ((await respPage2.json()) || []) : [];
-    const rawLeads = [...page1Leads, ...page2Leads];
+    const pagesData = await Promise.all(pagePromises);
+    const rawLeads = pagesData.flat();
     // Filtra WHERE deleted_at IS NULL por padrão, mas permite ao Super Admin ver excluídos quando include_deleted=true
     const leads = filterActiveRecords(rawLeads, {
       includeDeleted,
