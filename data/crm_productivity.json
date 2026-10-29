@@ -47,6 +47,19 @@
   ],
   "activities": [
     {
+      "id": "5be98b35-d67b-4a0c-ae3f-149b6eef917c",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-554799329491",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "554799329491",
+        "name": "Maicon Souza | Investimentos Imobiliários",
+        "channel": "whatsapp",
+        "message": "[Áudio recebido do cliente]"
+      },
+      "created_at": "2026-10-29T14:42:25.368Z"
+    },
+    {
       "id": "7d9303e1-79bb-4e4e-a920-4215b60380a3",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-558199970705",
@@ -634,5 +647,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T14:34:05.557Z"
+  "updated_at": "2026-10-29T14:42:25.368Z"
 }
