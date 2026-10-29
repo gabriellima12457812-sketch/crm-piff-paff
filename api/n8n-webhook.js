@@ -367,25 +367,72 @@ export default async function handler(req, res) {
     // CAPTURA AUTOMÁTICA DE CHAMADAS TELEFÔNICAS / WHATSAPP (CALL:ENDED / VOIP)
     // =======================================================================
     const eventName = String(body.event || body.type || query.event || '').toLowerCase();
-    if (eventName === 'call' || eventName === 'call:ended' || eventName === 'calls' || body.call || body.data?.call) {
-      const callData = body.call || body.data?.call || body;
-      const callerNumber = cleanPhone(callData.caller || callData.from || body.from || body.caller || '');
-      const recipientNumber = cleanPhone(callData.recipient || callData.to || body.to || body.recipient || '');
-      const startedAt = callData.started_at || callData.startTime || body.started_at || new Date().toISOString();
-      const endedAt = callData.ended_at || callData.endTime || body.ended_at || new Date().toISOString();
-      let durationSeconds = callData.duration_seconds || callData.duration || body.duration_seconds;
-      if (typeof durationSeconds !== 'number') {
-        durationSeconds = Math.max(0, Math.floor((new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000));
+    const isCallEvent = eventName === 'call' || eventName === 'call:ended' || eventName === 'calls' ||
+                        eventName.includes('call') || Boolean(body.call) || Boolean(body.data?.call) ||
+                        (Array.isArray(body.data) && body.data.length > 0 && (body.data[0]?.status || body.data[0]?.isVideo !== undefined));
+
+    if (isCallEvent) {
+      const rawData = body.call || body.data?.call || (Array.isArray(body.data) ? body.data[0] : (body.data || body));
+
+      let callerNumber = cleanPhone(rawData.caller || rawData.from || rawData.callerNumber || body.sender || body.from || '');
+      let recipientNumber = cleanPhone(rawData.recipient || rawData.to || rawData.chatId || rawData.remoteJid || rawData.recipientNumber || body.to || '');
+
+      let clientPhone = recipientNumber;
+      if (callerNumber && !callerNumber.startsWith('47999158') && callerNumber !== cleanPhone(seller.phone || '')) {
+        clientPhone = callerNumber;
       }
-      const status = durationSeconds > 0 ? 'ANSWERED' : 'NO_ANSWER';
+
+      const callStatusRaw = String(rawData.status || body.status || '').toLowerCase();
+      let durationSeconds = parseInt(rawData.duration_seconds || rawData.duration || rawData.latencyMs || body.duration_seconds || '0', 10) || 0;
+
+      let finalStatus = 'NO_ANSWER';
+      if (callStatusRaw.includes('timeout') || callStatusRaw.includes('reject') || callStatusRaw.includes('miss') || callStatusRaw.includes('no_answer') || callStatusRaw.includes('decline')) {
+        finalStatus = 'NO_ANSWER';
+        durationSeconds = 0;
+      } else if (callStatusRaw.includes('accept') || callStatusRaw.includes('terminate') || callStatusRaw.includes('answered') || durationSeconds > 0) {
+        if (durationSeconds > 0) {
+          finalStatus = 'ANSWERED';
+        } else {
+          finalStatus = callStatusRaw.includes('accept') ? 'ANSWERED' : 'NO_ANSWER';
+        }
+      }
+
+      const startedAt = rawData.started_at || rawData.date || rawData.startTime || body.started_at || new Date().toISOString();
+      const endedAt = rawData.ended_at || rawData.endTime || body.ended_at || startedAt;
+
+      let matchedLeadId = null;
+      if (clientPhone) {
+        try {
+          const variants = normalizePhoneVariants(clientPhone);
+          const orFilter = variants.map(v => `phone.eq.${v},phone.ilike.*${v}*`).join(',');
+          const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&limit=1&select=id,name,notes`;
+          const sRes = await fetch(searchUrl, { headers: supabaseHeaders });
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            if (sData && sData[0]) {
+              matchedLeadId = sData[0].id;
+              const timeStr = new Date().toLocaleString('pt-BR');
+              const entry = `[${timeStr} - Ligação WhatsApp]: ${finalStatus === 'ANSWERED' ? `Chamada Atendida (${durationSeconds}s)` : '🔴 Ligação Não Atendida / Caixa (0s)'}`;
+              const updatedNotes = sData[0].notes ? `${sData[0].notes}\n\n${entry}` : entry;
+              await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(matchedLeadId)}`, {
+                method: 'PATCH',
+                headers: supabaseHeaders,
+                body: JSON.stringify({ notes: updatedNotes, last_interaction: new Date().toISOString() })
+              }).catch(() => {});
+            }
+          }
+        } catch (e) {}
+      }
+
       const callResult = await recordCallEvent({
-        userId: seller.user_id,
-        callerNumber,
-        recipientNumber,
-        callSource: callData.source || 'WHATSAPP',
-        status,
+        userId: seller.vendedor_id || seller.user_id,
+        leadId: matchedLeadId,
+        callerNumber: callerNumber || 'Comercial Piff-Paff',
+        recipientNumber: clientPhone || recipientNumber,
+        callSource: rawData.source || 'WHATSAPP',
+        status: finalStatus,
         durationSeconds,
-        recordingUrl: callData.recording_url || body.recording_url || null,
+        recordingUrl: rawData.recording_url || body.recording_url || null,
         startedAt,
         endedAt
       });

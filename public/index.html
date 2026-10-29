@@ -13244,7 +13244,7 @@
                 url: 'https://crm-piff-paff-v2.vercel.app/api/n8n-webhook',
                 byEvents: false,
                 base64: false,
-                events: ['MESSAGES_UPSERT']
+                events: ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'CALL', 'CHATS_UPSERT', 'CONNECTION_UPDATE']
               }
             })
           }).catch(() => {});

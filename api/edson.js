@@ -15,6 +15,7 @@ import {
 } from '../lib/governance.js';
 import {
   getWeeklyProductivityData,
+  getLeadProductivityTimeline,
   recordCallEvent,
   recordInboundContact,
   recordRemarketingAction
@@ -59,6 +60,13 @@ export default async function handler(req, res) {
   // ==============================================================================
   if (govRoute === 'productivity' || reqUrl.startsWith('/api/productivity')) {
     try {
+      const leadId = req.query?.lead_id || null;
+      const phone = req.query?.phone || null;
+      if (leadId || phone) {
+        const leadTimeline = await getLeadProductivityTimeline({ leadId, phone });
+        return res.status(200).json({ success: true, ...leadTimeline });
+      }
+
       const weekOffset = parseInt(req.query?.weekOffset || '0', 10) || 0;
       const sellerKey = req.query?.seller || null;
       let targetUserId = null;
