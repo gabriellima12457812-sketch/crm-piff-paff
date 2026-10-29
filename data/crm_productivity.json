@@ -32,6 +32,19 @@
   ],
   "activities": [
     {
+      "id": "5a874898-f365-4560-8ab3-4854a405ed21",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-554184997877",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "554184997877",
+        "name": "Ana Claudia",
+        "channel": "whatsapp",
+        "message": "Olá! Posso ter mais informações sobre isso?"
+      },
+      "created_at": "2026-10-29T13:18:46.423Z"
+    },
+    {
       "id": "cf5833db-0634-4630-bc6d-77a38fb94c7d",
       "user_id": "gabriel",
       "lead_id": null,
@@ -431,5 +444,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:12:54.376Z"
+  "updated_at": "2026-10-29T13:18:46.423Z"
 }
