@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "19792e63-d165-4e97-ac2b-ff2de1fe4db8",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-558299945758",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "558299945758",
+        "name": "Marivania",
+        "channel": "whatsapp",
+        "message": "Olá! Posso ter mais informações sobre isso?"
+      },
+      "created_at": "2026-10-29T15:20:21.198Z"
+    },
+    {
       "id": "b1c2262f-e458-42c3-afa6-3dfc5d84ccec",
       "user_id": "a1111111-1111-1111-1111-111111111111",
       "lead_id": "CRM-GAB-WA-1790444404752",
@@ -426,5 +439,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T15:05:18.559Z"
+  "updated_at": "2026-10-29T15:20:21.198Z"
 }
