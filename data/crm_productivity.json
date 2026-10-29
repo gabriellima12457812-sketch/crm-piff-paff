@@ -17,20 +17,6 @@
   ],
   "activities": [
     {
-      "id": "482a3134-ba5d-46a0-8398-2d21e4184bab",
-      "user_id": "a1111111-1111-1111-1111-111111111111",
-      "lead_id": "CRM-GAB-WA-554796846233",
-      "activity_type": "REMARKETING",
-      "metadata": {
-        "phone": "554796846233",
-        "name": "Lead WhatsApp 6233",
-        "channel": "whatsapp",
-        "message": "[Foto enviada por Gabriel Lima]",
-        "hours_inactive": 333
-      },
-      "created_at": "2026-10-29T16:38:58.722Z"
-    },
-    {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554796533494",
@@ -413,5 +399,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T16:38:58.722Z"
+  "updated_at": "2026-10-29T13:02:17.240Z"
 }
