@@ -32,6 +32,19 @@
   ],
   "activities": [
     {
+      "id": "de79ca67-31f5-463f-a846-b19beaf53cd6",
+      "user_id": "77777777-7777-7777-7777-777777777777",
+      "lead_id": "CRM-KAS-WA-553299222446",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "553299222446",
+        "name": "Jovelina",
+        "channel": "whatsapp",
+        "message": "Poderia me enviar mais  informações ?"
+      },
+      "created_at": "2026-10-29T13:32:30.499Z"
+    },
+    {
       "id": "935018cb-bd00-48c2-aba5-2662a1d81369",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554891667738",
@@ -483,5 +496,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:31:46.649Z"
+  "updated_at": "2026-10-29T13:32:30.499Z"
 }
