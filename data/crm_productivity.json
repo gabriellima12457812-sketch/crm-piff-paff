@@ -31,6 +31,20 @@
   ],
   "activities": [
     {
+      "id": "b2a3e3a8-274d-4002-a414-44e93891c9f2",
+      "user_id": "a1111111-1111-1111-1111-111111111111",
+      "lead_id": "lead-1789179933918-w024x",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "554191062777",
+        "name": "Lead WhatsApp 2777",
+        "channel": "whatsapp",
+        "message": "Olá",
+        "hours_inactive": 816
+      },
+      "created_at": "2026-10-29T12:41:19.804Z"
+    },
+    {
       "id": "59373395-1e9b-4f7b-8993-5054b33a413c",
       "user_id": "c3333333-3333-3333-3333-333333333333",
       "lead_id": "CRM-FEL-WA-554792806514",
@@ -416,5 +430,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:39:27.033Z"
+  "updated_at": "2026-10-29T12:41:19.804Z"
 }
