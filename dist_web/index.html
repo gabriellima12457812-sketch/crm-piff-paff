@@ -4574,6 +4574,9 @@
           if (typeof updateEdsonExecutiveDashboard === 'function') {
             updateEdsonExecutiveDashboard();
           }
+          if (typeof updateProductivityPermissionsUI === 'function') {
+            updateProductivityPermissionsUI();
+          }
 
           // Isolamento Exclusivo: O canal Instagram pertence UNICA E EXCLUSIVAMENTE ao Gabriel Lima
           const isGabrielUser = getSellerKey(user) === 'gabriel';
@@ -12421,6 +12424,9 @@
         } else if (viewName === 'vendas') {
           renderOrdersView();
         } else if (viewName === 'productivity') {
+          if (typeof updateProductivityPermissionsUI === 'function') {
+            updateProductivityPermissionsUI();
+          }
           loadProductivityDashboard(false);
         }
       }
@@ -13942,16 +13948,93 @@
       // CARREGAMENTO DO DASHBOARD SEMANAL DE PRODUTIVIDADE (SEGUNDA A DOMINGO)
       // ==============================================================================
 
+      // ==============================================================================
+      // PERMISSÕES DE VISUALIZAÇÃO: CADA VENDEDOR VÊ O SEU, GABRIEL E ÉDSON VÊEM TODOS
+      // ==============================================================================
+
+      function isProductivityPrivilegedUser() {
+        const curKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+        const curRole = (typeof getSellerRole === 'function') ? getSellerRole(authUser) : '';
+        const isOwner = (typeof isOwnerMode === 'function') ? isOwnerMode() : false;
+        return curKey === 'gabriel' || curKey === 'edson' || curRole === 'admin' || curRole === 'owner' || isOwner;
+      }
+      window.isProductivityPrivilegedUser = isProductivityPrivilegedUser;
+
+      function updateProductivityPermissionsUI() {
+        const curSeller = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+        const isPrivileged = isProductivityPrivilegedUser();
+        const selectEl = document.getElementById('prod-seller-select');
+        const manualSellerSelect = document.getElementById('manual-call-seller');
+
+        if (!selectEl) return;
+
+        if (isPrivileged) {
+          // Gabriel Lima e Edson podem ver toda a equipe ou filtrar por qualquer vendedor
+          selectEl.disabled = false;
+          selectEl.classList.remove('opacity-75', 'cursor-not-allowed');
+
+          const optionsHtml = `
+            <option value="all">💼 Toda a Equipe (Consolidado)</option>
+            <option value="gabriel">Gabriel Lima (Admin)</option>
+            <option value="edson">Édson (Diretoria)</option>
+            <option value="felipe">Felipe</option>
+            <option value="mayara">Mayara</option>
+            <option value="barbara">Bárbara</option>
+            <option value="eduardo">Eduardo</option>
+            <option value="rodrigo">Rodrigo</option>
+            <option value="kasio">Kasio</option>
+            <option value="diana">Diana</option>
+          `;
+          if (selectEl.innerHTML.trim() !== optionsHtml.trim()) {
+            selectEl.innerHTML = optionsHtml;
+          }
+          if (!productivitySelectedSeller) productivitySelectedSeller = 'all';
+          selectEl.value = productivitySelectedSeller;
+
+          if (manualSellerSelect) {
+            manualSellerSelect.disabled = false;
+          }
+        } else {
+          // Vendedor comum: vê estritamente o seu próprio desempenho comercial
+          productivitySelectedSeller = curSeller;
+          const myName = (typeof SELLER_REGISTRY !== 'undefined' && SELLER_REGISTRY[curSeller]?.name)
+            ? SELLER_REGISTRY[curSeller].name
+            : (curSeller.charAt(0).toUpperCase() + curSeller.slice(1));
+
+          selectEl.innerHTML = `<option value="${curSeller}">👤 Meu Desempenho (${myName})</option>`;
+          selectEl.value = curSeller;
+          selectEl.disabled = true;
+          selectEl.classList.add('opacity-75', 'cursor-not-allowed');
+          selectEl.title = 'Visualização restrita ao seu próprio desempenho comercial.';
+
+          if (manualSellerSelect) {
+            manualSellerSelect.value = curSeller;
+            manualSellerSelect.disabled = true;
+          }
+        }
+      }
+      window.updateProductivityPermissionsUI = updateProductivityPermissionsUI;
+
       async function loadProductivityDashboard(forceRefresh = false) {
+        updateProductivityPermissionsUI();
+
         const refreshIcon = document.getElementById('prod-refresh-icon');
         if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
         try {
-          const seller = productivitySelectedSeller || 'all';
-          const offset = productivityWeekOffset || 0;
-          const url = `/api/edson?gov_route=productivity&seller=${encodeURIComponent(seller)}&weekOffset=${offset}`;
+          const curSeller = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+          const isPrivileged = isProductivityPrivilegedUser();
+          const seller = isPrivileged ? (productivitySelectedSeller || 'all') : curSeller;
+          productivitySelectedSeller = seller;
 
-          const res = await fetch(url);
+          const offset = productivityWeekOffset || 0;
+          const url = `/api/edson?gov_route=productivity&seller=${encodeURIComponent(seller)}&caller_seller=${encodeURIComponent(curSeller)}&weekOffset=${offset}`;
+
+          const res = await fetch(url, {
+            headers: {
+              'x-caller-seller': curSeller
+            }
+          });
           const data = await res.json();
           productivityCurrentData = data;
 
@@ -14190,8 +14273,18 @@
       }
       window.navigateProductivityWeek = navigateProductivityWeek;
 
-      // Troca de Vendedor no filtro
+      // Troca de Vendedor no filtro (com trava estrita de permissão)
       function changeProductivitySeller(sellerKey) {
+        const isPrivileged = (typeof isProductivityPrivilegedUser === 'function') ? isProductivityPrivilegedUser() : false;
+        const curSeller = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+
+        if (!isPrivileged && sellerKey !== curSeller) {
+          showToast('Acesso restrito: Cada vendedor pode visualizar somente a sua própria produtividade comercial.', 'warning');
+          productivitySelectedSeller = curSeller;
+          if (typeof updateProductivityPermissionsUI === 'function') updateProductivityPermissionsUI();
+          return;
+        }
+
         productivitySelectedSeller = sellerKey;
         loadProductivityDashboard(true);
       }

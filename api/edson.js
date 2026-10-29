@@ -68,7 +68,16 @@ export default async function handler(req, res) {
       }
 
       const weekOffset = parseInt(req.query?.weekOffset || '0', 10) || 0;
-      const sellerKey = req.query?.seller || null;
+      const callerSeller = String(req.headers['x-caller-seller'] || req.query?.caller_seller || '').toLowerCase().trim();
+      let sellerKey = req.query?.seller || null;
+
+      // Trava de Privacidade: Somente Gabriel Lima e Édson podem ver métricas de todos
+      const isPrivilegedAdmin = (callerSeller === 'gabriel' || callerSeller === 'edson');
+      if (callerSeller && !isPrivilegedAdmin) {
+        // Vendedor comum: forçado a visualizar exclusivamente o seu próprio desempenho comercial
+        sellerKey = callerSeller;
+      }
+
       let targetUserId = null;
       if (sellerKey && sellerKey !== 'all' && sellerKey !== 'edson') {
         const { state: govState } = await loadGovernanceState();

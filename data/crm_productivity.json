@@ -31,47 +31,6 @@
   ],
   "activities": [
     {
-      "id": "b2a3e3a8-274d-4002-a414-44e93891c9f2",
-      "user_id": "a1111111-1111-1111-1111-111111111111",
-      "lead_id": "lead-1789179933918-w024x",
-      "activity_type": "REMARKETING",
-      "metadata": {
-        "phone": "554191062777",
-        "name": "Lead WhatsApp 2777",
-        "channel": "whatsapp",
-        "message": "Olá",
-        "hours_inactive": 816
-      },
-      "created_at": "2026-10-29T12:41:19.804Z"
-    },
-    {
-      "id": "59373395-1e9b-4f7b-8993-5054b33a413c",
-      "user_id": "c3333333-3333-3333-3333-333333333333",
-      "lead_id": "CRM-FEL-WA-554792806514",
-      "activity_type": "REMARKETING",
-      "metadata": {
-        "phone": "554792806514",
-        "name": "Lead WhatsApp 6514",
-        "channel": "whatsapp",
-        "message": "Verifica pra mim se conseguem fazer esse travesseiro no tricô",
-        "hours_inactive": 235
-      },
-      "created_at": "2026-10-29T12:39:27.033Z"
-    },
-    {
-      "id": "d503e8b0-9658-44e0-853c-7c7732b14b99",
-      "user_id": "d4444444-4444-4444-4444-444444444444",
-      "lead_id": "CRM-EDU-WA-553599061313",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "553599061313",
-        "name": "Elizabeth Balduino",
-        "channel": "whatsapp",
-        "message": "Quais são os materiais utilizados?"
-      },
-      "created_at": "2026-10-29T12:32:57.710Z"
-    },
-    {
       "id": "37ebbce3-4256-4f2e-8de6-b22a90b549d1",
       "user_id": "gabriel",
       "lead_id": "CRM-GAB-WA-5524999730231",
@@ -430,5 +389,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:41:19.804Z"
+  "updated_at": "2026-10-29T12:02:34.140Z"
 }
