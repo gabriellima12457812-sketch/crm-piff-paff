@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "3cd39953-939d-42fe-96e9-fd232465e52c",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-5511986071955",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "5511986071955",
+        "name": "L.A.E",
+        "channel": "whatsapp",
+        "message": "Olá"
+      },
+      "created_at": "2026-10-29T10:32:01.498Z"
+    },
+    {
       "id": "ae6f6486-3ffb-42dc-9958-d94b5cbf0238",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-559180146682",
@@ -111,5 +124,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T03:59:48.488Z"
+  "updated_at": "2026-10-29T10:32:01.498Z"
 }
