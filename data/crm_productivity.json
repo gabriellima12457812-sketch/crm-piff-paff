@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "5fb15196-df90-47e8-a816-70e79f1b4bf0",
+      "user_id": "77777777-7777-7777-7777-777777777777",
+      "lead_id": "CRM-KAS-WA-557991452806",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "557991452806",
+        "name": "Cristina Melo",
+        "channel": "whatsapp",
+        "message": "Olá! Posso ter mais informações sobre isso?"
+      },
+      "created_at": "2026-10-29T13:03:48.026Z"
+    },
+    {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554796533494",
@@ -399,5 +412,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:02:17.240Z"
+  "updated_at": "2026-10-29T13:03:48.026Z"
 }
