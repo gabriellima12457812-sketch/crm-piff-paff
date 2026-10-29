@@ -547,13 +547,6 @@
                 </span>
                 <span id="badge-users-total" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-bold">8</span>
               </button>
-              <button data-view="resgate" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition text-amber-300 hover:text-white hover:bg-amber-500/15 border border-amber-500/20 bg-amber-500/10">
-                <span class="flex items-center gap-2.5">
-                  <i class="ph-bold ph-archive-box text-lg text-amber-400"></i>
-                  <span>Base de Resgate</span>
-                </span>
-                <span id="badge-resgate-total" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-bold">0</span>
-              </button>
             </div>
           </nav>
         </div>
@@ -675,13 +668,6 @@
                   <span>Gestão de Usuários</span>
                 </span>
                 <span id="badge-users-total-mobile" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-bold">8</span>
-              </button>
-              <button data-view="resgate" class="nav-btn-mobile w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20">
-                <span class="flex items-center gap-3">
-                  <i class="ph-bold ph-archive-box text-xl text-amber-400"></i>
-                  <span>Base de Resgate</span>
-                </span>
-                <span id="badge-resgate-total-mobile" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-bold">0</span>
               </button>
             </div>
 
@@ -7161,15 +7147,28 @@
 
       allFunnelLeads.forEach(l => {
         if (!l.followup_date) {
-          l.followup_status = 'Sem Follow-up';
-        } else {
-          if (l.followup_date === todayStr) {
-            l.followup_status = 'Chamar Hoje';
-          } else if (l.followup_date < todayStr) {
-            l.followup_status = 'Atrasado';
-          } else {
-            l.followup_status = 'Agendado';
+          const rawDate = l.last_interaction || l.data_ultima_interacao || l.created_at;
+          if (rawDate) {
+            try {
+              const d = new Date(rawDate);
+              if (!isNaN(d.getTime())) {
+                const nextContact = new Date(d.getTime() + 86400000);
+                l.followup_date = nextContact.toISOString().split('T')[0];
+              }
+            } catch (e) {}
           }
+        }
+
+        if (!l.followup_date) {
+          l.followup_date = todayStr;
+        }
+
+        if (l.followup_date === todayStr) {
+          l.followup_status = 'Chamar Hoje';
+        } else if (l.followup_date < todayStr) {
+          l.followup_status = 'Atrasado';
+        } else {
+          l.followup_status = 'Agendado';
         }
       });
 
@@ -12063,7 +12062,11 @@
       document.getElementById('sidebar-hot-count').textContent = `${hotCount} clientes`;
 
       const todayStr = new Date().toISOString().split('T')[0];
-      const overdue = leads.filter(l => l.followup_date && l.followup_date < todayStr && l.stage !== 'concluidas');
+      const overdue = leads.filter(l => {
+        if (l.stage === 'concluidas' || l.stage === 'concluida') return false;
+        const fDate = l.followup_date || (l.last_interaction ? l.last_interaction.split('T')[0] : null);
+        return fDate && fDate < todayStr;
+      });
       document.getElementById('badge-followup-urgent').textContent = overdue.length;
 
       if (typeof updateEdsonExecutiveDashboard === 'function') {
