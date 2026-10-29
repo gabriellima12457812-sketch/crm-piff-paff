@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "23601d15-3617-496c-95e9-088995a27fbd",
+      "user_id": "88888888-8888-8888-8888-888888888888",
+      "lead_id": "CRM-DIA-WA-556781113979",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "556781113979",
+        "name": "Alcir Marcon",
+        "channel": "whatsapp",
+        "message": "Bom dia"
+      },
+      "created_at": "2026-10-29T11:08:55.622Z"
+    },
+    {
       "id": "58791fc9-1c6a-41e4-b073-d33f0219e100",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554799028294",
@@ -202,5 +215,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T11:00:47.969Z"
+  "updated_at": "2026-10-29T11:08:55.622Z"
 }
