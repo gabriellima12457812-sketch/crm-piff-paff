@@ -17,6 +17,20 @@
   ],
   "activities": [
     {
+      "id": "b1c2262f-e458-42c3-afa6-3dfc5d84ccec",
+      "user_id": "a1111111-1111-1111-1111-111111111111",
+      "lead_id": "CRM-GAB-WA-1790444404752",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "554797892156",
+        "name": "Lead WhatsApp 2156",
+        "channel": "whatsapp",
+        "message": "Espreguiçadeira 690",
+        "hours_inactive": 50
+      },
+      "created_at": "2026-10-29T15:05:18.559Z"
+    },
+    {
       "id": "7ede8e5a-127b-4771-bad7-fc55f08196c0",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-556292984693",
@@ -412,5 +426,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T15:03:16.678Z"
+  "updated_at": "2026-10-29T15:05:18.559Z"
 }
