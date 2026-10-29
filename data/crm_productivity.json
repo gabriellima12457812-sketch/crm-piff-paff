@@ -31,6 +31,19 @@
   ],
   "activities": [
     {
+      "id": "2632d8a0-6fd9-4ee8-84ad-0d22527ac9da",
+      "user_id": "77777777-7777-7777-7777-777777777777",
+      "lead_id": "CRM-KAS-WA-556499108800",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "556499108800",
+        "name": "Virginia Carvalho",
+        "channel": "whatsapp",
+        "message": "Bom dia!\nSofá e cadeiras para área externa"
+      },
+      "created_at": "2026-10-29T12:19:12.729Z"
+    },
+    {
       "id": "76dcfa01-93c6-46f3-860a-e632ae8e2cbc",
       "user_id": "77777777-7777-7777-7777-777777777777",
       "lead_id": "CRM-KAS-WA-5511985881298",
@@ -416,5 +429,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:16:51.534Z"
+  "updated_at": "2026-10-29T12:19:12.729Z"
 }
