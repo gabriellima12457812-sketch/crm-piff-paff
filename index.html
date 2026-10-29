@@ -14094,9 +14094,16 @@
           });
 
           const meta = act.metadata || {};
-          const sellerName = (typeof SELLER_REGISTRY !== 'undefined' && SELLER_REGISTRY[act.user_id]?.name)
-            ? SELLER_REGISTRY[act.user_id].name
-            : (act.user_id || 'Comercial');
+          let sellerName = 'Comercial';
+          if (typeof SELLER_REGISTRY !== 'undefined') {
+            if (SELLER_REGISTRY[act.user_id]?.name) {
+              sellerName = SELLER_REGISTRY[act.user_id].name;
+            } else {
+              const matched = Object.values(SELLER_REGISTRY).find(s => s.id === act.user_id || s.key === act.user_id);
+              if (matched) sellerName = matched.name;
+              else sellerName = act.user_id || 'Comercial';
+            }
+          }
 
           if (act.activity_type === 'CALL') {
             const isAnswered = meta.status === 'ANSWERED' && (meta.duration_seconds > 0);
