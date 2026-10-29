@@ -227,6 +227,20 @@
   ],
   "activities": [
     {
+      "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-554796533494",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "554796533494",
+        "name": "Lead WhatsApp 3494",
+        "channel": "whatsapp",
+        "message": "Opa",
+        "hours_inactive": 115
+      },
+      "created_at": "2026-10-29T13:00:26.837Z"
+    },
+    {
       "id": "06ce9460-3cc6-4831-b7ba-b38d1a99e234",
       "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
       "lead_id": "CRM-SEB-WA-5978110468",
@@ -835,5 +849,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:59:13.087Z"
+  "updated_at": "2026-10-29T13:00:26.837Z"
 }
