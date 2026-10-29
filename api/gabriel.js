@@ -2083,28 +2083,39 @@ export default async function handler(req, res) {
 
     let existingLead = null;
     if (id) {
-      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*`, { headers: supabaseHeaders });
+      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(id)}&select=*`, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const found = await searchRes.json();
         if (Array.isArray(found) && found.length > 0) existingLead = found[0];
       }
     }
+
     if (!existingLead && normalizedPhone) {
-      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?phone=eq.${encodeURIComponent(normalizedPhone)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*`, { headers: supabaseHeaders });
+      const pDigits = normalizedPhone.replace(/\D/g, '');
+      const last8 = pDigits.slice(-8);
+      const variants = [pDigits];
+      if (pDigits.startsWith('55')) variants.push(pDigits.slice(2));
+      else variants.push(`55${pDigits}`);
+      if (last8.length === 8) variants.push(last8);
+
+      const orParts = variants.map(v => `phone.eq.${v},phone.ilike.*${v}*`).join(',');
+      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?or=(${orParts})&select=*&limit=1`, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const found = await searchRes.json();
         if (Array.isArray(found) && found.length > 0) existingLead = found[0];
       }
     }
+
     if (!existingLead && normalizedInsta) {
-      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?instagram=ilike.%25${encodeURIComponent(normalizedInsta)}%25&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*`, { headers: supabaseHeaders });
+      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?instagram=ilike.%25${encodeURIComponent(normalizedInsta)}%25&select=*&limit=1`, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const found = await searchRes.json();
         if (Array.isArray(found) && found.length > 0) existingLead = found[0];
       }
     }
+
     if (!existingLead && name && String(name).trim().length >= 3) {
-      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?name=ilike.%${encodeURIComponent(String(name).trim())}%&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*&limit=1`, { headers: supabaseHeaders });
+      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?name=ilike.%${encodeURIComponent(String(name).trim())}%&select=*&limit=1`, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const found = await searchRes.json();
         if (Array.isArray(found) && found.length > 0) existingLead = found[0];

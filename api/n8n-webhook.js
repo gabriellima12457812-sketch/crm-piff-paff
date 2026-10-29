@@ -684,16 +684,44 @@ export default async function handler(req, res) {
       });
     }
 
-    // 1.5 Extração de Telefone
-    const rawPhone = body.telefone || body.phone || rawJid.replace(/@.*$/, '') || '';
+    // 1.5 Extração e Resolução Blindada de Telefone (suporte total a WhatsApp @lid)
+    let altJid = String(key.remoteJidAlt || evoData?.remoteJidAlt || body.remoteJidAlt || '');
+    let realPhone = '';
+    if (altJid && altJid.includes('@s.whatsapp.net')) {
+      realPhone = cleanPhone(altJid.replace(/@.*$/, ''));
+    }
+
+    // Se o contato veio com @lid e sem altJid no payload, consulta chat na Evolution API para descobrir o número real
+    if (!realPhone && rawJid.includes('@lid')) {
+      try {
+        const evoUrl = process.env.EVOLUTION_SERVER_URL || 'https://piffpaff-evolution-api.onrender.com';
+        const evoKey = process.env.EVOLUTION_API_KEY || 'PiffPaffEvoSecretKey2026!';
+        const chRes = await fetch(`${evoUrl}/chat/findChats/${seller.vendedor_id}`, {
+          method: 'POST',
+          headers: { apikey: evoKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ where: { remoteJid: rawJid } })
+        });
+        if (chRes.ok) {
+          const chData = await chRes.json();
+          const alt = chData?.lastMessage?.key?.remoteJidAlt || (Array.isArray(chData) && chData[0]?.lastMessage?.key?.remoteJidAlt);
+          if (alt) {
+            realPhone = cleanPhone(alt.replace(/@.*$/, ''));
+          }
+        }
+      } catch (e) {}
+    }
+
+    const rawPhone = realPhone || body.telefone || body.phone || rawJid.replace(/@.*$/, '') || '';
     const phoneDigits = cleanPhone(rawPhone);
 
-    if (!phoneDigits || phoneDigits.length < 8) {
+    // Se o número obtido for um LID numérico (>13 dígitos sem DDI 55), descarta para evitar criar contatos fake
+    if (!phoneDigits || phoneDigits.length < 8 || (phoneDigits.length > 13 && !phoneDigits.startsWith('55'))) {
       return res.status(200).json({
         success: true,
         ignored: true,
-        reason: 'Número de telefone não identificado ou evento não transacional',
-        event: body.event || 'unknown'
+        reason: 'Número de telefone não identificado ou LID interno não resolvido',
+        event: body.event || 'unknown',
+        rawPhone: phoneDigits
       });
     }
 
@@ -772,14 +800,14 @@ export default async function handler(req, res) {
         }
       }
 
-      // Se não encontrou vinculado a este vendedor, busca se já existe cadastrado sem vínculo de vendedor (legado)
+      // Se não encontrou restrito ao user_id exato, busca se já existe cadastrado no sistema para este número (evita contatos duplicados)
       if (!existingLead) {
-        const fallbackSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&user_id=is.null&order=created_at.asc&select=*&limit=1`;
-        const fbRes = await fetch(fallbackSearchUrl, { headers: supabaseHeaders });
-        if (fbRes.ok) {
-          const fbData = await fbRes.json();
-          if (Array.isArray(fbData) && fbData.length > 0) {
-            existingLead = fbData[0];
+        const broadSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&order=created_at.asc&select=*&limit=1`;
+        const broadRes = await fetch(broadSearchUrl, { headers: supabaseHeaders });
+        if (broadRes.ok) {
+          const broadData = await broadRes.json();
+          if (Array.isArray(broadData) && broadData.length > 0) {
+            existingLead = broadData[0];
           }
         }
       }

@@ -1,21 +1,6 @@
 {
   "calls": [
     {
-      "id": "46583dad-b6bc-47b6-940e-c1419aff40c1",
-      "external_call_id": "0037A2D960F215D2F018A796C014C4FD",
-      "user_id": "gabriel",
-      "lead_id": null,
-      "caller_number": "109070845517855",
-      "recipient_number": "558187243180",
-      "call_source": "WHATSAPP",
-      "status": "NO_ANSWER",
-      "duration_seconds": 0,
-      "recording_url": null,
-      "started_at": "2026-10-29T13:12:53.000Z",
-      "ended_at": "2026-10-29T13:12:53.000Z",
-      "created_at": "2026-10-29T13:12:54.376Z"
-    },
-    {
       "id": "ac447157-6537-4529-afe5-5f5b26d6e8b5",
       "user_id": "gabriel",
       "lead_id": "CRM-GAB-WA-5524999730231",
@@ -31,101 +16,6 @@
     }
   ],
   "activities": [
-    {
-      "id": "e796d99f-83fb-4abf-b1bb-bd942090b7b7",
-      "user_id": "d4444444-4444-4444-4444-444444444444",
-      "lead_id": "CRM-EDU-WA-559688056445",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "559688056445",
-        "name": "Leny",
-        "channel": "whatsapp",
-        "message": "Qual é o preço?"
-      },
-      "created_at": "2026-10-29T13:34:32.435Z"
-    },
-    {
-      "id": "de79ca67-31f5-463f-a846-b19beaf53cd6",
-      "user_id": "77777777-7777-7777-7777-777777777777",
-      "lead_id": "CRM-KAS-WA-553299222446",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "553299222446",
-        "name": "Jovelina",
-        "channel": "whatsapp",
-        "message": "Poderia me enviar mais  informações ?"
-      },
-      "created_at": "2026-10-29T13:32:30.499Z"
-    },
-    {
-      "id": "935018cb-bd00-48c2-aba5-2662a1d81369",
-      "user_id": "d4444444-4444-4444-4444-444444444444",
-      "lead_id": "CRM-EDU-WA-554891667738",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "554891667738",
-        "name": "Mariana Araujo",
-        "channel": "whatsapp",
-        "message": "Olá! 👋 Sou a Mariana, Coordenadora de Suprimentos do Grupo OAD.\n\nComo posso te ajudar?\n\nSe você deseja apresentar sua empresa como fornecedora, envie um e-mail para suprimentos@grupooad.com.br.\n\nPara dúvidas sobre pagamentos ou assuntos financeiros, pedimos que o contato também seja feito por e-mail, para garantir o registro e agilidade no retorno.\n\nAgradeço o contato! 😊"
-      },
-      "created_at": "2026-10-29T13:31:46.649Z"
-    },
-    {
-      "id": "47787faa-962f-4a03-a0dd-20303e25fa3d",
-      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
-      "lead_id": "CRM-SEB-WA-557592258056",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "557592258056",
-        "name": "Geralda",
-        "channel": "whatsapp",
-        "message": "Lido"
-      },
-      "created_at": "2026-10-29T13:30:50.802Z"
-    },
-    {
-      "id": "1bf17311-7e25-4183-8b07-c325802c05ff",
-      "user_id": "d4444444-4444-4444-4444-444444444444",
-      "lead_id": "CRM-EDU-WA-554891062567",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "554891062567",
-        "name": "Dayara Cardoso",
-        "channel": "whatsapp",
-        "message": "[Contato compartilhado pelo cliente]"
-      },
-      "created_at": "2026-10-29T13:29:58.956Z"
-    },
-    {
-      "id": "5a874898-f365-4560-8ab3-4854a405ed21",
-      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
-      "lead_id": "CRM-SEB-WA-554184997877",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "554184997877",
-        "name": "Ana Claudia",
-        "channel": "whatsapp",
-        "message": "Olá! Posso ter mais informações sobre isso?"
-      },
-      "created_at": "2026-10-29T13:18:46.423Z"
-    },
-    {
-      "id": "cf5833db-0634-4630-bc6d-77a38fb94c7d",
-      "user_id": "gabriel",
-      "lead_id": null,
-      "activity_type": "CALL",
-      "metadata": {
-        "call_id": "46583dad-b6bc-47b6-940e-c1419aff40c1",
-        "external_call_id": "0037A2D960F215D2F018A796C014C4FD",
-        "duration_seconds": 0,
-        "status": "NO_ANSWER",
-        "caller_number": "109070845517855",
-        "recipient_number": "558187243180",
-        "call_source": "WHATSAPP",
-        "recording_url": null
-      },
-      "created_at": "2026-10-29T13:12:54.376Z"
-    },
     {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
@@ -509,5 +399,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:34:32.435Z"
+  "updated_at": "2026-10-29T13:02:17.240Z"
 }

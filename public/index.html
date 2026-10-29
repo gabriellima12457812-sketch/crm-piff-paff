@@ -5262,7 +5262,7 @@
             cloudInsta.length = 0; // Vendedores não-Gabriel nunca possuem Instagram
           }
 
-          // PRESERVAÇÃO CRÍTICA E CANÔNICA DE WHATSAPP / BASE OFICIAL DO GABRIEL (909 LEADS):
+          // PRESERVAÇÃO CRÍTICA E CANÔNICA DE WHATSAPP / BASE DESDUPLICADA DO GABRIEL:
           const isGabrielSync = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
           if (isGabrielSync) {
             const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS))
@@ -5272,46 +5272,67 @@
             const baseMap = new Map();
             const phoneMap = new Map();
 
+            // Mapeia por ID canônico e por todas as variantes de telefone (com/sem 55 e últimos 8 dígitos)
             baseLeads.forEach(l => {
               baseMap.set(String(l.id).toUpperCase(), { ...l });
               const cleanP = cleanPhone(l.phone);
-              if (cleanP) phoneMap.set(cleanP, l.id);
+              if (cleanP) {
+                phoneMap.set(cleanP, l.id);
+                const last8 = cleanP.slice(-8);
+                if (last8.length === 8) phoneMap.set(last8, l.id);
+                if (cleanP.startsWith('55')) phoneMap.set(cleanP.slice(2), l.id);
+                else phoneMap.set(`55${cleanP}`, l.id);
+              }
             });
 
             // Atualiza leads existentes com notas ou status mais recentes do Supabase em nuvem
             cloudWa.forEach(cL => {
               const cId = String(cL.id || '').toUpperCase();
               const cPhone = cleanPhone(cL.phone);
+              const cLast8 = cPhone.slice(-8);
 
+              let targetId = null;
               if (baseMap.has(cId)) {
-                const target = baseMap.get(cId);
-                if (cL.notes && cL.notes.length > (target.notes || '').length) {
+                targetId = cId;
+              } else if (cPhone && phoneMap.has(cPhone)) {
+                targetId = phoneMap.get(cPhone);
+              } else if (cLast8.length === 8 && phoneMap.has(cLast8)) {
+                targetId = phoneMap.get(cLast8);
+              }
+
+              if (targetId && baseMap.has(targetId)) {
+                const target = baseMap.get(targetId);
+                // Mescla notas com segurança (nunca perde histórico de ligações ou mensagens)
+                if (cL.notes && (!target.notes || cL.notes.length > target.notes.length)) {
                   target.notes = cL.notes;
+                } else if (cL.notes && target.notes && !target.notes.includes(cL.notes.slice(0, 30))) {
+                  target.notes = `${target.notes}\n\n${cL.notes}`;
                 }
+
                 if (cL.stage && cL.stage !== 'novos') {
                   target.stage = cL.stage;
                 }
                 if (cL.last_interaction) {
                   target.last_interaction = cL.last_interaction;
                 }
-                target.followup_date = cL.followup_date || null;
-                target.followup_status = target.followup_date ? (target.followup_date === formatYMD(new Date()) ? 'Chamar Hoje' : (target.followup_date < formatYMD(new Date()) ? 'Atrasado' : 'Agendado')) : 'Sem Follow-up';
-              } else if (cPhone && phoneMap.has(cPhone)) {
-                const target = baseMap.get(phoneMap.get(cPhone));
-                if (target) {
-                  if (cL.notes && cL.notes.length > (target.notes || '').length) {
-                    target.notes = cL.notes;
-                  }
-                  if (cL.stage && cL.stage !== 'novos') {
-                    target.stage = cL.stage;
-                  }
-                  target.followup_date = cL.followup_date || null;
-                  target.followup_status = target.followup_date ? (target.followup_date === formatYMD(new Date()) ? 'Chamar Hoje' : (target.followup_date < formatYMD(new Date()) ? 'Atrasado' : 'Agendado')) : 'Sem Follow-up';
+                if (cL.name && (!target.name || target.name.startsWith('Cliente') || target.name.startsWith('Você') || target.name.startsWith('Lead WhatsApp'))) {
+                  target.name = cL.name;
+                }
+                target.followup_date = cL.followup_date || target.followup_date || null;
+                target.followup_status = target.followup_date
+                  ? (target.followup_date === formatYMD(new Date()) ? 'Chamar Hoje' : (target.followup_date < formatYMD(new Date()) ? 'Atrasado' : 'Agendado'))
+                  : (target.followup_status || 'Sem Follow-up');
+              } else if (cL.id) {
+                // Lead genuinamente novo vindo do WhatsApp/Supabase: preserva sem descartar!
+                baseMap.set(cId, { ...cL });
+                if (cPhone) {
+                  phoneMap.set(cPhone, cL.id);
+                  if (cLast8.length === 8) phoneMap.set(cLast8, cL.id);
                 }
               }
             });
 
-            // Garante rigorosamente os 909 leads canônicos oficiais sem inchaço ou pipeline duplicado
+            // Constrói lista consolidada sem contatos repetidos
             cloudWa.length = 0;
             cloudWa.push(...Array.from(baseMap.values()));
           }
@@ -5321,18 +5342,39 @@
               ? CARIBE_170_LEADS.filter(l => !deletedIds.has(l.id))
               : [];
             const edsonMap = new Map();
+            const edsonPhoneMap = new Map();
+
             baseLeads.forEach(l => {
-              edsonMap.set(String(l.id).toUpperCase(), { ...l, vendedor_id: l.vendedor_id || 'gabriel' });
+              const idUpper = String(l.id).toUpperCase();
+              edsonMap.set(idUpper, { ...l, vendedor_id: l.vendedor_id || 'gabriel' });
+              const cleanP = cleanPhone(l.phone);
+              if (cleanP) {
+                edsonPhoneMap.set(cleanP, idUpper);
+                const last8 = cleanP.slice(-8);
+                if (last8.length === 8) edsonPhoneMap.set(last8, idUpper);
+              }
             });
+
             userCloudLeads.forEach(cL => {
               const cId = String(cL.id || '').toUpperCase();
-              if (edsonMap.has(cId)) {
-                const target = edsonMap.get(cId);
-                if (cL.notes && cL.notes.length > (target.notes || '').length) target.notes = cL.notes;
+              const cPhone = cleanPhone(cL.phone);
+              const cLast8 = cPhone.slice(-8);
+
+              let targetId = null;
+              if (edsonMap.has(cId)) targetId = cId;
+              else if (cPhone && edsonPhoneMap.has(cPhone)) targetId = edsonPhoneMap.get(cPhone);
+              else if (cLast8.length === 8 && edsonPhoneMap.has(cLast8)) targetId = edsonPhoneMap.get(cLast8);
+
+              if (targetId && edsonMap.has(targetId)) {
+                const target = edsonMap.get(targetId);
+                if (cL.notes && (!target.notes || cL.notes.length > target.notes.length)) target.notes = cL.notes;
+                else if (cL.notes && target.notes && !target.notes.includes(cL.notes.slice(0, 30))) target.notes = `${target.notes}\n\n${cL.notes}`;
                 if (cL.stage) target.stage = cL.stage;
                 if (cL.value) target.value = cL.value;
+                if (cL.name && (!target.name || target.name.startsWith('Cliente') || target.name.startsWith('Você'))) target.name = cL.name;
               } else {
                 edsonMap.set(cId, cL);
+                if (cPhone) edsonPhoneMap.set(cPhone, cId);
               }
             });
             cloudWa.length = 0;

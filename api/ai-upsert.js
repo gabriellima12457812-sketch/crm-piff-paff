@@ -852,7 +852,15 @@ export default async function handler(req, res) {
     }
 
     if (!existingLead && normalizedPhone) {
-      const searchUrl = `${supabaseUrl}/rest/v1/leads?phone=eq.${encodeURIComponent(normalizedPhone)}&user_id=eq.${encodeURIComponent(sellerUserId)}&select=*`;
+      const pDigits = normalizedPhone.replace(/\D/g, '');
+      const last8 = pDigits.slice(-8);
+      const variants = [pDigits];
+      if (pDigits.startsWith('55')) variants.push(pDigits.slice(2));
+      else variants.push(`55${pDigits}`);
+      if (last8.length === 8) variants.push(last8);
+
+      const orParts = variants.map(v => `phone.eq.${v},phone.ilike.*${v}*`).join(',');
+      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orParts})&select=*&limit=1`;
       const searchRes = await fetch(searchUrl, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const found = await searchRes.json();
