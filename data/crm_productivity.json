@@ -62,6 +62,20 @@
   ],
   "activities": [
     {
+      "id": "90f94220-6f53-4350-b584-cbab7ba1e6ef",
+      "user_id": "e5555555-5555-5555-5555-555555555555",
+      "lead_id": "CRM-ROD-WA-554797674120",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "554797674120",
+        "name": "Lead WhatsApp 4120",
+        "channel": "whatsapp",
+        "message": "pediu",
+        "hours_inactive": 72
+      },
+      "created_at": "2026-10-29T14:45:08.878Z"
+    },
+    {
       "id": "5352b5f8-eeb6-45b9-a5b5-cadbe37ceba6",
       "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
       "lead_id": "CRM-SEB-WA-557791990001",
@@ -706,5 +720,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T14:44:36.829Z"
+  "updated_at": "2026-10-29T14:45:08.878Z"
 }
