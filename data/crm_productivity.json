@@ -1,21 +1,6 @@
 {
   "calls": [
     {
-      "id": "c9a773c0-0e0c-441b-b0e2-f9c7d617b57c",
-      "external_call_id": "009C32843318769885C4E89DC21D1C99",
-      "user_id": "felipe",
-      "lead_id": null,
-      "caller_number": "55989311152188",
-      "recipient_number": "554797674120",
-      "call_source": "WHATSAPP",
-      "status": "ANSWERED",
-      "duration_seconds": 0,
-      "recording_url": null,
-      "started_at": "2026-10-29T16:05:40.000Z",
-      "ended_at": "2026-10-29T16:05:40.000Z",
-      "created_at": "2026-10-29T16:05:41.264Z"
-    },
-    {
       "id": "ac447157-6537-4529-afe5-5f5b26d6e8b5",
       "user_id": "gabriel",
       "lead_id": "CRM-GAB-WA-5524999730231",
@@ -31,130 +16,6 @@
     }
   ],
   "activities": [
-    {
-      "id": "d85ab7b1-08f3-4153-ab8c-abb17b4d35bd",
-      "user_id": "bbbbbbbb-9999-4999-a999-999999999999",
-      "lead_id": "CRM-ROD-WA-556798079796",
-      "activity_type": "REMARKETING",
-      "metadata": {
-        "phone": "556798079796",
-        "name": "Lead WhatsApp 9796",
-        "channel": "whatsapp",
-        "message": "Bom dia ☀️ \nTudo bem???\nsou a Yasmim, faço parte do time da Caribe Móveis de Luxo.",
-        "hours_inactive": 219
-      },
-      "created_at": "2026-10-29T16:11:13.893Z"
-    },
-    {
-      "id": "d7fef95f-c101-40fa-86b0-6e1cc45db4a4",
-      "user_id": "bbbbbbbb-9999-4999-a999-999999999999",
-      "lead_id": "CRM-YAS-WA-553599276786",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "553599276786",
-        "name": "Maria Jaqueline",
-        "channel": "whatsapp",
-        "message": "Certinho"
-      },
-      "created_at": "2026-10-29T16:09:15.717Z"
-    },
-    {
-      "id": "935ef17b-ee36-4dcb-8b17-c35be95a0d4a",
-      "user_id": "felipe",
-      "lead_id": null,
-      "activity_type": "CALL",
-      "metadata": {
-        "call_id": "c9a773c0-0e0c-441b-b0e2-f9c7d617b57c",
-        "external_call_id": "009C32843318769885C4E89DC21D1C99",
-        "duration_seconds": 0,
-        "status": "ANSWERED",
-        "caller_number": "55989311152188",
-        "recipient_number": "554797674120",
-        "call_source": "WHATSAPP",
-        "recording_url": null
-      },
-      "created_at": "2026-10-29T16:05:41.264Z"
-    },
-    {
-      "id": "30fad033-491b-4947-b8ae-881875b0b1cd",
-      "user_id": "c3333333-3333-3333-3333-333333333333",
-      "lead_id": "CRM-FEL-WA-556596990402",
-      "activity_type": "REMARKETING",
-      "metadata": {
-        "phone": "556596990402",
-        "name": "Lead WhatsApp 0402",
-        "channel": "whatsapp",
-        "message": "Boa tarde Vinicius",
-        "hours_inactive": 314
-      },
-      "created_at": "2026-10-29T16:05:29.013Z"
-    },
-    {
-      "id": "2a4fc925-522c-4e89-a6fe-24d4a76edc90",
-      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
-      "lead_id": "CRM-SEB-WA-557588088582",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "557588088582",
-        "name": "Thayna Almeida",
-        "channel": "whatsapp",
-        "message": "Olá! Posso ter mais informações sobre isso?"
-      },
-      "created_at": "2026-10-29T15:32:49.033Z"
-    },
-    {
-      "id": "59162186-0999-4299-af91-97b766b9abdb",
-      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
-      "lead_id": "CRM-SEB-WA-5521979683337",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "5521979683337",
-        "name": "Ronaldo Cataldi",
-        "channel": "whatsapp",
-        "message": "Qual é o preço?"
-      },
-      "created_at": "2026-10-29T15:26:20.386Z"
-    },
-    {
-      "id": "19792e63-d165-4e97-ac2b-ff2de1fe4db8",
-      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
-      "lead_id": "CRM-SEB-WA-558299945758",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "558299945758",
-        "name": "Marivania",
-        "channel": "whatsapp",
-        "message": "Olá! Posso ter mais informações sobre isso?"
-      },
-      "created_at": "2026-10-29T15:20:21.198Z"
-    },
-    {
-      "id": "b1c2262f-e458-42c3-afa6-3dfc5d84ccec",
-      "user_id": "a1111111-1111-1111-1111-111111111111",
-      "lead_id": "CRM-GAB-WA-1790444404752",
-      "activity_type": "REMARKETING",
-      "metadata": {
-        "phone": "554797892156",
-        "name": "Lead WhatsApp 2156",
-        "channel": "whatsapp",
-        "message": "Espreguiçadeira 690",
-        "hours_inactive": 50
-      },
-      "created_at": "2026-10-29T15:05:18.559Z"
-    },
-    {
-      "id": "7ede8e5a-127b-4771-bad7-fc55f08196c0",
-      "user_id": "d4444444-4444-4444-4444-444444444444",
-      "lead_id": "CRM-EDU-WA-556292984693",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "556292984693",
-        "name": "Maurina Martins",
-        "channel": "whatsapp",
-        "message": "Olá! Posso ter mais informações sobre isso?"
-      },
-      "created_at": "2026-10-29T15:03:16.678Z"
-    },
     {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
@@ -538,5 +399,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T16:14:37.273Z"
+  "updated_at": "2026-10-29T13:02:17.240Z"
 }

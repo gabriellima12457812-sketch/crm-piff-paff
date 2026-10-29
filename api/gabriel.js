@@ -1882,19 +1882,20 @@ export default async function handler(req, res) {
 
       const dbLeads = (await leadsRes.json()) || [];
 
-      // Mescla com os leads oficiais de Instagram caso ainda não estejam gravados no Supabase
+      // Mescla com os leads oficiais de Instagram caso ainda não estejam gravados no Supabase e não tenham sido excluídos
+      const { state: govState } = await loadGovernanceState();
       const existingIds = new Set(dbLeads.map(l => l.id));
       const existingInstas = new Set(dbLeads.map(l => (l.instagram || '').toLowerCase().replace(/^@/, '')));
 
       const rawMergedLeads = [...dbLeads];
       DEFAULT_INSTAGRAM_LEADS_GABRIEL.forEach(instaLead => {
         const cleanInsta = (instaLead.instagram || '').toLowerCase().replace(/^@/, '');
-        if (!existingIds.has(instaLead.id) && !existingInstas.has(cleanInsta)) {
+        const isDeleted = Boolean(govState?.soft_deleted_records?.[`lead:${instaLead.id}`]);
+        if (!isDeleted && !existingIds.has(instaLead.id) && !existingInstas.has(cleanInsta)) {
           rawMergedLeads.push(instaLead);
         }
       });
 
-      const { state: govState } = await loadGovernanceState();
       const mergedLeads = filterActiveRecords(rawMergedLeads, {
         includeDeleted: query.include_deleted === 'true',
         isSuperAdmin: query.role === 'super_admin',
@@ -2124,19 +2125,25 @@ export default async function handler(req, res) {
 
     // EXCLUIR DEFINITIVO NO SUPABASE COM AUDITORIA DE GOVERNANÇA
     if (action === 'delete' || action === 'excluir') {
-      if (!existingLead) {
-        return res.status(404).json({ success: false, error: `Lead "${name || phone || id}" não foi encontrado na carteira de ${SELLER_NAME}.` });
+      const targetId = id || existingLead?.id;
+      const targetPhone = phone || existingLead?.phone;
+      const targetName = name || existingLead?.name || targetId;
+
+      if (!existingLead && !targetId && !targetPhone) {
+        return res.status(400).json({ success: false, error: `ID ou telefone do lead é obrigatório para exclusão.` });
       }
 
       // 1. Remove qualquer duplicata pelo ID
-      await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}`, {
-        method: 'DELETE',
-        headers: supabaseHeaders
-      }).catch(() => {});
+      if (targetId) {
+        await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(targetId)}`, {
+          method: 'DELETE',
+          headers: supabaseHeaders
+        }).catch(() => {});
+      }
 
       // 2. Remove pelo telefone se disponível (evita ressurreição por variação de formato)
-      if (existingLead.phone) {
-        const pDigits = cleanPhone(existingLead.phone);
+      if (targetPhone) {
+        const pDigits = cleanPhone(targetPhone);
         const last8 = pDigits.slice(-8);
         if (last8.length === 8) {
           await fetch(`${supabaseUrl}/rest/v1/leads?phone=ilike.*${last8}*`, {
@@ -2149,7 +2156,7 @@ export default async function handler(req, res) {
       const softDeleted = await performSoftDeleteLead({
         supabaseUrl,
         supabaseHeaders,
-        lead: existingLead,
+        lead: existingLead || { id: targetId, name: targetName, phone: targetPhone || '' },
         actorUserId: SELLER_USER_ID,
         actorName: SELLER_NAME,
         req
@@ -2158,7 +2165,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         action: 'deleted',
-        message: `Lead "${existingLead.name}" excluído definitivamente com sucesso do CRM e da nuvem!`,
+        message: `Lead "${targetName}" excluído definitivamente com sucesso do CRM e da nuvem!`,
         deleted_lead: softDeleted
       });
     }

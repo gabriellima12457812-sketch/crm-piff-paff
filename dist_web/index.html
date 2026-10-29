@@ -3741,6 +3741,15 @@
   <!-- JAVASCRIPT MASTER: LOGIC, PARSER, DRAG & DROP, TTS, CSV -->
   <script>
     // ==========================================
+    // FUNÇÕES UTILITÁRIAS GLOBAIS DE LIMPEZA E TELEFONE
+    // ==========================================
+    function cleanPhone(raw) {
+      if (!raw) return '';
+      return String(raw).replace(/\D/g, '').trim();
+    }
+    window.cleanPhone = cleanPhone;
+
+    // ==========================================
     // SISTEMA UNIFICADO DE ISOLAMENTO & SEGURANÇA MULTI-TENANT
     // ==========================================
     const SELLER_REGISTRY = {
@@ -4211,7 +4220,15 @@
     const PERMANENT_DEDUP_IDS = [
       'CRM-GAB-0010-c185-4',
       'CRM-GAB-0010-c191-4',
-      'CRM-GAB-0010-c131-2'
+      'CRM-GAB-0010-c131-2',
+      'CRM-GAB-0050-c185-27',
+      'CRM-GAB-0073-c185-32',
+      'CRM-GAB-1003-c185-2',
+      'CRM-GAB-0062-c185-9',
+      'CRM-GAB-0061-c185-11',
+      'CRM-GAB-0113-c185-26',
+      'CRM-GAB-0040-c185-8',
+      'CRM-GAB-0078-c185-33'
     ];
 
     function getDeletedLeadIds() {
@@ -4484,9 +4501,10 @@
 
       // 1. Se pertencer explicitamente a outro vendedor, REJEITA IMEDIATAMENTE
       for (const [otherKey, otherConf] of Object.entries(SELLER_REGISTRY)) {
-        if (otherKey !== sellerKey) {
+        const normOther = normalizeSellerKey(otherKey);
+        if (normOther !== sellerKey) {
           if (leadUserId && leadUserId === otherConf.id) return false;
-          if (leadVendedor && leadVendedor === otherKey) return false;
+          if (leadVendedor && leadVendedor === normOther) return false;
           if (leadId.includes(otherConf.prefix)) return false;
           if (leadId.includes(`-${otherKey.toUpperCase().substring(0,3)}-`)) return false;
         }
@@ -5186,8 +5204,8 @@
         let cloudLeads = null;
 
         // 1. Tenta carregar via API Serverless do vendedor (Autenticação do backend sem bloqueio de RLS anon)
-        // Para todos os vendedores isolados (Rodrigo, Eduardo, Felipe, Mayara, Bárbara, Kasio, Diana e novos) e também para Édson (Consolidado)
-        if (sellerKey !== 'gabriel') {
+        // Para todos os vendedores isolados (Gabriel, Rodrigo, Eduardo, Felipe, Mayara, Bárbara, Kasio, Diana e novos) e também para Édson (Consolidado)
+        if (sellerKey) {
           try {
             const apiUrl = sellerKey === 'edson'
               ? '/api/edson?limit=3000'

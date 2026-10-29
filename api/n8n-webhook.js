@@ -16,6 +16,8 @@ const SELLERS = {
     user_id: 'a1111111-1111-1111-1111-111111111111',
     vendedor_id: 'gabriel',
     name: 'Gabriel Lima',
+    phone: '554796137630',
+    alt_phone: '5547999158919',
     leadPrefix: 'CRM-GAB-WA',
     origem: 'WhatsApp Gabriel'
   },
@@ -23,6 +25,7 @@ const SELLERS = {
     user_id: 'c3333333-3333-3333-3333-333333333333',
     vendedor_id: 'felipe',
     name: 'Felipe',
+    phone: '554797674120',
     leadPrefix: 'CRM-FEL-WA',
     origem: 'WhatsApp Felipe'
   },
@@ -30,6 +33,7 @@ const SELLERS = {
     user_id: 'b2222222-2222-2222-2222-222222222222',
     vendedor_id: 'mayara',
     name: 'Mayara',
+    phone: '554796610600',
     leadPrefix: 'CRM-MAY-WA',
     origem: 'WhatsApp Mayara'
   },
@@ -37,6 +41,7 @@ const SELLERS = {
     user_id: 'f6666666-6666-6666-6666-666666666666',
     vendedor_id: 'barbara',
     name: 'Especialista Bárbara',
+    phone: '554796487189',
     leadPrefix: 'CRM-BAR-WA',
     origem: 'WhatsApp Bárbara'
   },
@@ -44,6 +49,7 @@ const SELLERS = {
     user_id: 'd4444444-4444-4444-4444-444444444444',
     vendedor_id: 'eduardo',
     name: 'Eduardo',
+    phone: '554730509208',
     leadPrefix: 'CRM-EDU-WA',
     origem: 'WhatsApp Eduardo'
   },
@@ -51,6 +57,7 @@ const SELLERS = {
     user_id: 'e5555555-5555-5555-5555-555555555555',
     vendedor_id: 'rodrigo',
     name: 'Rodrigo',
+    phone: '554797779767',
     leadPrefix: 'CRM-ROD-WA',
     origem: 'WhatsApp Rodrigo'
   },
@@ -58,6 +65,7 @@ const SELLERS = {
     user_id: '77777777-7777-7777-7777-777777777777',
     vendedor_id: 'kasio',
     name: 'Kasio',
+    phone: '554796043717',
     leadPrefix: 'CRM-KAS-WA',
     origem: 'WhatsApp Kasio'
   },
@@ -65,6 +73,7 @@ const SELLERS = {
     user_id: '88888888-8888-8888-8888-888888888888',
     vendedor_id: 'diana',
     name: 'Diana',
+    phone: '554796413082',
     leadPrefix: 'CRM-DIA-WA',
     origem: 'WhatsApp Diana'
   },
@@ -72,6 +81,7 @@ const SELLERS = {
     user_id: '528bdca6-62a3-4dd5-bc45-0e77e9174e67',
     vendedor_id: 'sebastiao',
     name: 'Sebastião',
+    phone: '554796490322',
     leadPrefix: 'CRM-SEB-WA',
     origem: 'WhatsApp Sebastião'
   },
@@ -79,6 +89,7 @@ const SELLERS = {
     user_id: 'bbbbbbbb-9999-4999-a999-999999999999',
     vendedor_id: 'yasmim',
     name: 'Yasmim',
+    phone: '554796890192',
     leadPrefix: 'CRM-YAS-WA',
     origem: 'WhatsApp Yasmim'
   }
@@ -423,8 +434,28 @@ export default async function handler(req, res) {
       let callerNumber = cleanPhone(rawCaller);
       let recipientNumber = cleanPhone(rawRecipient);
 
+      // Conjunto com números conhecidos de vendedores para identificar quem é o cliente
+      const sellerPhones = new Set([
+        cleanPhone(seller.phone),
+        cleanPhone(seller.alt_phone),
+        '554796137630',
+        '5547999158919',
+        '47999158919',
+        '554797779767',
+        '554796043717',
+        '554796890192',
+        '554797674120',
+        '554730509208',
+        '554796413082',
+        '554796490322'
+      ].filter(Boolean));
+
       if (!clientPhone) {
-        if (callerNumber && !callerNumber.startsWith('47999158') && callerNumber !== cleanPhone(seller.phone || '')) {
+        if (sellerPhones.has(callerNumber)) {
+          clientPhone = recipientNumber;
+        } else if (sellerPhones.has(recipientNumber)) {
+          clientPhone = callerNumber;
+        } else if (callerNumber && callerNumber.length <= 13 && callerNumber.startsWith('55')) {
           clientPhone = callerNumber;
         } else {
           clientPhone = recipientNumber;
@@ -432,7 +463,7 @@ export default async function handler(req, res) {
       }
 
       // DESCARTA SE FOR LID BRUTO NÃO RESOLVIDO (ex: 97526040547358)
-      if (clientPhone && clientPhone.length > 13 && !clientPhone.startsWith('55')) {
+      if ((clientPhone && clientPhone.length > 13 && !clientPhone.startsWith('55')) || clientPhone === '97526040547358') {
         console.warn('[n8n-webhook] Descartando evento de chamada com LID não resolvido:', clientPhone);
         return res.status(200).json({ success: true, message: 'Evento descartado pois o número é um LID interno não resolvido.', clientPhone });
       }
@@ -456,16 +487,26 @@ export default async function handler(req, res) {
       const externalCallId = rawData.id || rawData.callId || body.id || null;
 
       let matchedLeadId = null;
-      if (clientPhone) {
+      if (clientPhone && clientPhone.length >= 8) {
         try {
           const variants = normalizePhoneVariants(clientPhone);
-          const orFilter = variants.map(v => `phone.eq.${v},phone.ilike.*${v}*`).join(',');
-          const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&limit=1&select=id,name,notes`;
+          const last8 = clientPhone.slice(-8);
+          const orParts = variants.map(v => `phone.eq.${v}`);
+          if (last8.length === 8) {
+            orParts.push(`phone.ilike.%${last8}%`);
+            orParts.push(`phone.ilike.%${last8.slice(0, 4)}-${last8.slice(4)}%`);
+          }
+          const orFilter = orParts.join(',');
+          const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&limit=10&select=id,name,phone,notes`;
           const sRes = await fetch(searchUrl, { headers: supabaseHeaders });
           if (sRes.ok) {
             const sData = await sRes.json();
-            if (sData && sData[0]) {
-              matchedLeadId = sData[0].id;
+            if (Array.isArray(sData) && sData.length > 0) {
+              const best = sData.find(l => {
+                const cP = cleanPhone(l.phone);
+                return cP && (cP === clientPhone || cP.endsWith(last8));
+              }) || sData[0];
+              matchedLeadId = best.id;
             }
           }
         } catch (e) {}
@@ -793,30 +834,29 @@ export default async function handler(req, res) {
     let existingLead = null;
 
     try {
-      const orFilters = phoneVariants.map(p => `phone.eq.${p}`);
       const last8 = phoneDigits.slice(-8);
+      const orFilters = phoneVariants.map(p => `phone.eq.${p}`);
       if (last8 && last8.length === 8) {
-        orFilters.push(`phone.like.*${last8}`);
+        orFilters.push(`phone.ilike.%${last8}%`);
+        orFilters.push(`phone.ilike.%${last8.slice(0, 4)}-${last8.slice(4)}%`);
       }
       const orFilter = orFilters.join(',');
 
-      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&user_id=eq.${encodeURIComponent(seller.user_id)}&order=created_at.asc&select=*&limit=1`;
+      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&order=created_at.asc&select=*&limit=10`;
       const searchRes = await fetch(searchUrl, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const searchData = await searchRes.json();
         if (Array.isArray(searchData) && searchData.length > 0) {
-          existingLead = searchData[0];
-        }
-      }
+          // 1. Prioriza lead existente que pertence a este vendedor e cujo telefone limpo bate com o final
+          existingLead = searchData.find(l => {
+            const sellerMatch = String(l.user_id) === String(seller.user_id) || String(l.vendedor_id) === String(seller.vendedor_id);
+            const phoneMatch = cleanPhone(l.phone).endsWith(last8);
+            return sellerMatch && phoneMatch;
+          });
 
-      // Se não encontrou restrito ao user_id exato, busca se já existe cadastrado no sistema para este número (evita contatos duplicados)
-      if (!existingLead) {
-        const broadSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&order=created_at.asc&select=*&limit=1`;
-        const broadRes = await fetch(broadSearchUrl, { headers: supabaseHeaders });
-        if (broadRes.ok) {
-          const broadData = await broadRes.json();
-          if (Array.isArray(broadData) && broadData.length > 0) {
-            existingLead = broadData[0];
+          // 2. Se não encontrou do próprio vendedor, pega qualquer lead cadastrado para este telefone
+          if (!existingLead) {
+            existingLead = searchData.find(l => cleanPhone(l.phone).endsWith(last8)) || searchData[0];
           }
         }
       }
