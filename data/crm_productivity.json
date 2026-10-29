@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "165fb1a2-4a2a-4880-bd67-501c3c1647ef",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-558586274749",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "558586274749",
+        "name": "Helena Marques",
+        "channel": "whatsapp",
+        "message": "Poderia me enviar mais  informações ?"
+      },
+      "created_at": "2026-10-29T10:50:43.448Z"
+    },
+    {
       "id": "8e7e4a05-2ff2-4fed-baf2-5451312a6837",
       "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
       "lead_id": "CRM-SEB-WA-557481163309",
@@ -137,5 +150,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T10:49:47.370Z"
+  "updated_at": "2026-10-29T10:50:43.448Z"
 }
