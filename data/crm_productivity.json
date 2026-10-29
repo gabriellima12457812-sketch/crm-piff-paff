@@ -17,6 +17,20 @@
   ],
   "activities": [
     {
+      "id": "a0e97219-26d0-48e8-a45e-e15617af35f9",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-5511969075918",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "5511969075918",
+        "name": "Lead WhatsApp 5918",
+        "channel": "whatsapp",
+        "message": "Bom dia",
+        "hours_inactive": 74
+      },
+      "created_at": "2026-10-29T13:40:04.216Z"
+    },
+    {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554796533494",
@@ -399,5 +413,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:02:17.240Z"
+  "updated_at": "2026-10-29T13:40:04.216Z"
 }
