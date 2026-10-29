@@ -227,6 +227,19 @@
   ],
   "activities": [
     {
+      "id": "59d00884-250d-4d8f-9e8d-304f2b192b99",
+      "user_id": "88888888-8888-8888-8888-888888888888",
+      "lead_id": "CRM-DIA-WA-557599013636",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "557599013636",
+        "name": "Rita Andrade",
+        "channel": "whatsapp",
+        "message": "[Áudio recebido do cliente]"
+      },
+      "created_at": "2026-10-29T12:58:58.565Z"
+    },
+    {
       "id": "abe860cc-6cb3-4989-af26-c16ce8b5f6d3",
       "user_id": "rodrigo",
       "lead_id": null,
@@ -809,5 +822,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:58:36.546Z"
+  "updated_at": "2026-10-29T12:58:58.565Z"
 }
