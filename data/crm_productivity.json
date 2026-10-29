@@ -32,6 +32,19 @@
   ],
   "activities": [
     {
+      "id": "47787faa-962f-4a03-a0dd-20303e25fa3d",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-557592258056",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "557592258056",
+        "name": "Geralda",
+        "channel": "whatsapp",
+        "message": "Lido"
+      },
+      "created_at": "2026-10-29T13:30:50.802Z"
+    },
+    {
       "id": "1bf17311-7e25-4183-8b07-c325802c05ff",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554891062567",
@@ -457,5 +470,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:29:58.956Z"
+  "updated_at": "2026-10-29T13:30:50.802Z"
 }
