@@ -14151,7 +14151,7 @@
       }
       window.renderProductivityWeekDays = renderProductivityWeekDays;
 
-      // Renderiza Feed de Atividades Recentes
+      // Renderiza Feed de Atividades Recentes com Deduplicação Visual Blindada
       function renderProductivityActivitiesFeed(activities = []) {
         const container = document.getElementById('prod-activities-container');
         if (!container) return;
@@ -14160,6 +14160,22 @@
         if (productivityActivityTypeFilter !== 'all') {
           filtered = activities.filter(a => a.activity_type === productivityActivityTypeFilter);
         }
+
+        // Filtro defensivo contra LIDs brutos e deduplicação visual no mesmo minuto
+        const seenFeedKeys = new Set();
+        filtered = filtered.filter(act => {
+          const meta = act.metadata || {};
+          const num = String(meta.recipient_number || meta.phone || meta.caller_number || '');
+          // Desconsidera LIDs brutos não resolvidos (>13 dígitos sem DDI 55)
+          if (num && num.length > 13 && !num.startsWith('55')) return false;
+
+          const actTime = new Date(act.created_at).getTime();
+          const minuteBucket = Math.floor(actTime / 60000);
+          const key = `${act.activity_type}_${act.user_id}_${num}_${minuteBucket}`;
+          if (seenFeedKeys.has(key)) return false;
+          seenFeedKeys.add(key);
+          return true;
+        });
 
         if (filtered.length === 0) {
           container.innerHTML = `

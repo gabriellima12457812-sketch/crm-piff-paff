@@ -373,16 +373,61 @@ export default async function handler(req, res) {
 
     if (isCallEvent) {
       const rawData = body.call || body.data?.call || (Array.isArray(body.data) ? body.data[0] : (body.data || body));
+      const callStatusRaw = String(rawData.status || body.status || '').toLowerCase();
 
-      let callerNumber = cleanPhone(rawData.caller || rawData.from || rawData.callerNumber || body.sender || body.from || '');
-      let recipientNumber = cleanPhone(rawData.recipient || rawData.to || rawData.chatId || rawData.remoteJid || rawData.recipientNumber || body.to || '');
-
-      let clientPhone = recipientNumber;
-      if (callerNumber && !callerNumber.startsWith('47999158') && callerNumber !== cleanPhone(seller.phone || '')) {
-        clientPhone = callerNumber;
+      // 1. IGNORA PACOTES INTERMEDIÁRIOS DE TOQUE (evita repetições de ringing/offer)
+      if (callStatusRaw === 'offer' || callStatusRaw === 'ringing') {
+        return res.status(200).json({ success: true, message: 'Pacote de toque intermediário ignorado. Aguardando finalização.', status: callStatusRaw });
       }
 
-      const callStatusRaw = String(rawData.status || body.status || '').toLowerCase();
+      // 2. EXTRAÇÃO E RESOLUÇÃO DE TELEFONE REAL (BLINDAGEM DE LIDs @lid)
+      const rawCaller = String(rawData.caller || rawData.from || rawData.callerNumber || body.sender || body.from || '');
+      const rawRecipient = String(rawData.recipient || rawData.to || rawData.chatId || rawData.remoteJid || rawData.recipientNumber || body.to || '');
+      let altJid = String(rawData.remoteJidAlt || rawData.participantAlt || rawData.jidAlt || rawData.key?.remoteJidAlt || '');
+
+      let clientPhone = '';
+      if (altJid && altJid.includes('@')) {
+        clientPhone = cleanPhone(altJid.split('@')[0]);
+      }
+
+      // Se não temos altJid e um dos lados é um @lid, tenta resolver na Evolution API
+      const targetJid = rawRecipient.includes('@lid') ? rawRecipient : (rawCaller.includes('@lid') ? rawCaller : '');
+      if (!clientPhone && targetJid) {
+        try {
+          const evoUrl = process.env.EVOLUTION_SERVER_URL || 'https://piffpaff-evolution-api.onrender.com';
+          const evoKey = process.env.EVOLUTION_API_KEY || 'PiffPaffEvoSecretKey2026!';
+          const chRes = await fetch(`${evoUrl}/chat/findChats/${seller.vendedor_id}`, {
+            method: 'POST',
+            headers: { apikey: evoKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ where: { remoteJid: targetJid } })
+          });
+          if (chRes.ok) {
+            const chData = await chRes.json();
+            const alt = chData?.lastMessage?.key?.remoteJidAlt || (Array.isArray(chData) && chData[0]?.lastMessage?.key?.remoteJidAlt);
+            if (alt) {
+              clientPhone = cleanPhone(alt.split('@')[0]);
+            }
+          }
+        } catch (e) {}
+      }
+
+      let callerNumber = cleanPhone(rawCaller);
+      let recipientNumber = cleanPhone(rawRecipient);
+
+      if (!clientPhone) {
+        if (callerNumber && !callerNumber.startsWith('47999158') && callerNumber !== cleanPhone(seller.phone || '')) {
+          clientPhone = callerNumber;
+        } else {
+          clientPhone = recipientNumber;
+        }
+      }
+
+      // DESCARTA SE FOR LID BRUTO NÃO RESOLVIDO (ex: 97526040547358)
+      if (clientPhone && clientPhone.length > 13 && !clientPhone.startsWith('55')) {
+        console.warn('[n8n-webhook] Descartando evento de chamada com LID não resolvido:', clientPhone);
+        return res.status(200).json({ success: true, message: 'Evento descartado pois o número é um LID interno não resolvido.', clientPhone });
+      }
+
       let durationSeconds = parseInt(rawData.duration_seconds || rawData.duration || rawData.latencyMs || body.duration_seconds || '0', 10) || 0;
 
       let finalStatus = 'NO_ANSWER';
@@ -399,6 +444,7 @@ export default async function handler(req, res) {
 
       const startedAt = rawData.started_at || rawData.date || rawData.startTime || body.started_at || new Date().toISOString();
       const endedAt = rawData.ended_at || rawData.endTime || body.ended_at || startedAt;
+      const externalCallId = rawData.id || rawData.callId || body.id || null;
 
       let matchedLeadId = null;
       if (clientPhone) {
@@ -411,14 +457,6 @@ export default async function handler(req, res) {
             const sData = await sRes.json();
             if (sData && sData[0]) {
               matchedLeadId = sData[0].id;
-              const timeStr = new Date().toLocaleString('pt-BR');
-              const entry = `[${timeStr} - Ligação WhatsApp]: ${finalStatus === 'ANSWERED' ? `Chamada Atendida (${durationSeconds}s)` : '🔴 Ligação Não Atendida / Caixa (0s)'}`;
-              const updatedNotes = sData[0].notes ? `${sData[0].notes}\n\n${entry}` : entry;
-              await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(matchedLeadId)}`, {
-                method: 'PATCH',
-                headers: supabaseHeaders,
-                body: JSON.stringify({ notes: updatedNotes, last_interaction: new Date().toISOString() })
-              }).catch(() => {});
             }
           }
         } catch (e) {}
@@ -434,9 +472,30 @@ export default async function handler(req, res) {
         durationSeconds,
         recordingUrl: rawData.recording_url || body.recording_url || null,
         startedAt,
-        endedAt
+        endedAt,
+        callId: externalCallId
       });
-      return res.status(200).json({ success: true, message: 'Chamada registrada com sucesso.', call: callResult.call });
+
+      // Só atualiza notas no lead do Supabase se não foi um evento duplicado
+      if (matchedLeadId && !callResult.duplicate && !callResult.ignored) {
+        try {
+          const timeStr = new Date().toLocaleString('pt-BR');
+          const entry = `[${timeStr} - Ligação WhatsApp]: ${finalStatus === 'ANSWERED' ? `Chamada Atendida (${durationSeconds}s)` : '🔴 Ligação Não Atendida / Caixa (0s)'}`;
+          const currentNotesRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(matchedLeadId)}&select=notes`, { headers: supabaseHeaders });
+          if (currentNotesRes.ok) {
+            const currentData = await currentNotesRes.json();
+            const prevNotes = currentData?.[0]?.notes || '';
+            const updatedNotes = prevNotes ? `${prevNotes}\n\n${entry}` : entry;
+            await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(matchedLeadId)}`, {
+              method: 'PATCH',
+              headers: supabaseHeaders,
+              body: JSON.stringify({ notes: updatedNotes, last_interaction: new Date().toISOString() })
+            }).catch(() => {});
+          }
+        } catch (noteErr) {}
+      }
+
+      return res.status(200).json({ success: true, message: callResult.duplicate ? 'Evento duplicado ignorado.' : 'Chamada registrada com sucesso.', call: callResult.call });
     }
 
     // =======================================================================
