@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "25dc255d-93c6-4ffb-a291-a1cd610eed41",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-559882775415",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "559882775415",
+        "name": "Sonnya",
+        "channel": "whatsapp",
+        "message": "Olá! Posso ter mais informações sobre isso?"
+      },
+      "created_at": "2026-10-29T11:21:23.649Z"
+    },
+    {
       "id": "2a3ee088-885a-438c-bb74-17b6799a2258",
       "user_id": "77777777-7777-7777-7777-777777777777",
       "lead_id": "CRM-KAS-WA-553199955265",
@@ -228,5 +241,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T11:13:49.757Z"
+  "updated_at": "2026-10-29T11:21:23.649Z"
 }
