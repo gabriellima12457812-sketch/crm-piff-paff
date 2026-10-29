@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "2d83c588-1313-4052-99f2-2e06415456a8",
+      "user_id": "77777777-7777-7777-7777-777777777777",
+      "lead_id": "CRM-KAS-WA-558488650531",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "558488650531",
+        "name": "Danusia Freitas",
+        "channel": "whatsapp",
+        "message": "Qual é o preço?"
+      },
+      "created_at": "2026-10-29T10:55:02.345Z"
+    },
+    {
       "id": "818334d3-a689-4bb9-ad24-890ca5dd43e5",
       "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
       "lead_id": "CRM-SEB-WA-559591300015",
@@ -176,5 +189,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T10:53:50.879Z"
+  "updated_at": "2026-10-29T10:55:02.345Z"
 }
