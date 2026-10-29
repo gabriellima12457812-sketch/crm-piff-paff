@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "1668c154-e5ef-4745-b465-e19c89977a8d",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-5511972829431",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "5511972829431",
+        "name": "Rodrigo Pecoraro",
+        "channel": "whatsapp",
+        "message": "Olá! Posso ter mais informações sobre isso?"
+      },
+      "created_at": "2026-10-29T11:43:29.676Z"
+    },
+    {
       "id": "61e8c23a-cee0-464a-a192-fa1eee3738bd",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-553899587612",
@@ -293,5 +306,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T11:39:13.196Z"
+  "updated_at": "2026-10-29T11:43:29.676Z"
 }
