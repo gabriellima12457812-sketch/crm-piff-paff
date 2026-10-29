@@ -5237,7 +5237,7 @@
         if (sellerKey) {
           try {
             const apiUrl = sellerKey === 'edson'
-              ? '/api/edson?limit=3000'
+              ? '/api/edson?limit=5000'
               : (STATIC_SELLER_ENDPOINTS.includes(sellerKey)
                   ? `/api/${sellerKey}?channel=todos&limit=1000`
                   : `/api/edson?seller=${encodeURIComponent(sellerKey)}&limit=1000`);
@@ -5259,18 +5259,35 @@
 
         // 2. Fallback: REST Direto no Supabase caso API serverless não responda ou para Gabriel/Edson
         if (!cloudLeads && url && key) {
-          const queryUrl = (sellerKey === 'edson')
-            ? `${url}/rest/v1/leads?select=*&order=value.desc&limit=2000`
-            : `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc&limit=1000`;
-          const res = await fetch(queryUrl, {
-            headers: {
-              'apikey': key,
-              'Authorization': `Bearer ${authToken}`
+          if (sellerKey === 'edson') {
+            // Édson (Super Admin/Dono) consulta todas as páginas do Supabase em paralelo (3000+ leads)
+            try {
+              const baseQuery = `${url}/rest/v1/leads?select=*&order=value.desc`;
+              const pageOffsets = [0, 1000, 2000, 3000, 4000];
+              const pagesData = await Promise.all(pageOffsets.map(offset =>
+                fetch(`${baseQuery}&offset=${offset}&limit=1000`, {
+                  headers: {
+                    'apikey': key,
+                    'Authorization': `Bearer ${authToken}`
+                  }
+                }).then(r => r.ok ? r.json() : []).catch(() => [])
+              ));
+              cloudLeads = pagesData.flat();
+            } catch (edsonErr) {
+              console.warn('[Sync Édson] Falha na paginação direta:', edsonErr);
             }
-          });
-          if (res.ok) {
-            const resData = await res.json();
-            if (Array.isArray(resData)) cloudLeads = resData;
+          } else {
+            const queryUrl = `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc&limit=2000`;
+            const res = await fetch(queryUrl, {
+              headers: {
+                'apikey': key,
+                'Authorization': `Bearer ${authToken}`
+              }
+            });
+            if (res.ok) {
+              const resData = await res.json();
+              if (Array.isArray(resData)) cloudLeads = resData;
+            }
           }
         }
 
