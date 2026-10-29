@@ -62,6 +62,19 @@
   ],
   "activities": [
     {
+      "id": "5352b5f8-eeb6-45b9-a5b5-cadbe37ceba6",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-557791990001",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "557791990001",
+        "name": "Vânia",
+        "channel": "whatsapp",
+        "message": "Olá! Posso ter mais informações sobre isso?"
+      },
+      "created_at": "2026-10-29T14:44:36.829Z"
+    },
+    {
       "id": "bc295065-4dec-4579-90fc-9d0faed03a53",
       "user_id": "gabriel",
       "lead_id": null,
@@ -693,5 +706,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T14:43:55.576Z"
+  "updated_at": "2026-10-29T14:44:36.829Z"
 }
