@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "7ede8e5a-127b-4771-bad7-fc55f08196c0",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-556292984693",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "556292984693",
+        "name": "Maurina Martins",
+        "channel": "whatsapp",
+        "message": "Olá! Posso ter mais informações sobre isso?"
+      },
+      "created_at": "2026-10-29T15:03:16.678Z"
+    },
+    {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554796533494",
@@ -399,5 +412,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:02:17.240Z"
+  "updated_at": "2026-10-29T15:03:16.678Z"
 }
