@@ -17,6 +17,20 @@
   ],
   "activities": [
     {
+      "id": "625eb954-6c8d-42f9-8a24-84f3af35ad82",
+      "user_id": "a1111111-1111-1111-1111-111111111111",
+      "lead_id": "CRM-GAB-WA-554796583495",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "554796583495",
+        "name": "Lead WhatsApp 3495",
+        "channel": "whatsapp",
+        "message": "https://crm-piff-paff-v2.vercel.app/?vendedor=nathaly",
+        "hours_inactive": 192
+      },
+      "created_at": "2026-10-29T13:52:46.966Z"
+    },
+    {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554796533494",
@@ -399,5 +413,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:02:17.240Z"
+  "updated_at": "2026-10-29T13:52:46.966Z"
 }
