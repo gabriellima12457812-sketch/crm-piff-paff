@@ -1,6 +1,20 @@
 {
   "calls": [
     {
+      "id": "ffc0a29e-a6cf-46c4-98d3-06c1aac46af7",
+      "user_id": "felipe",
+      "lead_id": null,
+      "caller_number": "554797674120",
+      "recipient_number": "554797674120",
+      "call_source": "WEB",
+      "status": "NO_ANSWER",
+      "duration_seconds": 0,
+      "recording_url": null,
+      "started_at": "2026-10-29T12:28:02.876Z",
+      "ended_at": "2026-10-29T12:28:02.876Z",
+      "created_at": "2026-10-29T12:28:02.876Z"
+    },
+    {
       "id": "f8de8f0b-9d79-4216-9fab-900efe904fb0",
       "user_id": "felipe",
       "lead_id": null,
@@ -72,6 +86,22 @@
     }
   ],
   "activities": [
+    {
+      "id": "be76c350-ff79-40fa-ba48-9c320f6f8501",
+      "user_id": "felipe",
+      "lead_id": null,
+      "activity_type": "CALL",
+      "metadata": {
+        "call_id": "ffc0a29e-a6cf-46c4-98d3-06c1aac46af7",
+        "duration_seconds": 0,
+        "status": "NO_ANSWER",
+        "caller_number": "554797674120",
+        "recipient_number": "554797674120",
+        "call_source": "WEB",
+        "recording_url": null
+      },
+      "created_at": "2026-10-29T12:28:02.876Z"
+    },
     {
       "id": "b71a859d-80d5-4abe-ac7d-6f5d22f7990e",
       "user_id": "felipe",
@@ -545,5 +575,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:27:45.726Z"
+  "updated_at": "2026-10-29T12:28:02.876Z"
 }
