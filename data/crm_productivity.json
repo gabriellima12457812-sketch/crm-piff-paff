@@ -17,60 +17,6 @@
   ],
   "activities": [
     {
-      "id": "fee01552-1ad2-4637-835a-ef519a3e9733",
-      "user_id": "d4444444-4444-4444-4444-444444444444",
-      "lead_id": "CRM-EDU-WA-559899697240",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "559899697240",
-        "name": "Dilma",
-        "channel": "whatsapp",
-        "message": "[Áudio recebido do cliente]"
-      },
-      "created_at": "2026-10-29T13:48:35.184Z"
-    },
-    {
-      "id": "e9955380-9144-4260-a5fb-70c37438bc96",
-      "user_id": "a1111111-1111-1111-1111-111111111111",
-      "lead_id": "CRM-GAB-WA-554792806514",
-      "activity_type": "REMARKETING",
-      "metadata": {
-        "phone": "554792806514",
-        "name": "Lead WhatsApp 6514",
-        "channel": "whatsapp",
-        "message": "[Foto enviada por Gabriel Lima]",
-        "hours_inactive": 68
-      },
-      "created_at": "2026-10-29T13:44:16.457Z"
-    },
-    {
-      "id": "01dee00e-fd7e-4ccb-bc4c-d24342ab3205",
-      "user_id": "d4444444-4444-4444-4444-444444444444",
-      "lead_id": "CRM-EDU-WA-559581045016",
-      "activity_type": "INBOUND_CONTACT",
-      "metadata": {
-        "phone": "559581045016",
-        "name": "Deyve",
-        "channel": "whatsapp",
-        "message": "Poderia me enviar mais  informações ?"
-      },
-      "created_at": "2026-10-29T13:41:30.609Z"
-    },
-    {
-      "id": "a0e97219-26d0-48e8-a45e-e15617af35f9",
-      "user_id": "d4444444-4444-4444-4444-444444444444",
-      "lead_id": "CRM-EDU-WA-5511969075918",
-      "activity_type": "REMARKETING",
-      "metadata": {
-        "phone": "5511969075918",
-        "name": "Lead WhatsApp 5918",
-        "channel": "whatsapp",
-        "message": "Bom dia",
-        "hours_inactive": 74
-      },
-      "created_at": "2026-10-29T13:40:04.216Z"
-    },
-    {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554796533494",
@@ -453,5 +399,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:48:35.184Z"
+  "updated_at": "2026-10-29T13:02:17.240Z"
 }

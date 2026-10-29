@@ -2122,11 +2122,30 @@ export default async function handler(req, res) {
       }
     }
 
-    // EXCLUIR (SOFT DELETE UNIVERSAL: deleted_at = NOW() + TRILHA DE AUDITORIA)
+    // EXCLUIR DEFINITIVO NO SUPABASE COM AUDITORIA DE GOVERNANÇA
     if (action === 'delete' || action === 'excluir') {
       if (!existingLead) {
         return res.status(404).json({ success: false, error: `Lead "${name || phone || id}" não foi encontrado na carteira de ${SELLER_NAME}.` });
       }
+
+      // 1. Remove qualquer duplicata pelo ID
+      await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}`, {
+        method: 'DELETE',
+        headers: supabaseHeaders
+      }).catch(() => {});
+
+      // 2. Remove pelo telefone se disponível (evita ressurreição por variação de formato)
+      if (existingLead.phone) {
+        const pDigits = cleanPhone(existingLead.phone);
+        const last8 = pDigits.slice(-8);
+        if (last8.length === 8) {
+          await fetch(`${supabaseUrl}/rest/v1/leads?phone=ilike.*${last8}*`, {
+            method: 'DELETE',
+            headers: supabaseHeaders
+          }).catch(() => {});
+        }
+      }
+
       const softDeleted = await performSoftDeleteLead({
         supabaseUrl,
         supabaseHeaders,
@@ -2135,10 +2154,11 @@ export default async function handler(req, res) {
         actorName: SELLER_NAME,
         req
       });
+
       return res.status(200).json({
         success: true,
-        action: 'soft_delete',
-        message: `Lead "${existingLead.name}" arquivado em Soft Delete com sucesso no funil de ${SELLER_NAME}!`,
+        action: 'deleted',
+        message: `Lead "${existingLead.name}" excluído definitivamente com sucesso do CRM e da nuvem!`,
         deleted_lead: softDeleted
       });
     }

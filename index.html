@@ -4211,14 +4211,32 @@
       }
     }
 
-    function markLeadDeleted(leadId) {
+    function markLeadDeleted(leadId, leadPhone = null) {
       if (!leadId) return;
       const ids = getDeletedLeadIds();
-      if (!ids.includes(leadId)) {
-        ids.push(leadId);
-        localStorage.setItem('piffpaff_deleted_ids', JSON.stringify(ids));
+      if (!ids.includes(leadId)) ids.push(leadId);
+      if (leadPhone) {
+        const cleanP = cleanPhone(leadPhone);
+        if (cleanP && !ids.includes(cleanP)) ids.push(cleanP);
+        const last8 = cleanP.slice(-8);
+        if (last8.length === 8 && !ids.includes(last8)) ids.push(last8);
       }
+      localStorage.setItem('piffpaff_deleted_ids', JSON.stringify(ids));
     }
+
+    function isLeadDeleted(l, deletedIdsSet = null) {
+      if (!l) return true;
+      const set = deletedIdsSet || new Set(getDeletedLeadIds());
+      if (l.deleted_at) return true;
+      if (l.notes && l.notes.includes('[SOFT_DELETED_AT:')) return true;
+      if (l.id && set.has(l.id)) return true;
+      const cleanP = cleanPhone(l.phone);
+      if (cleanP && set.has(cleanP)) return true;
+      const last8 = cleanP.slice(-8);
+      if (last8.length === 8 && set.has(last8)) return true;
+      return false;
+    }
+    window.isLeadDeleted = isLeadDeleted;
 
     function getStorageKey() {
       if (authUser && authUser.id) {
@@ -4292,17 +4310,8 @@
           const minExpected = isGabriel ? 10 : 1;
           const baseLeadsCheck = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
           if (Array.isArray(parsed) && parsed.length >= minExpected) {
-            // Se Gabriel e a base salva tiver menos de 800 clientes (ex: resíduo antigo de 594), força a base completa oficial de 909
-            if (isGabriel && (parsed.length < 800 || (baseLeadsCheck && baseLeadsCheck.length > parsed.length))) {
-              if (baseLeadsCheck && baseLeadsCheck.length > 0) {
-                leads = baseLeadsCheck.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'));
-                sanitizeFollowupList(leads);
-                saveStorage();
-                return;
-              }
-            }
-            // Filtra estritamente apenas os leads deste vendedor ativo
-            leads = parsed.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, sellerKey));
+            // Filtra estritamente apenas os leads ativos deste vendedor (removendo excluídos)
+            leads = parsed.filter(l => !isLeadDeleted(l, deletedIds) && isLeadOfSeller(l, sellerKey));
             if (leads.length > 0) {
               sanitizeFollowupList(leads);
               saveStorage();
@@ -4318,7 +4327,7 @@
       if (sellerKey === 'edson') {
         const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
         if (baseLeads && baseLeads.length > 0) {
-          leads = baseLeads.filter(l => !deletedIds.has(l.id));
+          leads = baseLeads.filter(l => !isLeadDeleted(l, deletedIds));
           sanitizeFollowupList(leads);
           return;
         }
@@ -4333,7 +4342,7 @@
       // Para Gabriel Lima (Admin): carrega a base consolidada oficial
       const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
       if (baseLeads && baseLeads.length > 0) {
-        leads = baseLeads.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'));
+        leads = baseLeads.filter(l => !isLeadDeleted(l, deletedIds) && isLeadOfSeller(l, 'gabriel'));
         sanitizeFollowupList(leads);
         saveStorage();
         return;
@@ -4358,7 +4367,7 @@
       const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
 
       if (baseLeads && baseLeads.length > 0) {
-        leads = baseLeads.filter(l => !deletedIds.has(l.id));
+        leads = baseLeads.filter(l => !isLeadDeleted(l, deletedIds));
         saveStorage();
         renderKanban();
         renderFollowupCenter();
@@ -5203,10 +5212,9 @@
 
         if (Array.isArray(cloudLeads)) {
           const deletedIds = new Set(getDeletedLeadIds());
-          // FILTRO ESTRITO DE ISOLAMENTO E SOFT DELETE: cada vendedor visualiza exclusivamente seus próprios leads ativos (deleted_at IS NULL)
+          // FILTRO ESTRITO DE ISOLAMENTO E EXCLUSÃO: cada vendedor visualiza exclusivamente seus próprios leads ativos
           const userCloudLeads = cloudLeads.filter(l => {
-            if (l.deleted_at) return false;
-            if (deletedIds.has(l.id)) return false;
+            if (isLeadDeleted(l, deletedIds)) return false;
             return isLeadOfSeller(l, sellerKey);
           });
 
@@ -5266,7 +5274,7 @@
           const isGabrielSync = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
           if (isGabrielSync) {
             const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS))
-              ? CARIBE_170_LEADS.filter(l => !deletedIds.has(l.id) && isLeadOfSeller(l, 'gabriel'))
+              ? CARIBE_170_LEADS.filter(l => !isLeadDeleted(l, deletedIds) && isLeadOfSeller(l, 'gabriel'))
               : [];
 
             const baseMap = new Map();
@@ -5287,6 +5295,8 @@
 
             // Atualiza leads existentes com notas ou status mais recentes do Supabase em nuvem
             cloudWa.forEach(cL => {
+              if (isLeadDeleted(cL, deletedIds)) return;
+
               const cId = String(cL.id || '').toUpperCase();
               const cPhone = cleanPhone(cL.phone);
               const cLast8 = cPhone.slice(-8);
@@ -5323,7 +5333,7 @@
                   ? (target.followup_date === formatYMD(new Date()) ? 'Chamar Hoje' : (target.followup_date < formatYMD(new Date()) ? 'Atrasado' : 'Agendado'))
                   : (target.followup_status || 'Sem Follow-up');
               } else if (cL.id) {
-                // Lead genuinamente novo vindo do WhatsApp/Supabase: preserva sem descartar!
+                // Lead genuinamente novo vindo do WhatsApp/Supabase: preserva sem descartar se não estiver excluído!
                 baseMap.set(cId, { ...cL });
                 if (cPhone) {
                   phoneMap.set(cPhone, cL.id);
@@ -5332,14 +5342,14 @@
               }
             });
 
-            // Constrói lista consolidada sem contatos repetidos
+            // Constrói lista consolidada sem contatos repetidos ou excluídos
             cloudWa.length = 0;
-            cloudWa.push(...Array.from(baseMap.values()));
+            cloudWa.push(...Array.from(baseMap.values()).filter(l => !isLeadDeleted(l, deletedIds)));
           }
 
           if (sellerKey === 'edson') {
             const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS))
-              ? CARIBE_170_LEADS.filter(l => !deletedIds.has(l.id))
+              ? CARIBE_170_LEADS.filter(l => !isLeadDeleted(l, deletedIds))
               : [];
             const edsonMap = new Map();
             const edsonPhoneMap = new Map();
@@ -5356,6 +5366,7 @@
             });
 
             userCloudLeads.forEach(cL => {
+              if (isLeadDeleted(cL, deletedIds)) return;
               const cId = String(cL.id || '').toUpperCase();
               const cPhone = cleanPhone(cL.phone);
               const cLast8 = cPhone.slice(-8);
@@ -5378,7 +5389,7 @@
               }
             });
             cloudWa.length = 0;
-            cloudWa.push(...Array.from(edsonMap.values()));
+            cloudWa.push(...Array.from(edsonMap.values()).filter(l => !isLeadDeleted(l, deletedIds)));
             edsonConsolidatedRawLeads = [...cloudWa];
           }
 
@@ -6035,52 +6046,56 @@
     }
     window.recordClientAuditEvent = recordClientAuditEvent;
 
-    async function deleteLeadFromSupabase(leadId) {
-      if (!leadId || !authUser) return;
-      const sellerKey = getSellerKey(authUser);
+    async function deleteLeadFromSupabase(leadId, leadPhone = null) {
+      if (!leadId) return;
+      const sellerKey = (typeof getSellerKey === 'function' && authUser) ? getSellerKey(authUser) : 'gabriel';
 
-      // 1. Executa SOFT DELETE via API Serverless do vendedor (deleted_at = NOW() + audit_logs)
+      // 1. Executa exclusão via API Serverless do vendedor
       try {
-        const apiRes = await fetch(`/api/${sellerKey}`, {
+        await fetch(`/api/${sellerKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'delete',
-            id: leadId
+            id: leadId,
+            phone: leadPhone
           })
         });
-        if (apiRes.ok) {
-          console.log(`[Soft Delete] Lead ${leadId} marcado com deleted_at via /api/${sellerKey}`);
-          return;
-        }
       } catch (e) {
-        console.warn(`[Soft Delete] Falha via /api/${sellerKey}, aplicando PATCH deleted_at via fallback:`, e);
+        console.warn(`[Delete] Aviso via /api/${sellerKey}:`, e);
       }
 
-      // 2. Fallback direto no Supabase REST: NUNCA executa DELETE físico! Aplica PATCH com deleted_at = NOW()
+      // 2. Fallback direto no Supabase REST: DELETE definitivo no banco em nuvem
       const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
       const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       if (!url || !key) return;
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
-      const deletedAtIso = new Date().toISOString();
 
       try {
-        await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&user_id=eq.${encodeURIComponent(authUser.id)}`, {
-          method: 'PATCH',
+        await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}`, {
+          method: 'DELETE',
           headers: {
             'apikey': key,
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
-            deleted_at: deletedAtIso,
-            updated_at: deletedAtIso
-          })
+            'Authorization': `Bearer ${authToken}`
+          }
         });
-        recordClientAuditEvent('LEAD_SOFT_DELETE', 'leads', leadId, { deleted_at: deletedAtIso });
+
+        if (leadPhone) {
+          const cleanP = cleanPhone(leadPhone);
+          const last8 = cleanP.slice(-8);
+          if (last8.length === 8) {
+            await fetch(`${url}/rest/v1/leads?phone=ilike.*${last8}*`, {
+              method: 'DELETE',
+              headers: {
+                'apikey': key,
+                'Authorization': `Bearer ${authToken}`
+              }
+            }).catch(() => {});
+          }
+        }
+        recordClientAuditEvent('LEAD_DELETE', 'leads', leadId, { phone: leadPhone });
       } catch (e) {
-        console.warn('Erro ao aplicar soft delete no Supabase via fallback REST:', e);
+        console.warn('Erro ao remover lead no Supabase:', e);
       }
     }
 
@@ -13052,8 +13067,9 @@
         btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-sm"></i> Excluindo...';
 
         try {
-          markLeadDeleted(leadId);
-          leads = leads.filter(l => l.id !== leadId);
+          const leadPhone = activeLead.phone;
+          markLeadDeleted(leadId, leadPhone);
+          leads = leads.filter(l => !isLeadDeleted(l));
           saveStorage();
           renderKanban();
           renderFollowupCenter();
@@ -13061,7 +13077,7 @@
           document.getElementById('modal-lead-detail').classList.add('hidden');
 
           showToast(`Excluindo "${leadName}" da nuvem...`, 'info');
-          await deleteLeadFromSupabase(leadId);
+          await deleteLeadFromSupabase(leadId, leadPhone);
           showToast(`Lead "${leadName}" excluído com sucesso do CRM e da nuvem!`, 'success');
         } catch (err) {
           console.error('Erro ao excluir lead:', err);
