@@ -32,6 +32,19 @@
   ],
   "activities": [
     {
+      "id": "1bf17311-7e25-4183-8b07-c325802c05ff",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-554891062567",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "554891062567",
+        "name": "Dayara Cardoso",
+        "channel": "whatsapp",
+        "message": "[Contato compartilhado pelo cliente]"
+      },
+      "created_at": "2026-10-29T13:29:58.956Z"
+    },
+    {
       "id": "5a874898-f365-4560-8ab3-4854a405ed21",
       "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
       "lead_id": "CRM-SEB-WA-554184997877",
@@ -444,5 +457,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:18:46.423Z"
+  "updated_at": "2026-10-29T13:29:58.956Z"
 }
