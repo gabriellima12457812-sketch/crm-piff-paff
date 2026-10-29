@@ -32,6 +32,19 @@
   ],
   "activities": [
     {
+      "id": "e796d99f-83fb-4abf-b1bb-bd942090b7b7",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-559688056445",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "559688056445",
+        "name": "Leny",
+        "channel": "whatsapp",
+        "message": "Qual é o preço?"
+      },
+      "created_at": "2026-10-29T13:34:32.435Z"
+    },
+    {
       "id": "de79ca67-31f5-463f-a846-b19beaf53cd6",
       "user_id": "77777777-7777-7777-7777-777777777777",
       "lead_id": "CRM-KAS-WA-553299222446",
@@ -496,5 +509,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:32:30.499Z"
+  "updated_at": "2026-10-29T13:34:32.435Z"
 }
