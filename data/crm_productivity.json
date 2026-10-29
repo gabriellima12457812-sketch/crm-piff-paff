@@ -17,6 +17,20 @@
   ],
   "activities": [
     {
+      "id": "7c8f0d10-0624-4ccf-af0d-b4ea6c24a7b9",
+      "user_id": "c3333333-3333-3333-3333-333333333333",
+      "lead_id": "CRM-FEL-WA-554797674120",
+      "activity_type": "REMARKETING",
+      "metadata": {
+        "phone": "554797674120",
+        "name": "Lead WhatsApp 4120",
+        "channel": "whatsapp",
+        "message": "11934465413",
+        "hours_inactive": 76
+      },
+      "created_at": "2026-10-29T16:18:23.217Z"
+    },
+    {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554796533494",
@@ -399,5 +413,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:02:17.240Z"
+  "updated_at": "2026-10-29T16:18:23.217Z"
 }
