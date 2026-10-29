@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "376491ac-2eb4-4a22-bcd9-ac2f1ef3571e",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-553197970925",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "553197970925",
+        "name": "Marli Bonoto",
+        "channel": "whatsapp",
+        "message": "Poderia me enviar mais  informações ?"
+      },
+      "created_at": "2026-10-29T14:00:24.597Z"
+    },
+    {
       "id": "dcdad414-9ea4-4152-999f-caad43710515",
       "user_id": "e5555555-5555-5555-5555-555555555555",
       "lead_id": "CRM-ROD-WA-161465151569947",
@@ -452,5 +465,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:59:49.405Z"
+  "updated_at": "2026-10-29T14:00:24.597Z"
 }
