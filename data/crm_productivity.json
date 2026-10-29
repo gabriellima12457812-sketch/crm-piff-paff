@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "818334d3-a689-4bb9-ad24-890ca5dd43e5",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-559591300015",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "559591300015",
+        "name": "0015",
+        "channel": "whatsapp",
+        "message": "Poderia me enviar mais  informações ?"
+      },
+      "created_at": "2026-10-29T10:53:50.879Z"
+    },
+    {
       "id": "2d9501c5-7754-4db3-8220-e9b64325e7eb",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-554796913636",
@@ -163,5 +176,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T10:51:14.917Z"
+  "updated_at": "2026-10-29T10:53:50.879Z"
 }
