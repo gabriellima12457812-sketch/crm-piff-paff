@@ -31,6 +31,19 @@
   ],
   "activities": [
     {
+      "id": "d503e8b0-9658-44e0-853c-7c7732b14b99",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-553599061313",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "553599061313",
+        "name": "Elizabeth Balduino",
+        "channel": "whatsapp",
+        "message": "Quais são os materiais utilizados?"
+      },
+      "created_at": "2026-10-29T12:32:57.710Z"
+    },
+    {
       "id": "37ebbce3-4256-4f2e-8de6-b22a90b549d1",
       "user_id": "gabriel",
       "lead_id": "CRM-GAB-WA-5524999730231",
@@ -389,5 +402,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:02:34.140Z"
+  "updated_at": "2026-10-29T12:32:57.710Z"
 }
