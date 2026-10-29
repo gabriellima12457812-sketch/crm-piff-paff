@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "ac02d7f6-20d4-4a10-93bd-20cc854b257c",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-555499979727",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "555499979727",
+        "name": "Patricia Corso",
+        "channel": "whatsapp",
+        "message": "Bom dia"
+      },
+      "created_at": "2026-10-29T11:37:41.638Z"
+    },
+    {
       "id": "adb2a9b1-485e-4f91-aa7a-a791cb15564b",
       "user_id": "88888888-8888-8888-8888-888888888888",
       "lead_id": "CRM-DIA-WA-554899089945",
@@ -267,5 +280,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T11:36:32.135Z"
+  "updated_at": "2026-10-29T11:37:41.638Z"
 }
