@@ -4382,9 +4382,38 @@
     }
 
     function saveStorage() {
-      if (Array.isArray(leads)) sanitizeFollowupList(leads);
-      localStorage.setItem(getStorageKey(), JSON.stringify(leads));
-      updateMetrics();
+      try {
+        if (Array.isArray(leads)) sanitizeFollowupList(leads);
+        const currentKey = getStorageKey();
+        try {
+          localStorage.setItem(currentKey, JSON.stringify(leads));
+        } catch (storageErr) {
+          console.warn('[Storage] Quota excedida no localStorage. Limpando caches de outros vendedores para liberar espaço...');
+          // 1. Limpa outras chaves de leads de outros vendedores para liberar espaço
+          for (const k of Object.keys(localStorage)) {
+            if (k.startsWith('piffpaff_leads_') && k !== currentKey) {
+              try { localStorage.removeItem(k); } catch (e) {}
+            }
+          }
+          try {
+            localStorage.setItem(currentKey, JSON.stringify(leads));
+          } catch (retryErr) {
+            // 2. Se ainda exceder, salva versão compactada (truncando notas longas no cache local)
+            const compacted = leads.map(l => ({
+              ...l,
+              notes: (l.notes && l.notes.length > 400) ? l.notes.slice(-400) : l.notes
+            }));
+            try {
+              localStorage.setItem(currentKey, JSON.stringify(compacted));
+            } catch (compactErr) {
+              console.warn('[Storage] Não foi possível gravar no localStorage, dados mantidos em memória RAM:', compactErr);
+            }
+          }
+        }
+        updateMetrics();
+      } catch (err) {
+        console.warn('[saveStorage] Erro ao salvar estado local:', err);
+      }
     }
 
     function loadCaribeBase(silent = false) {
