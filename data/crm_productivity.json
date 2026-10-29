@@ -31,6 +31,19 @@
   ],
   "activities": [
     {
+      "id": "c4d75442-53ad-42db-aa4a-95ab801df185",
+      "user_id": "77777777-7777-7777-7777-777777777777",
+      "lead_id": "CRM-KAS-WA-559886009104",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "559886009104",
+        "name": "CDE Consultoria Imobiliária",
+        "channel": "whatsapp",
+        "message": "Qual é o preço?"
+      },
+      "created_at": "2026-10-29T12:25:03.640Z"
+    },
+    {
       "id": "3a69d3eb-3931-463c-a4b4-fbdede1d99a0",
       "user_id": "d4444444-4444-4444-4444-444444444444",
       "lead_id": "CRM-EDU-WA-557182028130",
@@ -442,5 +455,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:22:57.651Z"
+  "updated_at": "2026-10-29T12:25:03.640Z"
 }
