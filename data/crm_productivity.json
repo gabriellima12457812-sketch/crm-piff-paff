@@ -17,6 +17,19 @@
   ],
   "activities": [
     {
+      "id": "ae6f6486-3ffb-42dc-9958-d94b5cbf0238",
+      "user_id": "d4444444-4444-4444-4444-444444444444",
+      "lead_id": "CRM-EDU-WA-559180146682",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "559180146682",
+        "name": "Rosemary",
+        "channel": "whatsapp",
+        "message": "Olá Eduardo, vim através do Site e gostaria de mais informações!"
+      },
+      "created_at": "2026-10-29T03:59:48.488Z"
+    },
+    {
       "id": "a8c485ef-beaf-4a40-a4b8-fbe490b0e373",
       "user_id": "e5555555-5555-5555-5555-555555555555",
       "lead_id": "CRM-ROD-WA-5511983140720",
@@ -98,5 +111,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-28T21:43:21.420Z"
+  "updated_at": "2026-10-29T03:59:48.488Z"
 }
