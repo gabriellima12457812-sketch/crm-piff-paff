@@ -227,6 +227,19 @@
   ],
   "activities": [
     {
+      "id": "06ce9460-3cc6-4831-b7ba-b38d1a99e234",
+      "user_id": "528bdca6-62a3-4dd5-bc45-0e77e9174e67",
+      "lead_id": "CRM-SEB-WA-5978110468",
+      "activity_type": "INBOUND_CONTACT",
+      "metadata": {
+        "phone": "5978110468",
+        "name": "Rosiane Pereira",
+        "channel": "whatsapp",
+        "message": "Qual é o preço?"
+      },
+      "created_at": "2026-10-29T12:59:13.087Z"
+    },
+    {
       "id": "59d00884-250d-4d8f-9e8d-304f2b192b99",
       "user_id": "88888888-8888-8888-8888-888888888888",
       "lead_id": "CRM-DIA-WA-557599013636",
@@ -822,5 +835,5 @@
       "created_at": "2026-10-28T20:33:01.274Z"
     }
   ],
-  "updated_at": "2026-10-29T12:58:58.565Z"
+  "updated_at": "2026-10-29T12:59:13.087Z"
 }
