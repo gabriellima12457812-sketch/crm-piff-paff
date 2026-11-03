@@ -913,6 +913,16 @@ export default async function handler(req, res) {
       const initialAction = pipelineInference ? pipelineInference.next_best_action : 'Apresentar catálogo e validar necessidade atual.';
       const initialAdvance = pipelineInference ? pipelineInference.desired_micro_advance : 'Identificar ambientes da casa e estilo desejado.';
 
+      // Verifica se o remetente é um dos vendedores/funcionários cadastrados
+      const isEmployeeSender = Object.values(SELLERS).some(s => {
+        const sp = cleanPhone(s.phone);
+        const ap = cleanPhone(s.alt_phone);
+        return (sp && (sp === phoneDigits || (phoneDigits.length >= 8 && sp.endsWith(phoneDigits.slice(-8))))) ||
+               (ap && (ap === phoneDigits || (phoneDigits.length >= 8 && ap.endsWith(phoneDigits.slice(-8)))));
+      });
+
+      const nextCadenceDate = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0];
+
       const newLeadPayload = {
         id: newLeadId,
         name: clientName,
@@ -943,8 +953,9 @@ export default async function handler(req, res) {
         what_not_to_do: 'Não enviar tabela de preços fria sem contextualizar o produto.',
         advance_probability: pipelineInference ? pipelineInference.advance_probability : 'media',
         priority: initialPrio,
-        commercial_line: 'Linha Premium',
-        notes: logNote,
+        commercial_line: isEmployeeSender ? 'Funcionário' : 'Linha Premium',
+        followup_date: isEmployeeSender ? '1970-01-01' : nextCadenceDate,
+        notes: isEmployeeSender ? `[TIPO: FUNCIONÁRIO] ${logNote}` : logNote,
         last_interaction: nowISO,
         data_ultima_interacao: nowISO,
         created_at: nowISO,
@@ -1020,6 +1031,24 @@ export default async function handler(req, res) {
         notes: updatedNotes,
         updated_at: nowISO
       };
+
+      // Como houve conversa hoje no WhatsApp (inbound ou outbound), o contato de hoje foi cumprido!
+      // Se a data de follow-up era hoje ou estava em atraso/nula, avança para daqui a 2 dias (próxima etapa da cadência)
+      const isInternal = existingLead.followup_date === '1970-01-01' ||
+        existingLead.commercial_line === 'Funcionário' ||
+        existingLead.commercial_line === 'Fornecedor' ||
+        String(existingLead.notes || '').includes('[TIPO: FUNCIONÁRIO]') ||
+        String(existingLead.notes || '').includes('[TIPO: FORNECEDOR]');
+
+      if (!isInternal) {
+        const todayYMD = nowISO.split('T')[0];
+        let nextFollowDate = existingLead.followup_date;
+        if (!nextFollowDate || nextFollowDate <= todayYMD) {
+          const nextD = new Date(Date.now() + 2 * 86400000);
+          nextFollowDate = nextD.toISOString().split('T')[0];
+        }
+        updatePayload.followup_date = nextFollowDate;
+      }
 
       // Atualização Inteligente de Valor Monetário Negociado
       if (detectedValue > 0) {

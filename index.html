@@ -4451,19 +4451,23 @@
 
       const id = String(l.id || '');
       const rootId = id.replace(/-c\d+-\d+|-exact\d+-\d+/, '');
-      let phone = String(l.phone || '').replace(/\D/g, '');
+      const rawPhone = String(l.phone || '').replace(/\D/g, '');
+      let phone = rawPhone;
       if (phone.startsWith('55') && phone.length >= 12) phone = phone.substring(2);
       const last8 = phone.slice(-8);
       const name = String(l.name || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
       // Blindagem estrita e permanente: Luciana Soares Bezerra (CRM-GAB-0002 / 63999847517)
-      if (id.includes('CRM-GAB-0002') || name === 'luciana soares bezerra' || (phone && phone === '63999847517')) {
+      if (id.includes('CRM-GAB-0002') || name === 'luciana soares bezerra' || (phone && phone === '63999847517') || (rawPhone && rawPhone === '5563999847517')) {
         return true;
       }
 
       if (Array.isArray(removedList) && removedList.length > 0) {
         if (removedList.includes(id) || (rootId && removedList.includes(rootId))) return true;
-        if (phone && phone.length >= 8 && removedList.some(r => r.length >= 8 && (r === phone || (last8.length === 8 && r.endsWith(last8))))) return true;
+        if (rawPhone && removedList.includes(rawPhone)) return true;
+        if (phone && removedList.includes(phone)) return true;
+        if (last8 && last8.length === 8 && removedList.includes(last8)) return true;
+        if (phone && phone.length >= 8 && removedList.some(r => r.length >= 8 && (r === phone || r === rawPhone || (last8.length === 8 && r.endsWith(last8))))) return true;
         if (name && name.length >= 3 && removedList.includes(name)) return true;
       }
 
@@ -5715,6 +5719,63 @@
             edsonConsolidatedRawLeads = [...cloudWa];
           }
 
+          const todaySyncStr = formatYMD(new Date());
+          let contactedTodayReg = {};
+          try {
+            contactedTodayReg = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
+          } catch (e) {}
+
+          // Mapa dos leads locais atuais para preservar datas futuras agendadas
+          const localLeadsMap = new Map();
+          (leads || []).concat(typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads) ? instagramLeads : []).forEach(loc => {
+            if (loc && loc.id) {
+              localLeadsMap.set(String(loc.id).toUpperCase(), loc);
+              const lp = cleanPhone(loc.phone);
+              if (lp) {
+                localLeadsMap.set(lp, loc);
+                if (lp.length >= 8) localLeadsMap.set(lp.slice(-8), loc);
+              }
+            }
+          });
+
+          [cloudWa, cloudInsta].forEach(list => {
+            if (!Array.isArray(list)) return;
+            list.forEach(l => {
+              if (!l) return;
+              const lIdUpper = String(l.id || '').toUpperCase();
+              const lCleanP = cleanPhone(l.phone);
+              const lLast8 = lCleanP.slice(-8);
+              const localLead = localLeadsMap.get(lIdUpper) || (lCleanP && localLeadsMap.get(lCleanP)) || (lLast8 && localLeadsMap.get(lLast8));
+
+              if (isFollowupRemoved(l) || (localLead && isFollowupRemoved(localLead))) {
+                l.followup_disabled = true;
+                l.followup_date = '1970-01-01';
+                l.followup_status = 'Sem Follow-up';
+                return;
+              }
+
+              const isSpoken = wasContactedToday(l) ||
+                (localLead && wasContactedToday(localLead)) ||
+                (l.id && contactedTodayReg[String(l.id)] === todaySyncStr) ||
+                (lCleanP && (contactedTodayReg[lCleanP] === todaySyncStr || (lCleanP.length >= 8 && contactedTodayReg[lLast8] === todaySyncStr)));
+
+              if (isSpoken) {
+                l.called_today = true;
+                l.last_contact_date = todaySyncStr;
+                if (!l.followup_date || l.followup_date <= todaySyncStr) {
+                  l.followup_date = (localLead && localLead.followup_date > todaySyncStr) ? localLead.followup_date : addDays(2);
+                }
+                l.followup_status = 'Agendado';
+              } else {
+                l.called_today = false;
+                if (localLead && localLead.followup_date && localLead.followup_date > todaySyncStr) {
+                  l.followup_date = localLead.followup_date;
+                  l.followup_status = 'Agendado';
+                }
+              }
+            });
+          });
+
           sanitizeFollowupList(cloudWa);
           sanitizeFollowupList(cloudInsta);
 
@@ -6245,7 +6306,7 @@
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
 
       try {
-        await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(lead.id)}&user_id=eq.${encodeURIComponent(authUser.id)}`, {
+        await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(lead.id)}`, {
           method: 'PATCH',
           headers: {
             'apikey': key,
@@ -6719,9 +6780,9 @@
                 <i class="ph-bold ph-instagram-logo text-base"></i>
               </button>
             ` : `
-              <a href="https://wa.me/55${lead.phone.replace(/\D/g,'').replace(/^55/, '')}" target="_blank" class="p-1 text-emerald-400 hover:text-emerald-300 rounded hover:bg-white/5" title="Chamar no WhatsApp" onclick="event.stopPropagation()">
+              <button type="button" onclick="event.stopPropagation(); handleChamarWhatsApp('${lead.id}', '${lead.phone}')" class="p-1 text-emerald-400 hover:text-emerald-300 rounded hover:bg-white/5 cursor-pointer" title="Chamar no WhatsApp e registrar contato realizado hoje">
                 <i class="ph-bold ph-whatsapp-logo text-base"></i>
-              </a>
+              </button>
             `) : ''}
             <button class="p-1 text-slate-400 hover:text-[#00D2D3] rounded hover:bg-white/5" title="Ver Detalhes">
               <i class="ph-bold ph-arrow-square-out text-base"></i>
@@ -7526,29 +7587,8 @@
       const todayBR = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
       const notes = String(lead.notes || '');
       if (notes) {
-        const lines = notes.split('\n');
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith(`[${todayBR}`) || trimmed.startsWith(`[${todayStr}`)) {
-            const lower = trimmed.toLowerCase();
-            if (
-              lower.includes('contato') ||
-              lower.includes('chamad') ||
-              lower.includes('ligação') ||
-              lower.includes('ligacao') ||
-              lower.includes('mensagem') ||
-              lower.includes('conversa') ||
-              lower.includes('whatsapp') ||
-              lower.includes('áudio') ||
-              lower.includes('audio') ||
-              lower.includes('já chamei') ||
-              lower.includes('ja chamei') ||
-              lower.includes('respondeu') ||
-              lower.includes('falou hoje')
-            ) {
-              return true;
-            }
-          }
+        if (notes.includes(`[${todayBR}`) || notes.includes(`[${todayStr}`)) {
+          return true;
         }
       }
 
@@ -7637,10 +7677,18 @@
     window.markLeadContactedToday = markLeadContactedToday;
 
     function handleChamarWhatsApp(leadId, cleanPhone) {
-      if (cleanPhone) {
-        const rawP = String(cleanPhone).replace(/\D/g, '');
-        const waUrl = `https://wa.me/55${rawP.replace(/^55/, '')}`;
-        window.open(waUrl, '_blank');
+      let p = cleanPhone;
+      if (!p && leadId) {
+        const lead = (leads || []).find(l => l && String(l.id) === String(leadId)) ||
+                     ((typeof instagramLeads !== 'undefined' && instagramLeads) ? instagramLeads.find(l => l && String(l.id) === String(leadId)) : null);
+        if (lead && lead.phone) p = lead.phone;
+      }
+      if (p) {
+        const rawP = String(p).replace(/\D/g, '');
+        if (rawP.length >= 8) {
+          const waUrl = `https://wa.me/55${rawP.replace(/^55/, '')}`;
+          window.open(waUrl, '_blank');
+        }
       }
       markLeadContactedToday(leadId, 'Contato iniciado via WhatsApp');
     }
@@ -8134,13 +8182,24 @@
 
     async function removeFromFollowup(leadId) {
       if (!leadId) return;
-      const { primaryLead, matches } = findMatchingLeadGroup(leadId);
-      if (!primaryLead && matches.length === 0) return;
+      const { primaryLead, matches } = (typeof findMatchingLeadGroup === 'function')
+        ? findMatchingLeadGroup(leadId)
+        : { primaryLead: (leads || []).find(l => l && String(l.id) === String(leadId)), matches: [] };
 
-      const leadName = primaryLead ? primaryLead.name : 'Contato';
+      const targetList = (matches && matches.length > 0)
+        ? matches
+        : (primaryLead ? [primaryLead] : []);
+
+      if (targetList.length === 0) {
+        const fallback = (leads || []).concat(typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads) ? instagramLeads : []).filter(l => l && String(l.id) === String(leadId));
+        targetList.push(...fallback);
+      }
+      if (targetList.length === 0) return;
+
+      const leadName = primaryLead ? primaryLead.name : (targetList[0]?.name || 'Contato');
 
       // 1. Desabilita follow-up em todas as duplicatas/clones e variantes do cliente
-      matches.forEach(l => {
+      targetList.forEach(l => {
         l.followup_disabled = true;
         l.followup_date = '1970-01-01';
         l.followup_status = 'Sem Follow-up';
@@ -8151,15 +8210,20 @@
       try {
         const removedList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
         const cleanPhoneDigits = (p) => String(p || '').replace(/\D/g, '');
-        const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : '';
-        const targetNormName = (primaryLead?.name || '').toLowerCase().trim();
+        const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : (targetList[0]?.phone ? cleanPhoneDigits(targetList[0].phone) : '');
+        const targetNormName = (primaryLead?.name || targetList[0]?.name || '').toLowerCase().trim();
         const rootId = String(primaryLead?.id || leadId).replace(/-c\d+-\d+|-exact\d+-\d+/, '');
 
-        matches.forEach(m => {
-          if (m.id && !removedList.includes(m.id)) removedList.push(m.id);
+        targetList.forEach(m => {
+          if (m.id && !removedList.includes(String(m.id))) removedList.push(String(m.id));
         });
+        if (leadId && !removedList.includes(String(leadId))) removedList.push(String(leadId));
         if (rootId && !removedList.includes(rootId)) removedList.push(rootId);
-        if (targetCleanPhone && targetCleanPhone.length >= 8 && !removedList.includes(targetCleanPhone)) removedList.push(targetCleanPhone);
+        if (targetCleanPhone && targetCleanPhone.length >= 8) {
+          if (!removedList.includes(targetCleanPhone)) removedList.push(targetCleanPhone);
+          if (targetCleanPhone.startsWith('55') && !removedList.includes(targetCleanPhone.substring(2))) removedList.push(targetCleanPhone.substring(2));
+          if (!removedList.includes(targetCleanPhone.slice(-8))) removedList.push(targetCleanPhone.slice(-8));
+        }
         if (targetNormName && targetNormName.length >= 3 && !removedList.includes(targetNormName)) removedList.push(targetNormName);
         localStorage.setItem('piffpaff_removed_followups', JSON.stringify(removedList));
       } catch (e) {}
@@ -8177,7 +8241,7 @@
 
       // 4. Sincroniza em nuvem no Supabase e na API do vendedor
       try {
-        const syncPromises = matches.map(m => syncLeadToSupabase({
+        const syncPromises = targetList.map(m => syncLeadToSupabase({
           ...m,
           followup_disabled: true,
           followup_date: '1970-01-01',
@@ -11013,6 +11077,7 @@
     }
 
     function checkAutoContactedToday(lead, todayBR) {
+      if (typeof wasContactedToday === 'function' && wasContactedToday(lead)) return true;
       const todayStr = getBrazilDateStr();
       // 1. Se foi marcado no state em memória/localStorage com a data de HOJE
       if (lead.last_contact_date && lead.last_contact_date === todayStr) return true;

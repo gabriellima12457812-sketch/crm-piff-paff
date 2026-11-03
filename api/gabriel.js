@@ -1943,6 +1943,7 @@ export default async function handler(req, res) {
       const isCountOnly = action === 'count' || action === 'contar' || action === 'total' || query.count === 'true';
 
       const compactLead = (l) => ({
+        ...l,
         id: l.id,
         name: l.name,
         phone: l.phone,
@@ -1956,8 +1957,10 @@ export default async function handler(req, res) {
         commercial_line: l.commercial_line,
         followup_status: l.followup_status || 'Ativo',
         followup_date: l.followup_date,
+        last_interaction: l.last_interaction,
+        data_ultima_interacao: l.data_ultima_interacao || l.last_interaction,
         channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
-        notes: l.notes ? (l.notes.length > 200 ? l.notes.substring(0, 200) + '...' : l.notes) : ''
+        notes: l.notes || ''
       });
 
       if (isQuarantineQuery) {
@@ -2280,7 +2283,7 @@ export default async function handler(req, res) {
 
     let resultData = null;
     if (existingLead) {
-      const updateRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
+      const updateRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}`, {
         method: 'PATCH',
         headers: supabaseHeaders,
         body: JSON.stringify(payload)
