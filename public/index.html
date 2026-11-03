@@ -14164,8 +14164,9 @@
 
         container.innerHTML = '<p class="text-[11px] text-slate-500 italic py-2">Consultando histórico no servidor...</p>';
 
-        let activities = [];
-        let calls = [];
+        try {
+          let activities = [];
+          let calls = [];
 
         try {
           const res = await fetch(`/api/edson?gov_route=productivity&lead_id=${encodeURIComponent(lead.id || '')}&phone=${encodeURIComponent(lead.phone || '')}`);
