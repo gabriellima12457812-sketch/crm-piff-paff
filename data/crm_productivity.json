@@ -1,6 +1,21 @@
 {
   "calls": [
     {
+      "id": "e2035f5f-2705-4e32-aee9-9dfdafd0fd71",
+      "external_call_id": null,
+      "user_id": "gabriel",
+      "lead_id": "CRM-TEST-VERIFY",
+      "caller_number": "Comercial Piff-Paff",
+      "recipient_number": "5511999997777",
+      "call_source": "WHATSAPP",
+      "status": "ANSWERED",
+      "duration_seconds": 42,
+      "recording_url": null,
+      "started_at": "2026-11-03T12:35:03.646Z",
+      "ended_at": "2026-11-03T12:35:45.646Z",
+      "created_at": "2026-11-03T12:35:03.646Z"
+    },
+    {
       "id": "ac447157-6537-4529-afe5-5f5b26d6e8b5",
       "user_id": "gabriel",
       "lead_id": "CRM-GAB-WA-5524999730231",
@@ -16,6 +31,24 @@
     }
   ],
   "activities": [
+    {
+      "id": "0f138b5e-5399-4307-934a-d64a15f48cc2",
+      "user_id": "gabriel",
+      "lead_id": "CRM-TEST-VERIFY",
+      "activity_type": "CALL",
+      "metadata": {
+        "call_id": "e2035f5f-2705-4e32-aee9-9dfdafd0fd71",
+        "external_call_id": null,
+        "duration_seconds": 42,
+        "status": "ANSWERED",
+        "caller_number": "Comercial Piff-Paff",
+        "recipient_number": "5511999997777",
+        "call_source": "WHATSAPP",
+        "recording_url": null,
+        "notes": "Ligação de teste gravada com sucesso no historico_interacoes"
+      },
+      "created_at": "2026-11-03T12:35:03.646Z"
+    },
     {
       "id": "a6dc0e2f-6175-4031-8457-a6db5dc87232",
       "user_id": "d4444444-4444-4444-4444-444444444444",
@@ -399,5 +432,5 @@
       "created_at": "2026-10-28T20:33:23.492Z"
     }
   ],
-  "updated_at": "2026-10-29T13:02:17.240Z"
+  "updated_at": "2026-11-03T12:35:03.646Z"
 }
