@@ -1205,7 +1205,7 @@ export default async function handler(req, res) {
         // Mensagem recebida do cliente: contato inbound
         if (!existingLead || resultAction === 'insert') {
           await recordInboundContact({
-            userId: seller.user_id,
+            userId: seller.vendedor_id || seller.name || 'gabriel',
             leadId: finalLead ? finalLead.id : null,
             phone: phoneDigits,
             name: clientName,
@@ -1220,7 +1220,7 @@ export default async function handler(req, res) {
           const diffHours = (Date.now() - lastIntTime) / (1000 * 3600);
           if (diffHours >= 48) {
             await recordRemarketingAction({
-              userId: seller.user_id,
+              userId: seller.vendedor_id || seller.name || 'gabriel',
               leadId: finalLead ? finalLead.id : null,
               phone: phoneDigits,
               name: clientName,
