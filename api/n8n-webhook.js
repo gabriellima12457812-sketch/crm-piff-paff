@@ -299,7 +299,7 @@ function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
     candidate = {
       stage: 'proposta',
       etapa_kanban: 'Proposta',
-      temperature: 'quente',
+      temperature: (detectedValue >= 35000 || /desconto|fecho|pix|sinal/i.test(lower)) ? 'quente' : 'morno',
       commercial_moment: 'proposta',
       priority: detectedValue >= 30000 ? 'MAXIMA' : 'ALTA',
       advance_probability: 'alta',
@@ -312,7 +312,7 @@ function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
     candidate = {
       stage: 'projetos',
       etapa_kanban: 'Projetos',
-      temperature: 'quente',
+      temperature: 'morno',
       commercial_moment: 'decisao',
       priority: 'ALTA',
       advance_probability: 'media',

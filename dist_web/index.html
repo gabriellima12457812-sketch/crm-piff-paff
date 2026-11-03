@@ -4308,6 +4308,63 @@
     }
     window.sanitizeFollowupList = sanitizeFollowupList;
 
+    /**
+     * Motor de Classificação Precisa de Temperatura Comercial (Quente, Morno, Frio)
+     * Avalia decaimento temporal de inatividade, estágio do funil, valor e sinais de intenção
+     */
+    function calculateLeadTemperature(l) {
+      if (!l) return 'morno';
+
+      const st = String(l.stage || 'novos').toLowerCase().trim();
+      if (st === 'concluidas' || st === 'concluida' || st === 'ganho') {
+        return 'morno';
+      }
+
+      const rawDate = l.last_interaction || l.data_ultima_interacao || l.updated_at || l.created_at;
+      const dt = rawDate ? new Date(rawDate) : null;
+      const now = new Date();
+      const diffDays = (dt && !isNaN(dt.getTime())) ? Math.max(0, (now.getTime() - dt.getTime()) / (1000 * 3600 * 24)) : 999;
+
+      const val = Number(l.value) || 0;
+      const notes = String(l.notes || '').toLowerCase();
+
+      // 1. Sinais expressos de Desistência ou Desinteresse -> FRIO imediato
+      if (/desisti|j[áa]\s*comprei|n[ãa]o\s*tenho\s*interesse|muito\s*caro|fora\s*do\s*(?:or[çc]amento|budget)|cancelad|n[ãa]o\s*vou\s*fechar|fechou\s*com\s*outro|sem\s*interesse|n[ãa]o\s*preciso/i.test(notes)) {
+        return 'frio';
+      }
+
+      // 2. Sinais expressos de Compra Iminente / Fechamento
+      const hasHotSignal = /pix|sinal|fechar|fechado|fechamos|contrato|comprovante|dados\s*banc[áa]rios|transfer[êe]ncia|endere[çc]o\s*para\s*entrega|cpf\s*(?:para|p\/)?\s*nota|pode\s*mandar\s*o\s*pedido/i.test(notes);
+
+      // 3. Inatividade Crítica (> 30 dias):
+      // Contatos antigos sem retorno há mais de 30 dias são FRIOS (base de resgate/reativação)
+      if (diffDays > 30) {
+        if (diffDays <= 45 && st === 'fechamento' && val >= 50000) return 'morno';
+        return 'frio';
+      }
+
+      // 4. Inatividade Moderada (15 a 30 dias):
+      if (diffDays > 14) {
+        if (st === 'fechamento' || (st === 'proposta' && val >= 30000)) return 'morno';
+        if (st === 'novos' || st === 'investigacao') return 'frio';
+        return 'morno';
+      }
+
+      // 5. Atividade Recente (8 a 14 dias):
+      if (diffDays > 7) {
+        if ((st === 'fechamento' && val > 0) || hasHotSignal || (st === 'proposta' && val >= 35000)) return 'quente';
+        return 'morno';
+      }
+
+      // 6. Atividade Muito Recente (últimos 7 dias):
+      if (st === 'fechamento' || st === 'proposta' || hasHotSignal) return 'quente';
+      if (st === 'novos' && diffDays <= 3) return 'quente';
+      if (diffDays <= 3 && (val > 0 || st === 'projetos')) return 'quente';
+
+      return 'morno';
+    }
+    window.calculateLeadTemperature = calculateLeadTemperature;
+
     function initStorage() {
       const deletedIds = new Set(getDeletedLeadIds());
       const storageKey = getStorageKey();
@@ -6347,8 +6404,14 @@
 
         container.innerHTML = '';
 
-        // Filtro por temperatura
-        let filtered = stageLeads.filter(l => currentTempFilter === 'all' || l.temperature === currentTempFilter);
+        // Filtro por temperatura preciso e contextual
+        let filtered = stageLeads.filter(l => {
+          if (currentTempFilter === 'all') return true;
+          const leadTemp = (typeof calculateLeadTemperature === 'function')
+            ? calculateLeadTemperature(l)
+            : (l.temperature || 'morno');
+          return leadTemp === currentTempFilter;
+        });
 
         // Se for a coluna de CONCLUÍDAS: Recompras no topo, ordenadas por data de compra mais recente; e avulsas por data de compra mais recente
         if (stage === 'concluidas') {
@@ -6396,7 +6459,11 @@
       card.setAttribute('draggable', isOwner ? 'false' : 'true');
       card.setAttribute('data-id', lead.id);
 
-      // Temperaturas e status de fechamento
+      // Temperaturas e status de fechamento preciso (Quente, Morno, Frio)
+      const effectiveTemp = (typeof calculateLeadTemperature === 'function')
+        ? calculateLeadTemperature(lead)
+        : (lead.temperature || 'morno');
+
       let tempBadge = '';
       if (lead.stage === 'concluidas') {
         if (isRecompra(lead)) {
@@ -6404,9 +6471,9 @@
         } else {
           tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1"><i class="ph-bold ph-check-circle"></i> Concluída</span>`;
         }
-      } else if (lead.temperature === 'quente') {
+      } else if (effectiveTemp === 'quente') {
         tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">🔥 Quente</span>`;
-      } else if (lead.temperature === 'morno') {
+      } else if (effectiveTemp === 'morno') {
         tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">🟡 Morno</span>`;
       } else {
         tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">❄️ Frio</span>`;
@@ -6706,7 +6773,7 @@
         candidate = {
           stage: 'proposta',
           etapa_kanban: 'Proposta',
-          temperature: 'quente',
+          temperature: (detectedValue >= 35000 || /desconto|fecho|pix|sinal/i.test(lower)) ? 'quente' : 'morno',
           commercial_moment: 'proposta',
           priority: detectedValue >= 30000 ? 'MAXIMA' : 'ALTA',
           advance_probability: 'alta',
@@ -6717,7 +6784,7 @@
         candidate = {
           stage: 'projetos',
           etapa_kanban: 'Projetos',
-          temperature: 'quente',
+          temperature: 'morno',
           commercial_moment: 'decisao',
           priority: 'ALTA',
           advance_probability: 'media',
@@ -11947,7 +12014,10 @@
           (l.notes && l.notes.toLowerCase().includes(search));
 
         const matchStage = leadMatchesStageTab(l.stage, activeStage);
-        const matchTemp = tempFilter === 'all' || l.temperature === tempFilter;
+        const lTemp = (typeof calculateLeadTemperature === 'function')
+          ? calculateLeadTemperature(l)
+          : (l.temperature || 'morno');
+        const matchTemp = tempFilter === 'all' || lTemp === tempFilter;
 
         return matchSearch && matchStage && matchTemp;
       });
@@ -11999,9 +12069,13 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-white/5 transition';
 
+        const effTemp = (typeof calculateLeadTemperature === 'function')
+          ? calculateLeadTemperature(lead)
+          : (lead.temperature || 'morno');
+
         let tempPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300">❄️ Frio</span>`;
-        if (lead.temperature === 'quente') tempPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300">🔥 Quente</span>`;
-        else if (lead.temperature === 'morno') tempPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">🟡 Morno</span>`;
+        if (effTemp === 'quente') tempPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300">🔥 Quente</span>`;
+        else if (effTemp === 'morno') tempPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">🟡 Morno</span>`;
 
         let stageBadge = `<span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs">${lead.stage}</span>`;
         if (lead.stage === 'concluidas' || lead.stage === 'concluida') {
@@ -12134,7 +12208,12 @@
       document.getElementById('badge-kanban-total').textContent = leads.length;
       document.getElementById('badge-clients-total').textContent = leads.length;
 
-      const hotCount = leads.filter(l => l.temperature === 'quente').length;
+      const hotCount = leads.filter(l => {
+        const t = (typeof calculateLeadTemperature === 'function')
+          ? calculateLeadTemperature(l)
+          : (l.temperature || 'morno');
+        return t === 'quente';
+      }).length;
       document.getElementById('sidebar-hot-count').textContent = `${hotCount} clientes`;
 
       const todayStr = new Date().toISOString().split('T')[0];
