@@ -126,7 +126,15 @@
       "destination": "/freelancer.html"
     },
     {
-      "source": "/((?!api/|freelancer|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar|setup-admin|FORMULARIO_PEDIDO_CARIBE_CHAT).*)",
+      "source": "/cadastro-empresa",
+      "destination": "/freelancer.html"
+    },
+    {
+      "source": "/cadastro-freelancer",
+      "destination": "/freelancer.html"
+    },
+    {
+      "source": "/((?!api/|freelancer|cadastro-empresa|cadastro-freelancer|contracts|draft|openapi|privacy|pasta_digital|atendimento|pedidos|gerador-pedidos|conectar|setup-admin|FORMULARIO_PEDIDO_CARIBE_CHAT).*)",
       "destination": "/index.html"
     }
   ],
