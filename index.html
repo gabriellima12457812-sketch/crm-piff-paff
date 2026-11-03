@@ -1503,6 +1503,12 @@
               <option value="morno">🟡 Morno</option>
               <option value="frio">❄️ Frio</option>
             </select>
+            <select id="select-filter-contact-type" onchange="renderClientsTable()" class="px-3.5 py-2.5 rounded-xl bg-[#0E1722] border border-white/10 text-sm text-slate-200 focus:outline-none focus:border-[#00D2D3]">
+              <option value="cliente" selected>💼 Apenas Clientes</option>
+              <option value="all">Todos os Contatos</option>
+              <option value="funcionario">👤 Funcionários</option>
+              <option value="fornecedor">🏢 Fornecedores</option>
+            </select>
           </div>
 
           <!-- Tabela de Clientes (Desktop) -->
@@ -2313,6 +2319,19 @@
               <span id="detail-phone" class="font-mono text-emerald-400 font-bold hidden"></span>
               <span id="detail-city"><i class="ph-bold ph-map-pin"></i> </span>
               <span id="detail-line"><i class="ph-bold ph-tag"></i> </span>
+            </div>
+            <!-- Classificação do Contato (Cliente, Funcionário, Fornecedor) -->
+            <div class="flex items-center gap-1.5 mt-1.5 text-xs">
+              <span class="text-slate-400 text-[11px] font-semibold">Tipo:</span>
+              <button type="button" id="btn-detail-type-cliente" onclick="setContactType(activeLead?.id, 'cliente'); updateDetailModalTypeButtons('cliente');" class="px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                💼 Cliente
+              </button>
+              <button type="button" id="btn-detail-type-funcionario" onclick="setContactType(activeLead?.id, 'funcionario'); updateDetailModalTypeButtons('funcionario');" class="px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5">
+                👤 Funcionário
+              </button>
+              <button type="button" id="btn-detail-type-fornecedor" onclick="setContactType(activeLead?.id, 'fornecedor'); updateDetailModalTypeButtons('fornecedor');" class="px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5">
+                🏢 Fornecedor
+              </button>
             </div>
           </div>
         </div>
@@ -4261,8 +4280,162 @@
       return 'piffpaff_leads_anon';
     }
 
+    /**
+     * Motor de Classificação de Tipo de Contato (Cliente, Funcionário, Fornecedor)
+     * Contatos marcados como Funcionário ou Fornecedor NÃO entram em métricas comerciais,
+     * nem no funil de vendas (Kanban), nem nas listas de follow-up.
+     */
+    function getContactType(lead) {
+      if (!lead) return 'cliente';
+      if (lead.contact_type === 'funcionario' || lead.contact_type === 'fornecedor') return lead.contact_type;
+      if (lead.tipo_contato === 'funcionario' || lead.tipo_contato === 'fornecedor') return lead.tipo_contato;
+
+      const line = String(lead.commercial_line || '').toLowerCase().trim();
+      if (line === 'funcionário' || line === 'funcionario') return 'funcionario';
+      if (line === 'fornecedor') return 'fornecedor';
+
+      const notes = String(lead.notes || '').toLowerCase();
+      if (notes.includes('[tipo: funcionário]') || notes.includes('[tipo: funcionario]')) return 'funcionario';
+      if (notes.includes('[tipo: fornecedor]')) return 'fornecedor';
+
+      const pipe = String(lead.pipeline || '').toLowerCase();
+      if (pipe === 'funcionario') return 'funcionario';
+      if (pipe === 'fornecedor') return 'fornecedor';
+
+      try {
+        const reg = JSON.parse(localStorage.getItem('piffpaff_contact_types') || '{}');
+        const id = String(lead.id || '');
+        if (reg[id]) return reg[id];
+        let p = String(lead.phone || '').replace(/\D/g, '');
+        if (p) {
+          if (reg[p]) return reg[p];
+          if (p.startsWith('55') && p.length >= 10 && reg[p.substring(2)]) return reg[p.substring(2)];
+          if (p.length >= 8 && reg[p.slice(-8)]) return reg[p.slice(-8)];
+        }
+      } catch (e) {}
+
+      return 'cliente';
+    }
+    window.getContactType = getContactType;
+
+    async function setContactType(leadId, newType) {
+      if (!leadId) return;
+      const validTypes = ['cliente', 'funcionario', 'fornecedor'];
+      const targetType = validTypes.includes(newType) ? newType : 'cliente';
+
+      const { primaryLead, matches } = (typeof findMatchingLeadGroup === 'function')
+        ? findMatchingLeadGroup(leadId)
+        : { primaryLead: (leads || []).find(l => l.id === leadId), matches: [] };
+
+      const targetList = (matches && matches.length > 0)
+        ? matches
+        : (primaryLead ? [primaryLead] : []);
+
+      if (targetList.length === 0) {
+        const fallback = (leads || []).concat(typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads) ? instagramLeads : []).filter(l => l && l.id === leadId);
+        targetList.push(...fallback);
+      }
+
+      const leadName = primaryLead?.name || targetList[0]?.name || 'Contato';
+
+      targetList.forEach(l => {
+        l.contact_type = targetType;
+        l.tipo_contato = targetType;
+
+        if (targetType === 'funcionario') {
+          l.commercial_line = 'Funcionário';
+          l.followup_disabled = true;
+          l.followup_date = '1970-01-01';
+          l.followup_status = 'Sem Follow-up';
+          if (!l.notes || !l.notes.includes('[TIPO: FUNCIONÁRIO]')) {
+            l.notes = `[TIPO: FUNCIONÁRIO] ${l.notes || ''}`.trim();
+          }
+        } else if (targetType === 'fornecedor') {
+          l.commercial_line = 'Fornecedor';
+          l.followup_disabled = true;
+          l.followup_date = '1970-01-01';
+          l.followup_status = 'Sem Follow-up';
+          if (!l.notes || !l.notes.includes('[TIPO: FORNECEDOR]')) {
+            l.notes = `[TIPO: FORNECEDOR] ${l.notes || ''}`.trim();
+          }
+        } else {
+          // Reverter para Cliente
+          l.commercial_line = 'Linha Premium';
+          l.followup_disabled = false;
+          if (l.followup_date === '1970-01-01') {
+            const todayStr = formatYMD(new Date());
+            l.followup_date = todayStr;
+            l.followup_status = 'Chamar Hoje';
+          }
+          if (l.notes) {
+            l.notes = l.notes.replace(/\[TIPO:\s*(FUNCION[AÁ]RIO|FORNECEDOR)\]\s*/gi, '').trim();
+          }
+        }
+      });
+
+      // Salva no registro permanente de localStorage
+      try {
+        const reg = JSON.parse(localStorage.getItem('piffpaff_contact_types') || '{}');
+        targetList.forEach(l => {
+          if (l.id) reg[l.id] = targetType;
+          let p = String(l.phone || '').replace(/\D/g, '');
+          if (p) {
+            reg[p] = targetType;
+            if (p.startsWith('55') && p.length >= 10) reg[p.substring(2)] = targetType;
+            if (p.length >= 8) reg[p.slice(-8)] = targetType;
+          }
+        });
+        localStorage.setItem('piffpaff_contact_types', JSON.stringify(reg));
+
+        const remList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+        targetList.forEach(l => {
+          const id = l.id;
+          let p = String(l.phone || '').replace(/\D/g, '');
+          if (targetType !== 'cliente') {
+            if (id && !remList.includes(id)) remList.push(id);
+            if (p && p.length >= 8 && !remList.includes(p)) remList.push(p);
+          } else {
+            const idxId = remList.indexOf(id);
+            if (idxId > -1) remList.splice(idxId, 1);
+            const idxP = remList.indexOf(p);
+            if (idxP > -1) remList.splice(idxP, 1);
+          }
+        });
+        localStorage.setItem('piffpaff_removed_followups', JSON.stringify(remList));
+      } catch (e) {}
+
+      saveStorage();
+      if (typeof saveInstagramStorage === 'function') saveInstagramStorage();
+
+      renderKanban();
+      renderClientsTable();
+      renderFollowupCenter();
+      updateMetrics();
+
+      const typeLabels = {
+        funcionario: '👤 Funcionário',
+        fornecedor: '🏢 Fornecedor',
+        cliente: '💼 Cliente Comercial'
+      };
+      const label = typeLabels[targetType] || targetType;
+
+      if (targetType !== 'cliente') {
+        showToast(`"${leadName}" classificado como ${label}! (Removido do funil, métricas e follow-up)`, 'success');
+      } else {
+        showToast(`"${leadName}" reativado como ${label}! (Retornou ao funil de vendas)`, 'info');
+      }
+
+      // Sincroniza em segundo plano com o Supabase
+      try {
+        const syncPromises = targetList.map(l => syncLeadToSupabase(l));
+        Promise.allSettled(syncPromises).catch(() => {});
+      } catch (e) {}
+    }
+    window.setContactType = setContactType;
+
     function isFollowupRemoved(l) {
       if (!l) return true;
+      if (typeof getContactType === 'function' && getContactType(l) !== 'cliente') return true;
       if (l.followup_disabled === true) return true;
       if (l.followup_status === 'Sem Follow-up') return true;
       if (l.followup_date === '1970-01-01') return true;
@@ -5042,7 +5215,8 @@
       }
       panel.classList.remove('hidden');
 
-      const activeLeadsList = Array.isArray(leads) ? leads : [];
+      // Filtra estritamente apenas contatos comerciais (exclui Funcionários e Fornecedores das métricas do Dono)
+      const activeLeadsList = (Array.isArray(leads) ? leads : []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
       
       // 1. Pipeline Total
       const totalPipeline = activeLeadsList.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
@@ -6027,10 +6201,10 @@
         temperature: lead.temperature || 'morno',
         priority: lead.priority || 'MEDIA',
         commercial_moment: lead.commercial_moment || 'pesquisa',
-        commercial_line: lead.commercial_line || 'Linha Premium',
+        commercial_line: (typeof getContactType === 'function' && getContactType(lead) === 'funcionario') ? 'Funcionário' : ((typeof getContactType === 'function' && getContactType(lead) === 'fornecedor') ? 'Fornecedor' : (lead.commercial_line || 'Linha Premium')),
         next_best_action: lead.next_best_action || 'Contatar cliente para diagnóstico.',
         notes: lead.notes || '',
-        followup_date: (lead.followup_disabled || lead.followup_status === 'Sem Follow-up' || lead.followup_date === '1970-01-01' || (typeof isFollowupRemoved === 'function' && isFollowupRemoved(lead))) ? '1970-01-01' : (lead.followup_date || null),
+        followup_date: ((typeof getContactType === 'function' && getContactType(lead) !== 'cliente') || lead.followup_disabled || lead.followup_status === 'Sem Follow-up' || lead.followup_date === '1970-01-01' || (typeof isFollowupRemoved === 'function' && isFollowupRemoved(lead))) ? '1970-01-01' : (lead.followup_date || null),
         channel: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.channel || (lead.instagram && !lead.phone ? 'instagram' : 'whatsapp')),
         pipeline: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.pipeline || 'whatsapp'),
         vendedor_id: sellerKey,
@@ -6387,7 +6561,8 @@
         const container = document.querySelector(`.cards-container[data-stage="${stage}"]`);
         if (!container) return;
 
-        const stageLeads = (leads || []).filter(l => l.stage === stage);
+        // Exclui contatos marcados como Funcionário ou Fornecedor das colunas de vendas ativas do Kanban
+        const stageLeads = (leads || []).filter(l => l.stage === stage && (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
 
         // Atualiza cabeçalho da coluna SEMPRE (mantém contadores em sincronia)
         const col = container.closest('.kanban-col');
@@ -6497,6 +6672,15 @@
               <span><i class="ph-bold ph-map-pin"></i> ${lead.city || 'Brasil'}</span>
               <span>•</span>
               <span class="text-slate-300">${lead.commercial_line || 'Linha Premium'}</span>
+            </div>
+            <!-- Função Pequena e Discreta: Funcionário / Fornecedor -->
+            <div class="flex items-center gap-1.5 mt-1.5 text-[10px]" onclick="event.stopPropagation()">
+              <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'funcionario')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5 hover:border-indigo-500/30 active:scale-95" title="Marcar como Funcionário (não entra em métricas, follow-up nem pipeline)">
+                👤 Funcionário
+              </button>
+              <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'fornecedor')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5 hover:border-amber-500/30 active:scale-95" title="Marcar como Fornecedor (não entra em métricas, follow-up nem pipeline)">
+                🏢 Fornecedor
+              </button>
             </div>
           </div>
           ${tempBadge}
@@ -6893,6 +7077,36 @@
     // ==========================================
     // 5. DETALHES DO LEAD & AUDIO TTS
     // ==========================================
+    function updateDetailModalTypeButtons(currentType) {
+      const type = currentType || 'cliente';
+      const btnCli = document.getElementById('btn-detail-type-cliente');
+      const btnFunc = document.getElementById('btn-detail-type-funcionario');
+      const btnForn = document.getElementById('btn-detail-type-fornecedor');
+
+      if (btnCli) {
+        if (type === 'cliente') {
+          btnCli.className = 'px-2 py-0.5 rounded text-[11px] font-bold transition cursor-pointer bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-sm';
+        } else {
+          btnCli.className = 'px-2 py-0.5 rounded text-[11px] font-medium transition cursor-pointer bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-200 border border-white/5';
+        }
+      }
+      if (btnFunc) {
+        if (type === 'funcionario') {
+          btnFunc.className = 'px-2 py-0.5 rounded text-[11px] font-bold transition cursor-pointer bg-indigo-500/30 text-indigo-300 border border-indigo-500/50 shadow-sm';
+        } else {
+          btnFunc.className = 'px-2 py-0.5 rounded text-[11px] font-medium transition cursor-pointer bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5';
+        }
+      }
+      if (btnForn) {
+        if (type === 'fornecedor') {
+          btnForn.className = 'px-2 py-0.5 rounded text-[11px] font-bold transition cursor-pointer bg-amber-500/30 text-amber-300 border border-amber-500/50 shadow-sm';
+        } else {
+          btnForn.className = 'px-2 py-0.5 rounded text-[11px] font-medium transition cursor-pointer bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5';
+        }
+      }
+    }
+    window.updateDetailModalTypeButtons = updateDetailModalTypeButtons;
+
     function openLeadDetail(leadId) {
       const lead = leads.find(l => l.id === leadId) || (typeof instagramLeads !== 'undefined' ? instagramLeads.find(l => l.id === leadId) : null);
       if (!lead) return;
@@ -7047,6 +7261,11 @@
       // Rastreamento automático de chamadas & ações comerciais do lead
       if (typeof renderLeadProductivityTimeline === 'function') {
         renderLeadProductivityTimeline(lead);
+      }
+
+      // Atualiza botões de classificação do contato (Cliente, Funcionário, Fornecedor)
+      if (typeof updateDetailModalTypeButtons === 'function') {
+        updateDetailModalTypeButtons(getContactType(lead));
       }
 
       document.getElementById('modal-lead-detail').classList.remove('hidden');
@@ -7383,6 +7602,15 @@
 
               <p class="text-xs text-slate-300"><strong class="text-cyan-300">Ação:</strong> ${lead.next_best_action || 'Entrar em contato para diagnóstico consultivo.'}</p>
               <div class="text-[11px] text-slate-400">Data programada: <span class="font-semibold text-slate-300">${formatDateBR(lead.followup_date)}</span></div>
+              <div class="flex items-center gap-1.5 pt-1 text-[10px]">
+                <span class="text-slate-500 text-[10px]">Classificar:</span>
+                <button onclick="setContactType('${safeId}', 'funcionario')" class="px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5 hover:border-indigo-500/30 transition cursor-pointer active:scale-95" title="Marcar como Funcionário (tira de follow-up e métricas)">
+                  👤 Funcionário
+                </button>
+                <button onclick="setContactType('${safeId}', 'fornecedor')" class="px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5 hover:border-amber-500/30 transition cursor-pointer active:scale-95" title="Marcar como Fornecedor (tira de follow-up e métricas)">
+                  🏢 Fornecedor
+                </button>
+              </div>
             </div>
 
             <div class="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
@@ -10939,6 +11167,15 @@
               <span>•</span>
               <span class="text-slate-300">${lead.commercial_line || 'Linha Premium'}</span>
             </div>
+            <!-- Função Pequena e Discreta: Funcionário / Fornecedor -->
+            <div class="flex items-center gap-1.5 mt-1.5 text-[10px]" onclick="event.stopPropagation()">
+              <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'funcionario')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5 hover:border-indigo-500/30 active:scale-95" title="Marcar como Funcionário (não entra em métricas, follow-up nem pipeline)">
+                👤 Funcionário
+              </button>
+              <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'fornecedor')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5 hover:border-amber-500/30 active:scale-95" title="Marcar como Fornecedor (não entra em métricas, follow-up nem pipeline)">
+                🏢 Fornecedor
+              </button>
+            </div>
           </div>
           ${stageBadge}
         </div>
@@ -11793,19 +12030,20 @@
     let temperatureChartInstance = null;
 
     function renderDashboardCharts() {
+      const commercialLeads = (leads || []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
       let totalPipeline = 0;
       if (currentTenantSeller === 'mayara') {
         totalPipeline = 890400;
       } else {
-        totalPipeline = leads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+        totalPipeline = commercialLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
       }
 
-      const hotLeads = leads.filter(l => (l.temperature || '').toLowerCase() === 'quente');
-      const warmLeads = leads.filter(l => (l.temperature || '').toLowerCase() === 'morno');
-      const coldLeads = leads.filter(l => (l.temperature || '').toLowerCase() === 'frio');
+      const hotLeads = commercialLeads.filter(l => (l.temperature || '').toLowerCase() === 'quente');
+      const warmLeads = commercialLeads.filter(l => (l.temperature || '').toLowerCase() === 'morno');
+      const coldLeads = commercialLeads.filter(l => (l.temperature || '').toLowerCase() === 'frio');
 
-      const totalCount = leads.length;
-      const leadsWithVal = leads.filter(l => Number(l.value) > 0);
+      const totalCount = commercialLeads.length;
+      const leadsWithVal = commercialLeads.filter(l => Number(l.value) > 0);
       const avgTicket = leadsWithVal.length > 0 ? (totalPipeline / leadsWithVal.length) : 0;
 
       const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -11818,7 +12056,7 @@
       if (canvasFunnel && typeof Chart !== 'undefined') {
         const stageNames = ['Novos', 'Investigação', 'Projetos', 'Proposta', 'Fechamento', 'Concluídas'];
         const stageKeys = ['novos', 'investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas'];
-        const stageCounts = stageKeys.map(k => leads.filter(l => l.stage === k).length);
+        const stageCounts = stageKeys.map(k => commercialLeads.filter(l => l.stage === k).length);
 
         if (funnelChartInstance) {
           funnelChartInstance.destroy();
@@ -11989,6 +12227,8 @@
       const search = (searchInput?.value || '').trim().toLowerCase();
       const stageSelect = document.getElementById('select-filter-stage');
       const tempSelect = document.getElementById('select-filter-temp');
+      const typeSelect = document.getElementById('select-filter-contact-type');
+      const contactTypeFilter = typeSelect?.value || 'cliente';
 
       // Se a aba de estágio estiver ativa, sincroniza o select
       let activeStage = currentClientsStageTab;
@@ -11999,13 +12239,18 @@
 
       // Atualiza estado visual do botão "Limpar Filtros"
       const btnClear = document.getElementById('btn-clear-clients-filters');
-      const isFiltered = search !== '' || activeStage !== 'all' || tempFilter !== 'all';
+      const isFiltered = search !== '' || activeStage !== 'all' || tempFilter !== 'all' || contactTypeFilter !== 'cliente';
       if (btnClear) {
         if (isFiltered) btnClear.classList.remove('hidden');
         else btnClear.classList.add('hidden');
       }
 
       const filtered = allSellerLeads.filter(l => {
+        const lType = (typeof getContactType === 'function') ? getContactType(l) : 'cliente';
+        if (contactTypeFilter !== 'all' && lType !== contactTypeFilter) {
+          return false;
+        }
+
         const matchSearch = !search ||
           (l.name && l.name.toLowerCase().includes(search)) ||
           (l.phone && l.phone.includes(search)) ||
@@ -12095,6 +12340,35 @@
           ? `<span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">📸 Direct</span>`
           : `<span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">💬 WhatsApp</span>`;
 
+        const rowType = (typeof getContactType === 'function') ? getContactType(lead) : 'cliente';
+        let contactTypeBadge = '';
+        if (rowType === 'funcionario') {
+          contactTypeBadge = `
+            <div class="flex items-center gap-1 mt-1 text-[10px]">
+              <span class="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-bold inline-flex items-center gap-0.5">👤 Funcionário</span>
+              <button onclick="setContactType('${lead.id}', 'cliente')" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-[10px] transition cursor-pointer" title="Reverter para Cliente">↺ Cliente</button>
+            </div>
+          `;
+        } else if (rowType === 'fornecedor') {
+          contactTypeBadge = `
+            <div class="flex items-center gap-1 mt-1 text-[10px]">
+              <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold inline-flex items-center gap-0.5">🏢 Fornecedor</span>
+              <button onclick="setContactType('${lead.id}', 'cliente')" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-[10px] transition cursor-pointer" title="Reverter para Cliente">↺ Cliente</button>
+            </div>
+          `;
+        } else {
+          contactTypeBadge = `
+            <div class="flex items-center gap-1 mt-1 text-[10px]">
+              <button onclick="setContactType('${lead.id}', 'funcionario')" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5 transition text-[10px] cursor-pointer" title="Marcar como Funcionário (não entra em métricas nem funil)">
+                👤 Funcionário
+              </button>
+              <button onclick="setContactType('${lead.id}', 'fornecedor')" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5 transition text-[10px] cursor-pointer" title="Marcar como Fornecedor (não entra em métricas nem funil)">
+                🏢 Fornecedor
+              </button>
+            </div>
+          `;
+        }
+
         tr.innerHTML = `
           <td class="py-3 px-4">
             <div class="font-bold text-white cursor-pointer hover:text-[#00D2D3]" onclick="openLeadDetail('${lead.id}')">${lead.name}</div>
@@ -12102,6 +12376,7 @@
               <span class="text-[11px] text-slate-400 font-mono">${lead.phone ? formatPhoneBR(lead.phone) : (lead.instagram ? '@' + lead.instagram : 'Sem contato')}</span>
               ${channelBadge}
             </div>
+            ${contactTypeBadge}
           </td>
           <td class="py-3 px-4 text-slate-300">${lead.city || 'Brasil'}</td>
           <td class="py-3 px-4 capitalize font-semibold text-slate-200">
@@ -12126,10 +12401,12 @@
       currentClientsStageTab = 'all';
       const stageSelect = document.getElementById('select-filter-stage');
       const tempSelect = document.getElementById('select-filter-temp');
+      const typeSelect = document.getElementById('select-filter-contact-type');
       const searchInput = document.getElementById('input-search-clients');
 
       if (stageSelect) stageSelect.value = 'all';
       if (tempSelect) tempSelect.value = 'all';
+      if (typeSelect) typeSelect.value = 'cliente';
       if (searchInput) searchInput.value = '';
 
       document.querySelectorAll('.stage-tab').forEach(t => {
@@ -12203,12 +12480,14 @@
     }
 
     function updateMetrics() {
-      const totalPipeline = leads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+      // Clientes comerciais ativos: exclui estritamente funcionários e fornecedores das métricas de vendas
+      const activeCommercialLeads = (leads || []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
+      const totalPipeline = activeCommercialLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
       document.getElementById('sidebar-total-pipeline').textContent = formatBRL(totalPipeline);
-      document.getElementById('badge-kanban-total').textContent = leads.length;
+      document.getElementById('badge-kanban-total').textContent = activeCommercialLeads.length;
       document.getElementById('badge-clients-total').textContent = leads.length;
 
-      const hotCount = leads.filter(l => {
+      const hotCount = activeCommercialLeads.filter(l => {
         const t = (typeof calculateLeadTemperature === 'function')
           ? calculateLeadTemperature(l)
           : (l.temperature || 'morno');
@@ -12217,8 +12496,9 @@
       document.getElementById('sidebar-hot-count').textContent = `${hotCount} clientes`;
 
       const todayStr = new Date().toISOString().split('T')[0];
-      const overdue = leads.filter(l => {
+      const overdue = activeCommercialLeads.filter(l => {
         if (l.stage === 'concluidas' || l.stage === 'concluida') return false;
+        if (typeof isFollowupRemoved === 'function' && isFollowupRemoved(l)) return false;
         const fDate = l.followup_date || (l.last_interaction ? l.last_interaction.split('T')[0] : null);
         return fDate && fDate < todayStr;
       });

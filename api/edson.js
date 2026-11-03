@@ -174,6 +174,12 @@ export default async function handler(req, res) {
       const nowIso = new Date().toISOString();
       const shortPhone8 = rawPhone.slice(-8);
 
+      // Verifica se o contato que mandou mensagem é outro funcionário/vendedor da empresa
+      const isEmployeeSender = (govState?.users || []).some(u => {
+        const uPhone = String(u.phone || '').replace(/\D/g, '');
+        return uPhone && (uPhone === rawPhone || (shortPhone8.length >= 8 && uPhone.endsWith(shortPhone8)));
+      });
+
       // Verifica se já existe lead com esse telefone na carteira deste vendedor
       const checkUrl = `${url}/rest/v1/leads?or=(vendedor_id.eq.${encodeURIComponent(instanceName)},user_id.eq.${encodeURIComponent(sellerUserId)})&phone=ilike.*${encodeURIComponent(shortPhone8)}*&limit=1`;
       const existingRes = await fetch(checkUrl, { headers });
@@ -202,6 +208,7 @@ export default async function handler(req, res) {
         ? pushName
         : `Cliente WhatsApp (${rawPhone.slice(-4)})`;
 
+      const initialNotes = textMsg ? `[WhatsApp ${new Date().toLocaleString('pt-BR')}]: ${textMsg}` : 'Lead capturado automaticamente via WhatsApp QR Code.';
       const newLeadPayload = {
         id: newLeadId,
         user_id: sellerUserId,
@@ -215,7 +222,9 @@ export default async function handler(req, res) {
         value: 0,
         channel: 'whatsapp',
         pipeline: 'whatsapp',
-        notes: textMsg ? `[WhatsApp ${new Date().toLocaleString('pt-BR')}]: ${textMsg}` : 'Lead capturado automaticamente via WhatsApp QR Code.',
+        commercial_line: isEmployeeSender ? 'Funcionário' : 'Linha Premium',
+        followup_date: isEmployeeSender ? '1970-01-01' : null,
+        notes: isEmployeeSender ? `[TIPO: FUNCIONÁRIO] ${initialNotes}` : initialNotes,
         last_interaction: nowIso,
         created_at: nowIso,
         updated_at: nowIso
@@ -370,10 +379,21 @@ export default async function handler(req, res) {
       resourceType: 'lead'
     }).filter(l => Boolean(l.deleted_at));
 
-    const totalPipeline = leads.reduce((sum, l) => sum + (Number(l.value) || 0), 0);
-    const projectsLeads = leads.filter(l => (l.stage || '').toLowerCase() === 'projetos');
+    // Separa contatos comerciais de contatos internos (Funcionários / Fornecedores)
+    const isInternalContact = (l) => {
+      const line = String(l?.commercial_line || '').toLowerCase();
+      const notes = String(l?.notes || '').toLowerCase();
+      const pipeline = String(l?.pipeline || '').toLowerCase();
+      return line.includes('funcionário') || line.includes('funcionario') || line.includes('fornecedor') ||
+             notes.includes('[tipo: funcionário]') || notes.includes('[tipo: funcionario]') || notes.includes('[tipo: fornecedor]') ||
+             pipeline === 'funcionario' || pipeline === 'fornecedor';
+    };
+
+    const commercialLeads = leads.filter(l => !isInternalContact(l));
+    const totalPipeline = commercialLeads.reduce((sum, l) => sum + (Number(l.value) || 0), 0);
+    const projectsLeads = commercialLeads.filter(l => (l.stage || '').toLowerCase() === 'projetos');
     const totalProjectsValue = projectsLeads.reduce((sum, l) => sum + (Number(l.value) || 0), 0);
-    const vipLeads = leads.filter(l => (Number(l.value) || 0) >= 30000 || (l.priority || '').toUpperCase() === 'MAXIMA');
+    const vipLeads = commercialLeads.filter(l => (Number(l.value) || 0) >= 30000 || (l.priority || '').toUpperCase() === 'MAXIMA');
     const totalVipValue = vipLeads.reduce((sum, l) => sum + (Number(l.value) || 0), 0);
 
     return res.status(200).json({
@@ -382,10 +402,11 @@ export default async function handler(req, res) {
       role: 'super_admin',
       mode: 'super_admin_full_governance',
       metrics: {
-        total_leads: leads.length,
+        total_leads: commercialLeads.length,
+        total_contacts_all: leads.length,
         soft_deleted_count: deletedLeads.length,
         pipeline_total: totalPipeline,
-        avg_ticket: leads.length > 0 ? (totalPipeline / leads.length) : 0,
+        avg_ticket: commercialLeads.length > 0 ? (totalPipeline / commercialLeads.length) : 0,
         projetos_count: projectsLeads.length,
         projetos_value: totalProjectsValue,
         vip_count: vipLeads.length,
