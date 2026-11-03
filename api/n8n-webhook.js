@@ -441,12 +441,7 @@ export default async function handler(req, res) {
       const rawData = body.call || body.data?.call || (Array.isArray(body.data) ? body.data[0] : (body.data || body));
       const callStatusRaw = String(rawData.status || body.status || '').toLowerCase();
 
-      // 1. IGNORA PACOTES INTERMEDIÁRIOS DE TOQUE (evita repetições de ringing/offer)
-      if (callStatusRaw === 'offer' || callStatusRaw === 'ringing') {
-        return res.status(200).json({ success: true, message: 'Pacote de toque intermediário ignorado. Aguardando finalização.', status: callStatusRaw });
-      }
-
-      // 2. EXTRAÇÃO E RESOLUÇÃO DE TELEFONE REAL (BLINDAGEM DE LIDs @lid)
+      // 1. EXTRAÇÃO E RESOLUÇÃO DE TELEFONE REAL (BLINDAGEM DE LIDs @lid)
       const rawCaller = String(rawData.caller || rawData.from || rawData.callerNumber || body.sender || body.from || '');
       const rawRecipient = String(rawData.recipient || rawData.to || rawData.chatId || rawData.remoteJid || rawData.recipientNumber || body.to || '');
       let altJid = String(rawData.remoteJidAlt || rawData.participantAlt || rawData.jidAlt || rawData.key?.remoteJidAlt || '');
