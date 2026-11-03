@@ -2345,10 +2345,14 @@
             <i class="ph-bold ph-phone-outgoing text-base"></i>
             <span>Ligar</span>
           </button>
-          <a id="detail-wa-link" href="#" target="_blank" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-bold transition active:scale-95">
+          <a id="detail-wa-link" href="#" target="_blank" onclick="if (activeLead) markLeadContactedToday(activeLead.id, 'Contato iniciado via WhatsApp');" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-bold transition active:scale-95 cursor-pointer">
             <i class="ph-bold ph-whatsapp-logo text-base"></i>
             <span>WhatsApp</span>
           </a>
+          <button type="button" id="btn-detail-mark-contacted" onclick="if (activeLead) markLeadContactedToday(activeLead.id, 'Conversa realizada hoje');" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-bold transition active:scale-95 cursor-pointer" title="Marcar que conversou hoje com o cliente (tira do follow-up urgente e reagenda)">
+            <i class="ph-bold ph-check text-base"></i>
+            <span>Falou Hoje</span>
+          </button>
           <button id="btn-close-detail" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition">
             <i class="ph-bold ph-x text-xl"></i>
           </button>
@@ -6673,8 +6677,17 @@
               <span>•</span>
               <span class="text-slate-300">${lead.commercial_line || 'Linha Premium'}</span>
             </div>
-            <!-- Função Pequena e Discreta: Funcionário / Fornecedor -->
+            <!-- Função Pequena e Discreta: Funcionário / Fornecedor / Falei Hoje -->
             <div class="flex items-center gap-1.5 mt-1.5 text-[10px]" onclick="event.stopPropagation()">
+              ${(typeof wasContactedToday === 'function' && wasContactedToday(lead)) ? `
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 inline-flex items-center gap-0.5" title="Conversa ou contato realizado hoje">
+                  <i class="ph-bold ph-check"></i> Falou Hoje
+                </span>
+              ` : `
+                <button type="button" onclick="event.stopPropagation(); markLeadContactedToday('${lead.id}', 'Conversa realizada hoje')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-300 border border-white/5 hover:border-emerald-500/30 active:scale-95" title="Marcar que conversou hoje com o cliente (tira do follow-up urgente)">
+                  ✓ Falei Hoje
+                </button>
+              `}
               <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'funcionario')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5 hover:border-indigo-500/30 active:scale-95" title="Marcar como Funcionário (não entra em métricas, follow-up nem pipeline)">
                 👤 Funcionário
               </button>
@@ -7473,6 +7486,166 @@
       showToast('Telefone copiado: ' + formatPhoneBR(lead.phone), 'success');
     };
 
+    /**
+     * Identifica se houve conversa, mensagem ou ligação com o cliente no dia de HOJE.
+     * Avalia last_contact_date, last_interaction, data_ultima_interacao, registro local e notas.
+     */
+    function wasContactedToday(lead) {
+      if (!lead) return false;
+      const todayStr = formatYMD(new Date());
+      if (!todayStr) return false;
+
+      // 1. Flag explícita em memória ou no objeto
+      if (lead.called_today === true) return true;
+      if (lead.last_contact_date && lead.last_contact_date === todayStr) return true;
+
+      // 2. Registro persistente em localStorage
+      try {
+        const reg = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
+        const id = String(lead.id || '');
+        if (id && reg[id] === todayStr) return true;
+        let p = String(lead.phone || '').replace(/\D/g, '');
+        if (p) {
+          if (reg[p] === todayStr) return true;
+          if (p.startsWith('55') && p.length >= 10 && reg[p.substring(2)] === todayStr) return true;
+          if (p.length >= 8 && reg[p.slice(-8)] === todayStr) return true;
+        }
+      } catch (e) {}
+
+      // 3. last_interaction ou data_ultima_interacao ocorrida HOJE
+      const rawDate = lead.last_interaction || lead.data_ultima_interacao;
+      if (rawDate) {
+        const interYMD = formatYMD(rawDate);
+        if (interYMD && interYMD === todayStr) {
+          return true;
+        }
+      }
+
+      // 4. Notas com registro de mensagem/contato de hoje
+      const now = new Date();
+      const todayBR = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+      const notes = String(lead.notes || '');
+      if (notes) {
+        const lines = notes.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith(`[${todayBR}`) || trimmed.startsWith(`[${todayStr}`)) {
+            const lower = trimmed.toLowerCase();
+            if (
+              lower.includes('contato') ||
+              lower.includes('chamad') ||
+              lower.includes('ligação') ||
+              lower.includes('ligacao') ||
+              lower.includes('mensagem') ||
+              lower.includes('conversa') ||
+              lower.includes('whatsapp') ||
+              lower.includes('áudio') ||
+              lower.includes('audio') ||
+              lower.includes('já chamei') ||
+              lower.includes('ja chamei') ||
+              lower.includes('respondeu') ||
+              lower.includes('falou hoje')
+            ) {
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    }
+    window.wasContactedToday = wasContactedToday;
+
+    /**
+     * Registra que o vendedor conversou HOJE com o cliente.
+     * Imediatamente tira o cliente das listas de urgência de follow-up (Atrasados e Chamar Hoje),
+     * reagenda o próximo follow-up segundo a cadência (+2 dias por padrão) e salva no Supabase.
+     */
+    async function markLeadContactedToday(leadId, sourceOrNote = 'Conversa realizada hoje') {
+      if (!leadId) return;
+      const { primaryLead, matches } = (typeof findMatchingLeadGroup === 'function')
+        ? findMatchingLeadGroup(leadId)
+        : { primaryLead: (leads || []).find(l => l.id === leadId), matches: [] };
+
+      const targetList = (matches && matches.length > 0)
+        ? matches
+        : (primaryLead ? [primaryLead] : []);
+
+      if (targetList.length === 0) {
+        const fallback = (leads || []).concat(typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads) ? instagramLeads : []).filter(l => l && l.id === leadId);
+        targetList.push(...fallback);
+      }
+      if (targetList.length === 0) return;
+
+      const leadName = primaryLead?.name || targetList[0]?.name || 'Contato';
+      const todayStr = formatYMD(new Date());
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+      const dateBR = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+      // Calcula próximo contato (mínimo 2 dias à frente para dar respiro ao cliente)
+      const nextCadence = (typeof computeFollowupCadence === 'function') ? computeFollowupCadence(targetList[0]) : null;
+      let nextDate = nextCadence?.followup_date || addDays(2);
+      if (nextDate <= todayStr) nextDate = addDays(2);
+
+      const logText = `[${dateBR}, ${timeStr}]: ${sourceOrNote}. Próximo follow-up agendado para ${formatDateBR(nextDate)}.`;
+
+      targetList.forEach(l => {
+        l.last_contact_date = todayStr;
+        l.last_contact_time = timeStr;
+        l.last_interaction = now.toISOString();
+        l.called_today = true;
+        l.followup_disabled = false;
+        l.followup_date = nextDate;
+        l.followup_status = 'Agendado';
+        l.notes = l.notes ? `${l.notes}\n${logText}` : logText;
+      });
+
+      // 1. Registra no mapa persistente de contatados hoje
+      try {
+        const reg = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
+        targetList.forEach(l => {
+          if (l.id) reg[l.id] = todayStr;
+          let p = String(l.phone || '').replace(/\D/g, '');
+          if (p) {
+            reg[p] = todayStr;
+            if (p.startsWith('55') && p.length >= 10) reg[p.substring(2)] = todayStr;
+            if (p.length >= 8) reg[p.slice(-8)] = todayStr;
+          }
+        });
+        localStorage.setItem('piffpaff_contacted_today', JSON.stringify(reg));
+      } catch (e) {}
+
+      // 2. Persiste e atualiza UI
+      saveStorage();
+      if (typeof saveInstagramStorage === 'function') saveInstagramStorage();
+      if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
+
+      renderFollowupCenter();
+      renderClientsTable();
+      renderKanban();
+      updateMetrics();
+
+      showToast(`✅ Conversa com "${leadName}" registrada hoje! Saiu do follow-up urgente e foi agendado para ${formatDateBR(nextDate)}.`, 'success');
+
+      // 3. Sincroniza em segundo plano com o Supabase
+      try {
+        const syncPromises = targetList.map(l => syncLeadToSupabase(l));
+        Promise.allSettled(syncPromises).catch(() => {});
+      } catch (e) {}
+    }
+    window.markLeadContactedToday = markLeadContactedToday;
+
+    function handleChamarWhatsApp(leadId, cleanPhone) {
+      if (cleanPhone) {
+        const rawP = String(cleanPhone).replace(/\D/g, '');
+        const waUrl = `https://wa.me/55${rawP.replace(/^55/, '')}`;
+        window.open(waUrl, '_blank');
+      }
+      markLeadContactedToday(leadId, 'Contato iniciado via WhatsApp');
+    }
+    window.handleChamarWhatsApp = handleChamarWhatsApp;
+
     function renderFollowupCenter() {
       const todayStr = formatYMD(new Date());
 
@@ -7500,6 +7673,26 @@
           return;
         }
 
+        const isContactedToday = (typeof wasContactedToday === 'function') ? wasContactedToday(l) : false;
+
+        // Se o vendedor já conversou ou interagiu HOJE com o cliente:
+        // O cliente cumpriu o follow-up de hoje e é automaticamente retirado das listas urgentes (Atrasados e Chamar Hoje).
+        // A data de follow-up é recalculada para a próxima etapa da cadência (mínimo +2 dias de respiro).
+        if (isContactedToday) {
+          l.called_today = true;
+          l.last_contact_date = todayStr;
+          if (!l.followup_date || l.followup_date <= todayStr) {
+            const nextCadence = (typeof computeFollowupCadence === 'function') ? computeFollowupCadence(l) : null;
+            let nextDate = nextCadence?.followup_date || addDays(2);
+            if (nextDate <= todayStr) nextDate = addDays(2);
+            l.followup_date = nextDate;
+          }
+          l.followup_status = 'Agendado';
+          return;
+        }
+
+        l.called_today = false;
+
         if (!l.followup_date || l.followup_date === '') {
           const rawDate = l.last_interaction || l.data_ultima_interacao || l.created_at;
           if (rawDate) {
@@ -7526,9 +7719,9 @@
         }
       });
 
-      const overdue = allFunnelLeads.filter(l => !isFollowupRemoved(l) && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && l.followup_date < todayStr);
-      const today = allFunnelLeads.filter(l => !isFollowupRemoved(l) && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && l.followup_date === todayStr);
-      const upcoming = allFunnelLeads.filter(l => !isFollowupRemoved(l) && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && l.followup_date > todayStr);
+      const overdue = allFunnelLeads.filter(l => !isFollowupRemoved(l) && !l.called_today && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && l.followup_date < todayStr);
+      const today = allFunnelLeads.filter(l => !isFollowupRemoved(l) && !l.called_today && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && l.followup_date === todayStr);
+      const upcoming = allFunnelLeads.filter(l => !isFollowupRemoved(l) && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && (l.called_today || l.followup_date > todayStr));
 
       const countOverdueEl = document.getElementById('count-overdue');
       const countTodayEl = document.getElementById('count-today');
@@ -7574,7 +7767,11 @@
             <div class="space-y-1.5">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-heading font-bold text-white text-sm cursor-pointer hover:text-[#00D2D3]" onclick="openLeadDetail('${safeId}')">${safeName}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeClass}">${badgeText}</span>
+                ${lead.called_today ? `
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1"><i class="ph-bold ph-check-circle"></i> Já Falou Hoje</span>
+                ` : `
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeClass}">${badgeText}</span>
+                `}
                 <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isInsta ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}">${isInsta ? '📸 Instagram Direct' : '💬 WhatsApp'}</span>
                 ${lead.followup_status ? `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30" title="${lead.followup_status}">${lead.followup_status}</span>` : ''}
                 <span class="text-xs font-heading font-bold text-[#FECA57]">${formatBRL(lead.value)}</span>
@@ -7615,13 +7812,20 @@
 
             <div class="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
               ${cleanPhone ? `
-                <a href="https://wa.me/55${cleanPhone}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-semibold flex items-center gap-1">
-                  <i class="ph-bold ph-whatsapp-logo"></i> Chamar
-                </a>` : ''}
+                <button type="button" onclick="handleChamarWhatsApp('${safeId}', '${cleanPhone}')" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-sm hover:shadow-emerald-500/20" title="Abrir conversa no WhatsApp e marcar contato realizado hoje">
+                  <i class="ph-bold ph-whatsapp-logo text-sm"></i> Chamar
+                </button>` : ''}
               ${isInsta && rawInsta ? `
-                <a href="https://instagram.com/${rawInsta}" target="_blank" class="px-3 py-1.5 rounded-lg bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 border border-pink-500/40 text-xs font-semibold flex items-center gap-1">
+                <a href="https://instagram.com/${rawInsta}" target="_blank" onclick="markLeadContactedToday('${safeId}', 'Contato Direct Instagram')" class="px-3 py-1.5 rounded-lg bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 border border-pink-500/40 text-xs font-semibold flex items-center gap-1 transition active:scale-95 cursor-pointer">
                   <i class="ph-bold ph-instagram-logo"></i> Direct
                 </a>` : ''}
+
+              <!-- BOTÃO EXPRESSO: JÁ FALEI HOJE (TIRA DO FOLLOW-UP URGENTE) -->
+              <button type="button" onclick="markLeadContactedToday('${safeId}', 'Conversa realizada hoje')" class="px-2.5 py-1.5 rounded-lg ${lead.called_today ? 'bg-emerald-500/30 text-emerald-200 border-emerald-500/50' : 'bg-white/5 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 border-white/10 hover:border-emerald-500/30'} border text-xs font-medium flex items-center gap-1 transition active:scale-95 cursor-pointer" title="Marcar que já conversou hoje com o cliente (tira do follow-up urgente e reagenda)">
+                <i class="ph-bold ph-check text-emerald-400"></i>
+                <span>${lead.called_today ? 'Já Falei' : 'Já Falei Hoje'}</span>
+              </button>
+
               <button onclick="quickAddDays('${safeId}', 1)" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-slate-300 transition active:scale-95 cursor-pointer" title="Avançar 1 dia">+1d</button>
               <button onclick="quickAddDays('${safeId}', 3)" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-slate-300 transition active:scale-95 cursor-pointer" title="Avançar 3 dias">+3d</button>
               <button onclick="openRescheduleModal('${safeId}')" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#00D2D3]/50 text-xs text-slate-300 hover:text-[#00D2D3] transition flex items-center gap-1 active:scale-95 cursor-pointer" title="Escolher data personalizada de follow-up">
@@ -11167,8 +11371,17 @@
               <span>•</span>
               <span class="text-slate-300">${lead.commercial_line || 'Linha Premium'}</span>
             </div>
-            <!-- Função Pequena e Discreta: Funcionário / Fornecedor -->
+            <!-- Função Pequena e Discreta: Funcionário / Fornecedor / Falei Hoje -->
             <div class="flex items-center gap-1.5 mt-1.5 text-[10px]" onclick="event.stopPropagation()">
+              ${(typeof wasContactedToday === 'function' && wasContactedToday(lead)) ? `
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 inline-flex items-center gap-0.5" title="Conversa ou contato realizado hoje">
+                  <i class="ph-bold ph-check"></i> Falou Hoje
+                </span>
+              ` : `
+                <button type="button" onclick="event.stopPropagation(); markLeadContactedToday('${lead.id}', 'Conversa realizada hoje')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-300 border border-white/5 hover:border-emerald-500/30 active:scale-95" title="Marcar que conversou hoje com o cliente (tira do follow-up urgente)">
+                  ✓ Falei Hoje
+                </button>
+              `}
               <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'funcionario')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5 hover:border-indigo-500/30 active:scale-95" title="Marcar como Funcionário (não entra em métricas, follow-up nem pipeline)">
                 👤 Funcionário
               </button>
@@ -12357,8 +12570,14 @@
             </div>
           `;
         } else {
+          const isSpokenToday = (typeof wasContactedToday === 'function') && wasContactedToday(lead);
           contactTypeBadge = `
             <div class="flex items-center gap-1 mt-1 text-[10px]">
+              ${isSpokenToday ? `
+                <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold inline-flex items-center gap-0.5"><i class="ph-bold ph-check"></i> Falou Hoje</span>
+              ` : `
+                <button onclick="markLeadContactedToday('${lead.id}', 'Conversa realizada hoje')" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-300 border border-white/5 text-[10px] transition cursor-pointer" title="Marcar que conversou hoje com o cliente (tira do follow-up urgente)">✓ Falei Hoje</button>
+              `}
               <button onclick="setContactType('${lead.id}', 'funcionario')" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5 transition text-[10px] cursor-pointer" title="Marcar como Funcionário (não entra em métricas nem funil)">
                 👤 Funcionário
               </button>
@@ -12499,6 +12718,7 @@
       const overdue = activeCommercialLeads.filter(l => {
         if (l.stage === 'concluidas' || l.stage === 'concluida') return false;
         if (typeof isFollowupRemoved === 'function' && isFollowupRemoved(l)) return false;
+        if (typeof wasContactedToday === 'function' && wasContactedToday(l)) return false;
         const fDate = l.followup_date || (l.last_interaction ? l.last_interaction.split('T')[0] : null);
         return fDate && fDate < todayStr;
       });
@@ -14400,6 +14620,11 @@
         // Recarrega dashboard semanal
         loadProductivityDashboard(true);
 
+        // Se a chamada foi atendida, marca automaticamente que já conversou hoje e retira do follow-up urgente
+        if (activeCallLead && status === 'ANSWERED' && typeof markLeadContactedToday === 'function') {
+          markLeadContactedToday(activeCallLead.id, `Ligação monitorada atendida (${formatDurationSecondsClient(durationSeconds)})`);
+        }
+
         activeCallLead = null;
         activeCallStartTime = null;
       }
@@ -15249,6 +15474,11 @@
           showToast(`Ligação gravada: ${status === 'ANSWERED' ? formatDurationSecondsClient(durationSec) : '0s (Não Atendida)'}`, 'success');
         } else {
           showToast('Ligação salva no histórico comercial.', 'info');
+        }
+
+        // Se a chamada foi atendida, marca automaticamente que já conversou hoje e retira do follow-up urgente
+        if (matchedLead && status === 'ANSWERED' && typeof markLeadContactedToday === 'function') {
+          markLeadContactedToday(matchedLead.id, `Ligação manual registrada (${formatDurationSecondsClient(durationSec)})`);
         }
 
         closeManualCallModal();

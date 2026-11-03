@@ -190,16 +190,27 @@ export default async function handler(req, res) {
         const updatedNotes = textMsg
           ? `${existingLead.notes || ''}\n[${new Date().toLocaleString('pt-BR')}] ${fromMe ? 'Vendedor' : 'Cliente'}: ${textMsg}`.trim()
           : (existingLead.notes || '');
+
+        // Como houve conversa hoje no WhatsApp, o follow-up de hoje foi cumprido!
+        // Se a data de follow-up era hoje ou estava em atraso, avança para daqui a 2 dias úteis
+        const todayYMD = nowIso.split('T')[0];
+        let nextFollowDate = existingLead.followup_date;
+        if (!nextFollowDate || nextFollowDate <= todayYMD) {
+          const nextD = new Date(Date.now() + 2 * 86400000);
+          nextFollowDate = nextD.toISOString().split('T')[0];
+        }
+
         await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}`, {
           method: 'PATCH',
           headers,
           body: JSON.stringify({
             last_interaction: nowIso,
             updated_at: nowIso,
+            followup_date: nextFollowDate,
             notes: updatedNotes.slice(-4000)
           })
         });
-        return res.status(200).json({ ok: true, action: 'updated', lead_id: existingLead.id, seller: instanceName });
+        return res.status(200).json({ ok: true, action: 'updated', lead_id: existingLead.id, seller: instanceName, followup_date: nextFollowDate });
       }
 
       // Cria novo lead automaticamente no Kanban do vendedor
