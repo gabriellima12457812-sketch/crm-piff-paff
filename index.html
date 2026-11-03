@@ -4277,6 +4277,76 @@
     }
     window.isLeadDeleted = isLeadDeleted;
 
+    // ==========================================
+    // REGISTRO DE VENDAS CONCLUÍDAS (BLINDAGEM DO ESTÁGIO 'CONCLUÍDAS')
+    // Impede que leads concluídos sejam rebaixados para 'fechamento' por webhooks ou bases estáticas
+    // ==========================================
+    function getConcludedLeadIds() {
+      try {
+        const stored = localStorage.getItem('piffpaff_concluded_leads');
+        const arr = stored ? JSON.parse(stored) : [];
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function markLeadConcluded(leadId, leadPhone = null) {
+      if (!leadId && !leadPhone) return;
+      try {
+        const list = getConcludedLeadIds();
+        const set = new Set(list.map(x => String(x).toUpperCase()));
+        if (leadId) set.add(String(leadId).toUpperCase());
+        if (leadPhone) {
+          const cp = cleanPhone(leadPhone);
+          if (cp) {
+            set.add(cp);
+            const l8 = cp.slice(-8);
+            if (l8.length === 8) set.add(l8);
+          }
+        }
+        localStorage.setItem('piffpaff_concluded_leads', JSON.stringify(Array.from(set)));
+      } catch (e) {}
+    }
+    window.markLeadConcluded = markLeadConcluded;
+
+    function unmarkLeadConcluded(leadId, leadPhone = null) {
+      try {
+        const list = getConcludedLeadIds();
+        const removeSet = new Set();
+        if (leadId) removeSet.add(String(leadId).toUpperCase());
+        if (leadPhone) {
+          const cp = cleanPhone(leadPhone);
+          if (cp) {
+            removeSet.add(cp);
+            const l8 = cp.slice(-8);
+            if (l8.length === 8) removeSet.add(l8);
+          }
+        }
+        const filtered = list.filter(item => !removeSet.has(String(item).toUpperCase()));
+        localStorage.setItem('piffpaff_concluded_leads', JSON.stringify(filtered));
+      } catch (e) {}
+    }
+    window.unmarkLeadConcluded = unmarkLeadConcluded;
+
+    function isLeadMarkedConcluded(l, concludedSet = null) {
+      if (!l) return false;
+      const s = String(l.stage || '').toLowerCase().trim();
+      const e = String(l.etapa_kanban || '').toLowerCase().trim();
+      if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(s) ||
+          ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(e)) {
+        return true;
+      }
+      const set = concludedSet || new Set(getConcludedLeadIds().map(x => String(x).toUpperCase()));
+      if (l.id && set.has(String(l.id).toUpperCase())) return true;
+      const cp = cleanPhone(l.phone);
+      if (cp && set.has(cp)) return true;
+      const l8 = cp ? cp.slice(-8) : '';
+      if (l8.length === 8 && set.has(l8)) return true;
+      return false;
+    }
+    window.isLeadMarkedConcluded = isLeadMarkedConcluded;
+
     function getStorageKey() {
       if (authUser && authUser.id) {
         return `piffpaff_leads_${authUser.id}`;
@@ -5522,6 +5592,8 @@
           const cloudInsta = [];
           const cloudWa = [];
 
+          const concludedSet = new Set(getConcludedLeadIds().map(x => String(x).toUpperCase()));
+
           const normalizeKanbanStage = (rawSt) => {
             const s = String(rawSt || 'novos').toLowerCase().trim();
             if (s === 'novo' || s === 'novos') return 'novos';
@@ -5529,7 +5601,7 @@
             if (['conversa', 'projetos', 'projeto'].includes(s)) return 'projetos';
             if (['proposta', 'orcamento', 'orçamento'].includes(s)) return 'proposta';
             if (['fechamento', 'fechando'].includes(s)) return 'fechamento';
-            if (['concluidas', 'concluida', 'concluídas', 'concluído', 'ganho'].includes(s)) return 'concluidas';
+            if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(s)) return 'concluidas';
             return 'novos';
           };
 
@@ -5553,9 +5625,14 @@
                 stage: instaStage
               });
             } else {
+              const normStage = normalizeKanbanStage(l.stage);
+              const isConcluded = normStage === 'concluidas' || isLeadMarkedConcluded(l, concludedSet);
+              if (isConcluded) {
+                markLeadConcluded(l.id, l.phone);
+              }
               cloudWa.push({
                 ...l,
-                stage: normalizeKanbanStage(l.stage),
+                stage: isConcluded ? 'concluidas' : normStage,
                 pipeline: 'whatsapp',
                 channel: 'whatsapp'
               });
@@ -5583,7 +5660,11 @@
 
             // Mapeia por ID canônico e por todas as variantes de telefone (com/sem 55 e últimos 8 dígitos)
             baseLeads.forEach(l => {
-              baseMap.set(String(l.id).toUpperCase(), { ...l });
+              const item = { ...l };
+              if (isLeadMarkedConcluded(item, concludedSet)) {
+                item.stage = 'concluidas';
+              }
+              baseMap.set(String(l.id).toUpperCase(), item);
               const cleanP = cleanPhone(l.phone);
               if (cleanP) {
                 phoneMap.set(cleanP, l.id);
@@ -5620,8 +5701,14 @@
                   target.notes = `${target.notes}\n\n${cL.notes}`;
                 }
 
-                if (cL.stage && cL.stage !== 'novos') {
-                  target.stage = cL.stage;
+                const cLStage = normalizeKanbanStage(cL.stage);
+                const isConcluded = target.stage === 'concluidas' || cLStage === 'concluidas' || isLeadMarkedConcluded(target, concludedSet) || isLeadMarkedConcluded(cL, concludedSet);
+
+                if (isConcluded) {
+                  target.stage = 'concluidas';
+                  markLeadConcluded(target.id, target.phone);
+                } else if (cLStage && cLStage !== 'novos') {
+                  target.stage = cLStage;
                 }
                 if (cL.last_interaction) {
                   target.last_interaction = cL.last_interaction;
@@ -5668,7 +5755,11 @@
 
             baseLeads.forEach(l => {
               const idUpper = String(l.id).toUpperCase();
-              edsonMap.set(idUpper, { ...l, vendedor_id: l.vendedor_id || 'gabriel' });
+              const item = { ...l, vendedor_id: l.vendedor_id || 'gabriel' };
+              if (isLeadMarkedConcluded(item, concludedSet)) {
+                item.stage = 'concluidas';
+              }
+              edsonMap.set(idUpper, item);
               const cleanP = cleanPhone(l.phone);
               if (cleanP) {
                 edsonPhoneMap.set(cleanP, idUpper);
@@ -5696,7 +5787,15 @@
                 const target = edsonMap.get(targetId);
                 if (cL.notes && (!target.notes || cL.notes.length > target.notes.length)) target.notes = cL.notes;
                 else if (cL.notes && target.notes && !target.notes.includes(cL.notes.slice(0, 30))) target.notes = `${target.notes}\n\n${cL.notes}`;
-                if (cL.stage) target.stage = cL.stage;
+                
+                const cLStage = normalizeKanbanStage(cL.stage);
+                const isConcluded = target.stage === 'concluidas' || cLStage === 'concluidas' || isLeadMarkedConcluded(target, concludedSet) || isLeadMarkedConcluded(cL, concludedSet);
+                if (isConcluded) {
+                  target.stage = 'concluidas';
+                  markLeadConcluded(target.id, target.phone);
+                } else if (cLStage) {
+                  target.stage = cLStage;
+                }
                 if (cL.value) target.value = cL.value;
                 if (cL.name && (!target.name || target.name.startsWith('Cliente') || target.name.startsWith('Você'))) target.name = cL.name;
                 if (cL.followup_date === '1970-01-01' || isFollowupRemoved(cL)) {
@@ -5725,7 +5824,7 @@
             contactedTodayReg = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
           } catch (e) {}
 
-          // Mapa dos leads locais atuais para preservar datas futuras agendadas
+          // Mapa dos leads locais atuais para preservar datas futuras agendadas e status concluído
           const localLeadsMap = new Map();
           (leads || []).concat(typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads) ? instagramLeads : []).forEach(loc => {
             if (loc && loc.id) {
@@ -5746,6 +5845,17 @@
               const lCleanP = cleanPhone(l.phone);
               const lLast8 = lCleanP.slice(-8);
               const localLead = localLeadsMap.get(lIdUpper) || (lCleanP && localLeadsMap.get(lCleanP)) || (lLast8 && localLeadsMap.get(lLast8));
+
+              // BLINDAGEM DE CONCLUÍDAS: Se o lead estiver concluído localmente ou no registro, preserva 'concluidas'
+              const isConcluded = (localLead && (localLead.stage === 'concluidas' || isLeadMarkedConcluded(localLead, concludedSet))) ||
+                                  (l && (l.stage === 'concluidas' || isLeadMarkedConcluded(l, concludedSet)));
+              if (isConcluded) {
+                l.stage = 'concluidas';
+                markLeadConcluded(l.id, l.phone);
+                if (!l.purchase_date && localLead && localLead.purchase_date) {
+                  l.purchase_date = localLead.purchase_date;
+                }
+              }
 
               if (isFollowupRemoved(l) || (localLead && isFollowupRemoved(localLead))) {
                 l.followup_disabled = true;
@@ -6081,13 +6191,19 @@
         renderInstagramBoard();
       } else {
         let rawSt = (row.stage || row.etapa_kanban || (idxWa >= 0 ? leads[idxWa].stage : 'novos')).toString().toLowerCase().trim();
+        const isConcluded = (idxWa >= 0 && (leads[idxWa].stage === 'concluidas' || isLeadMarkedConcluded(leads[idxWa]))) ||
+                            isLeadMarkedConcluded(row) ||
+                            ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(rawSt);
+
         let waStage = 'novos';
-        if (rawSt === 'novo' || rawSt === 'novos') waStage = 'novos';
-        else if (rawSt === 'investigacao' || rawSt === 'investigação' || rawSt === 'qualificacao') waStage = 'investigacao';
-        else if (rawSt === 'projetos' || rawSt === 'projeto') waStage = 'projetos';
-        else if (rawSt === 'proposta' || rawSt === 'orcamento') waStage = 'proposta';
-        else if (rawSt === 'fechamento') waStage = 'fechamento';
-        else if (rawSt === 'concluidas' || rawSt === 'concluida') waStage = 'concluidas';
+        if (isConcluded) {
+          waStage = 'concluidas';
+          markLeadConcluded(row.id, row.phone);
+        } else if (rawSt === 'novo' || rawSt === 'novos') waStage = 'novos';
+        else if (['abordagem', 'investigacao', 'investigação', 'qualificacao', 'qualificação'].includes(rawSt)) waStage = 'investigacao';
+        else if (['conversa', 'projetos', 'projeto'].includes(rawSt)) waStage = 'projetos';
+        else if (['proposta', 'orcamento', 'orçamento'].includes(rawSt)) waStage = 'proposta';
+        else if (['fechamento', 'fechando'].includes(rawSt)) waStage = 'fechamento';
 
         const merged = {
           ...(idxWa >= 0 ? leads[idxWa] : {}),
@@ -6176,6 +6292,7 @@
 
         if (matchingLead) {
           matchingLead.stage = 'concluidas';
+          markLeadConcluded(matchingLead.id, matchingLead.phone);
           matchingLead.value = Number(order.totals?.total || order.total) || matchingLead.value;
           const nowBR = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
           const log = `[${nowBR} - Pedido Criado]: Pedido #${order.number} formalizado no valor de ${totalVal}. Contrato gerado.`;
@@ -6251,9 +6368,19 @@
       const sellerKey = getSellerKey(authUser);
 
       let supabaseStage = lead.stage || 'novos';
-      if (supabaseStage === 'novo') supabaseStage = 'novos';
-      else if (supabaseStage === 'abordagem') supabaseStage = 'investigacao';
-      else if (supabaseStage === 'conversa') supabaseStage = 'projetos';
+      if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(String(supabaseStage).toLowerCase().trim()) || isLeadMarkedConcluded(lead)) {
+        supabaseStage = 'concluidas';
+      } else if (supabaseStage === 'novo') {
+        supabaseStage = 'novos';
+      } else if (['abordagem', 'investigacao', 'investigação'].includes(supabaseStage)) {
+        supabaseStage = 'investigacao';
+      } else if (['conversa', 'projetos', 'projeto'].includes(supabaseStage)) {
+        supabaseStage = 'projetos';
+      } else if (['proposta', 'orcamento', 'orçamento'].includes(supabaseStage)) {
+        supabaseStage = 'proposta';
+      } else if (['fechamento', 'fechando'].includes(supabaseStage)) {
+        supabaseStage = 'fechamento';
+      }
 
       const payload = {
         id: lead.id,
@@ -6262,6 +6389,7 @@
         instagram: lead.instagram || null,
         city: lead.city || 'Brasil',
         stage: supabaseStage,
+        etapa_kanban: supabaseStage === 'concluidas' ? 'Concluídas' : (lead.etapa_kanban || 'Novos'),
         value: Number(lead.value) || 0,
         temperature: lead.temperature || 'morno',
         priority: lead.priority || 'MEDIA',
@@ -6841,8 +6969,13 @@
               const prevStage = lead.stage;
               lead.stage = targetStage;
               lead.last_interaction = new Date().toISOString();
-              if (targetStage === 'concluidas' && !lead.purchase_date) {
-                lead.purchase_date = new Date().toISOString().split('T')[0];
+              if (targetStage === 'concluidas') {
+                if (!lead.purchase_date) {
+                  lead.purchase_date = new Date().toISOString().split('T')[0];
+                }
+                markLeadConcluded(lead.id, lead.phone);
+              } else {
+                unmarkLeadConcluded(lead.id, lead.phone);
               }
               saveStorage();
               renderKanban();
@@ -13810,8 +13943,13 @@
           if (!isNaN(editValue)) activeLead.value = editValue;
           if (editStage) {
             activeLead.stage = editStage;
-            if (editStage === 'concluidas' && !activeLead.purchase_date) {
-              activeLead.purchase_date = editDate || formatYMD(new Date());
+            if (editStage === 'concluidas') {
+              if (!activeLead.purchase_date) {
+                activeLead.purchase_date = editDate || formatYMD(new Date());
+              }
+              markLeadConcluded(activeLead.id, activeLead.phone);
+            } else {
+              unmarkLeadConcluded(activeLead.id, activeLead.phone);
             }
           }
           if (editTemp) activeLead.temperature = editTemp;

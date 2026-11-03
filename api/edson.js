@@ -306,6 +306,14 @@ export default async function handler(req, res) {
         const nowIso = new Date().toISOString();
         updatePayload.updated_at = nowIso;
 
+        if (updatePayload.stage) {
+          const sLower = String(updatePayload.stage).toLowerCase().trim();
+          if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(sLower)) {
+            updatePayload.stage = 'concluidas';
+            updatePayload.etapa_kanban = 'Concluídas';
+          }
+        }
+
         const patchRes = await fetch(`${url}/rest/v1/leads?id=eq.${encodeURIComponent(body.id)}`, {
           method: 'PATCH',
           headers,

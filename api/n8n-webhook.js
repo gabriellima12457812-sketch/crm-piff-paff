@@ -267,14 +267,41 @@ function extractMonetaryValue(text) {
 // ==============================================================================
 const STAGE_RANKS = {
   novos: 1,
+  novo: 1,
   investigacao: 2,
+  investigação: 2,
+  qualificacao: 2,
+  qualificação: 2,
+  diagnostico: 2,
+  abordagem: 2,
   projetos: 3,
+  projeto: 3,
+  conversa: 3,
   proposta: 4,
+  orcamento: 4,
+  orçamento: 4,
   fechamento: 5,
-  concluidas: 6
+  fechando: 5,
+  concluidas: 6,
+  concluida: 6,
+  concluídas: 6,
+  concluído: 6,
+  concluido: 6,
+  ganho: 6,
+  ganhos: 6,
+  venda: 6,
+  vendas: 6
 };
 
 function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
+  const curLower = String(currentStage || '').toLowerCase().trim();
+
+  // REGRA DE OURO: Lead Concluído é VENDA FINALIZADA!
+  // NUNCA regride lead concluído para fechamento ou qualquer outro estágio via WhatsApp!
+  if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(curLower)) {
+    return null;
+  }
+
   const lower = (text || '').toLowerCase();
   let candidate = null;
 
@@ -321,8 +348,8 @@ function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
     };
   }
 
-  // Regra de Unidirecionalidade: se o lead já está em estágio superior, preserva o estágio atual
-  const currentRank = STAGE_RANKS[(currentStage || 'novos').toLowerCase()] || 1;
+  // Regra de Unidirecionalidade: se o lead já está em estágio superior ou igual, preserva o estágio atual
+  const currentRank = STAGE_RANKS[curLower] || 1;
   if (candidate) {
     const candidateRank = STAGE_RANKS[candidate.stage] || 1;
     if (candidateRank > currentRank) {
@@ -633,11 +660,38 @@ export default async function handler(req, res) {
 
       const leadsToUpsert = [];
       const nowIso = new Date().toISOString();
+
+      // Busca leads existentes para preservar stage atual (nunca regride lead concluído para 'novos')
+      const existingLeadsMap = new Map();
+      try {
+        const exRes = await fetch(`${supabaseUrl}/rest/v1/leads?user_id=eq.${encodeURIComponent(seller.user_id)}&select=id,phone,stage,etapa_kanban,value,notes`, {
+          headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }
+        });
+        if (exRes.ok) {
+          const exList = await exRes.json();
+          if (Array.isArray(exList)) {
+            exList.forEach(ex => {
+              if (ex.id) existingLeadsMap.set(String(ex.id).toUpperCase(), ex);
+              const cp = cleanPhone(ex.phone);
+              if (cp) {
+                existingLeadsMap.set(cp, ex);
+                if (cp.length >= 8) existingLeadsMap.set(cp.slice(-8), ex);
+              }
+            });
+          }
+        }
+      } catch (exErr) {}
+
       for (const [phone, item] of contactMap.entries()) {
         const leadId = `${seller.leadPrefix}-${phone}`;
         const cleanName = item.name && item.name.trim().length > 1
           ? item.name.trim()
           : `Cliente WhatsApp (${phone.slice(-4)})`;
+
+        const existing = existingLeadsMap.get(String(leadId).toUpperCase()) || (phone && existingLeadsMap.get(phone)) || (phone.length >= 8 && existingLeadsMap.get(phone.slice(-8)));
+        const targetStage = existing?.stage || 'novos';
+        const targetEtapa = existing?.etapa_kanban || (targetStage === 'concluidas' ? 'Concluídas' : 'Novos');
+        const targetValue = existing?.value !== undefined ? existing.value : 0;
 
         leadsToUpsert.push({
           id: leadId,
@@ -646,18 +700,18 @@ export default async function handler(req, res) {
           name: cleanName,
           phone: phone,
           city: 'Brasil',
-          stage: 'novos',
-          etapa_kanban: 'Novos',
+          stage: targetStage,
+          etapa_kanban: targetEtapa,
           categoria: 1,
           origem: 'WhatsApp API',
           channel: 'whatsapp',
           pipeline: 'whatsapp',
           temperature: 'morno',
           priority: 'MEDIA',
-          value: 0,
-          notes: item.lastText ? `[Última mensagem WhatsApp]: ${item.lastText}` : `Contato importado do WhatsApp de ${seller.name}.`,
+          value: targetValue,
+          notes: item.lastText ? `[Última mensagem WhatsApp]: ${item.lastText}` : (existing?.notes || `Contato importado do WhatsApp de ${seller.name}.`),
           last_interaction: item.updatedAt || nowIso,
-          created_at: nowIso,
+          created_at: existing?.created_at || nowIso,
           updated_at: nowIso
         });
       }
@@ -896,7 +950,11 @@ export default async function handler(req, res) {
     const textToAnalyze = `${extractedText} ${interactionSummary}`.trim();
     const detectedValue = extractMonetaryValue(textToAnalyze);
     const currentLeadStage = existingLead ? (existingLead.stage || existingLead.etapa_kanban || 'novos') : 'novos';
-    const pipelineInference = inferPipelineStage(textToAnalyze, currentLeadStage, detectedValue);
+    const isLeadConcluded = existingLead && (
+      ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(String(existingLead.stage || '').toLowerCase().trim()) ||
+      ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(String(existingLead.etapa_kanban || '').toLowerCase().trim())
+    );
+    const pipelineInference = isLeadConcluded ? null : inferPipelineStage(textToAnalyze, currentLeadStage, detectedValue);
 
     if (!existingLead) {
       // =======================================================================
@@ -1058,8 +1116,8 @@ export default async function handler(req, res) {
         }
       }
 
-      // Reconhecimento Automático de Avanço do Pipeline
-      if (pipelineInference) {
+      // Reconhecimento Automático de Avanço do Pipeline (NUNCA altera estágio de lead já concluído)
+      if (pipelineInference && !isLeadConcluded) {
         updatePayload.stage = pipelineInference.stage;
         updatePayload.etapa_kanban = pipelineInference.etapa_kanban;
         updatePayload.temperature = pipelineInference.temperature;

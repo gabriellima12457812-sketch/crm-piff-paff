@@ -835,9 +835,12 @@ export default async function handler(req, res) {
 
     let targetStage = stage || stage_instagram || (isInstagram ? 'novos' : 'novos');
     const stageLower = String(targetStage).toLowerCase().trim();
-    if (stageLower === 'novo') targetStage = 'novos';
-    else if (stageLower === 'abordagem') targetStage = 'investigacao';
-    else if (stageLower === 'conversa') targetStage = 'projetos';
+    if (stageLower === 'novo' || stageLower === 'novos') targetStage = 'novos';
+    else if (['abordagem', 'investigacao', 'investigação', 'qualificacao', 'qualificação', 'diagnostico'].includes(stageLower)) targetStage = 'investigacao';
+    else if (['conversa', 'projetos', 'projeto'].includes(stageLower)) targetStage = 'projetos';
+    else if (['proposta', 'orcamento', 'orçamento'].includes(stageLower)) targetStage = 'proposta';
+    else if (['fechamento', 'fechando'].includes(stageLower)) targetStage = 'fechamento';
+    else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(stageLower)) targetStage = 'concluidas';
 
     // 3. Busca de lead existente ISOLADO pelo vendedor (user_id = sellerUserId)
     let existingLead = null;

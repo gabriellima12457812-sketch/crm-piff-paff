@@ -1256,11 +1256,11 @@
         closeModalBtn: $('#closeModalBtn')
       };
 
-      // ----- MUDANÇA 1: CÁLCULO AUTOMÁTICO DE DATA DE ENTREGA -----
+      // ----- MUDANÇA 1: CÁLCULO AUTOMÁTICO DE DATA DE ENTREGA E PRAZO -----
       function calcularDataEntrega() {
         const dataPedido = elements.orderDate.value;
-        const dias = parseInt(elements.prazoDias.value);
-        if (!dataPedido || !dias || dias < 1) return;
+        const dias = parseInt(elements.prazoDias.value, 10);
+        if (!dataPedido || isNaN(dias) || dias < 1) return;
 
         const data = new Date(dataPedido + 'T00:00:00');
         data.setDate(data.getDate() + dias);
@@ -1269,6 +1269,22 @@
         const mes = String(data.getMonth() + 1).padStart(2, '0');
         const dia = String(data.getDate()).padStart(2, '0');
         elements.deliveryDate.value = `${ano}-${mes}-${dia}`;
+      }
+
+      function calcularDiasEntreDatas(dataInicioStr, dataFimStr) {
+        if (!dataInicioStr || !dataFimStr) return '';
+        const d1 = new Date(dataInicioStr + 'T00:00:00');
+        const d2 = new Date(dataFimStr + 'T00:00:00');
+        const diffMs = d2.getTime() - d1.getTime();
+        const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+        return diffDays > 0 ? String(diffDays) : '';
+      }
+
+      function sincronizarPrazoPelaData() {
+        const diasCalc = calcularDiasEntreDatas(elements.orderDate.value, elements.deliveryDate.value);
+        if (diasCalc) {
+          elements.prazoDias.value = diasCalc;
+        }
       }
 
       // ----- MUDANÇA 3: CRIAR LINHA DE ITEM COM SUBCATEGORIAS FIXAS + ESPUMA -----
@@ -1675,7 +1691,7 @@
         return {
           number: Number(elements.orderNumber.value),
           date: elements.orderDate.value,
-          prazoDias: elements.prazoDias.value,   // MUDANÇA 1
+          prazoDias: elements.prazoDias.value || calcularDiasEntreDatas(elements.orderDate.value, elements.deliveryDate.value),   // MUDANÇA 1
           deliveryDate: elements.deliveryDate.value,
           sellerName: elements.sellerName.value.trim(),
           client: elements.client.value.trim(),
@@ -1728,8 +1744,8 @@
         elements.orderNumber.value = order.number;
         elements.orderDate.removeAttribute('min');
         elements.orderDate.value = order.date;
-        elements.prazoDias.value = order.prazoDias || '';
         elements.deliveryDate.value = order.deliveryDate;
+        elements.prazoDias.value = order.prazoDias || calcularDiasEntreDatas(order.date, order.deliveryDate) || '';
         elements.sellerName.value = order.sellerName || '';
         elements.client.value = order.client || '';
         elements.document.value = order.document || '';
@@ -1872,6 +1888,9 @@
             elements.deliveryDate.value = `${dp[2]}-${dp[1].padStart(2, '0')}-${dp[0].padStart(2, '0')}`;
           } else {
             elements.deliveryDate.value = deliveryDate;
+          }
+          if (!prazo) {
+            sincronizarPrazoPelaData();
           }
         }
 
@@ -2226,7 +2245,7 @@
 
         const precoText = `CLÁUSULA SEGUNDA – DO PREÇO E PAGAMENTO\nO pagamento total de ${valorFormatado} (${totalWords}) será realizado da seguinte forma:\n${obsPagamento}\nA produção somente será iniciada após a confirmação da entrada e das especificações do pedido. O despacho fica condicionado à quitação integral do saldo.`;
 
-        const prazoDiasVal = data.prazoDias || '60';
+        const prazoDiasVal = data.prazoDias || calcularDiasEntreDatas(data.date, data.deliveryDate) || '60';
         const prazoText = `CLÁUSULA TERCEIRA – DO PRAZO E DAS ALTERAÇÕES\nO prazo estimado de produção e disponibilização para entrega é de ${prazoDiasVal} dias, contados do pagamento da entrada e da aprovação final das especificações necessárias à produção. Qualquer alteração após a aprovação deverá ser solicitada por escrito e dependerá de aceite da CONTRATADA.`;
 
         printParagraph('COMÉRCIO DE MÓVEIS CARIBE LTDA, inscrita no CNPJ nº 37.134.893/0001-78, estabelecida na Rodovia dos Macacos-braço, Camboriú/SC, neste ato representada por seu sócio administrador Edson R. Batista, CPF nº 053.368.319-05, doravante denominada CONTRATADA.', false, 10);
@@ -2689,8 +2708,10 @@
           if (onlyNumbers(elements.cep.value).length === 8) buscarCEP();
         });
         
-        // MUDANÇA 1: calcular data de entrega ao digitar prazo ou mudar data
+        // MUDANÇA 1: calcular data de entrega ao digitar prazo ou mudar data, e calcular prazo ao escolher data de entrega
         elements.prazoDias.addEventListener('input', calcularDataEntrega);
+        elements.deliveryDate.addEventListener('change', sincronizarPrazoPelaData);
+        elements.deliveryDate.addEventListener('input', sincronizarPrazoPelaData);
         elements.orderDate.addEventListener('change', () => {
           const todayStr = getTodayDateStr();
           if (!state.editingOrderNumber && elements.orderDate.value < todayStr) {
@@ -2700,7 +2721,11 @@
           if (elements.orderDate.value) {
             elements.deliveryDate.min = elements.orderDate.value;
           }
-          calcularDataEntrega();
+          if (elements.prazoDias.value) {
+            calcularDataEntrega();
+          } else {
+            sincronizarPrazoPelaData();
+          }
         });
         elements.orderDate.addEventListener('input', () => {
           const todayStr = getTodayDateStr();

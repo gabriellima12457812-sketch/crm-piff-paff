@@ -2081,9 +2081,12 @@ export default async function handler(req, res) {
 
     let targetStage = stage || stage_instagram || (isInstagram ? 'novos' : 'novos');
     const stageLower = String(targetStage).toLowerCase().trim();
-    if (stageLower === 'novo') targetStage = 'novos';
-    else if (stageLower === 'abordagem') targetStage = 'investigacao';
-    else if (stageLower === 'conversa') targetStage = 'projetos';
+    if (stageLower === 'novo' || stageLower === 'novos') targetStage = 'novos';
+    else if (['abordagem', 'investigacao', 'investigação', 'qualificacao', 'qualificação', 'diagnostico'].includes(stageLower)) targetStage = 'investigacao';
+    else if (['conversa', 'projetos', 'projeto'].includes(stageLower)) targetStage = 'projetos';
+    else if (['proposta', 'orcamento', 'orçamento'].includes(stageLower)) targetStage = 'proposta';
+    else if (['fechamento', 'fechando'].includes(stageLower)) targetStage = 'fechamento';
+    else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(stageLower)) targetStage = 'concluidas';
 
     let existingLead = null;
     if (id) {
@@ -2209,7 +2212,10 @@ export default async function handler(req, res) {
 
     // Normalização segura de stage (PostgreSQL CHECK CONSTRAINT)
     const validStages = ['novos', 'investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas'];
-    payload.stage = validStages.includes(targetStage) ? targetStage : 'novos';
+    payload.stage = validStages.includes(targetStage) ? targetStage : (existingLead?.stage || 'novos');
+    if (payload.stage === 'concluidas') {
+      payload.etapa_kanban = 'Concluídas';
+    }
 
     if (value !== undefined && value !== null && !isNaN(Number(value))) payload.value = Number(value);
 
