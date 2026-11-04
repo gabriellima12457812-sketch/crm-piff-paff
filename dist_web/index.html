@@ -1356,7 +1356,7 @@
                   </span>
                 </div>
                 <div id="count-today" class="text-3xl font-heading font-extrabold text-amber-400 mt-1">0</div>
-                <div class="text-[11px] text-amber-300/80 mt-0.5">Compromissos agendados para hoje</div>
+                <div class="text-[11px] text-amber-300/80 mt-0.5">Contatos agendados + 3 dias a fio + atrasados</div>
               </div>
               <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-2xl group-hover:scale-110 group-hover:bg-amber-500/30 transition">
                 <i class="ph-bold ph-calendar-check"></i>
@@ -1400,7 +1400,7 @@
             <div class="flex items-center justify-between border-b border-white/5 pb-3">
               <h2 class="text-base font-heading font-bold text-amber-300 flex items-center gap-2">
                 <i class="ph-bold ph-sun text-lg text-amber-400"></i>
-                <span>Agendados para Hoje (Aba Amarela)</span>
+                <span>Chamar Hoje & 3 Dias a Fio (Aba Amarela)</span>
               </h2>
               <button type="button" onclick="scrollToFollowupTop()" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer" title="Voltar ao topo">
                 <i class="ph-bold ph-arrow-up text-xs"></i> <span>Topo</span>
@@ -5936,7 +5936,21 @@
                 l.followup_status = 'Agendado';
               } else {
                 l.called_today = false;
-                if (localLead && localLead.followup_date && localLead.followup_date > todaySyncStr) {
+                // Se o lead interagiu ontem ou nos últimos 3 dias e ainda não foi contatado hoje: regra 3 dias a fio
+                const rawInt = l.last_interaction || l.data_ultima_interacao || l.updated_at || l.created_at;
+                let isYesterdayOrRecent = false;
+                if (rawInt) {
+                  const dInt = new Date(rawInt);
+                  if (!isNaN(dInt.getTime())) {
+                    const diffH = (Date.now() - dInt.getTime()) / (1000 * 3600);
+                    if (diffH >= 10 && diffH <= 96) isYesterdayOrRecent = true;
+                  }
+                }
+
+                if (isYesterdayOrRecent || (l.followup_date && l.followup_date <= todaySyncStr)) {
+                  l.followup_date = todaySyncStr;
+                  l.followup_status = 'Chamar Hoje';
+                } else if (localLead && localLead.followup_date && localLead.followup_date > todaySyncStr) {
                   l.followup_date = localLead.followup_date;
                   l.followup_status = 'Agendado';
                 }
@@ -7915,8 +7929,6 @@
         const isContactedToday = (typeof wasContactedToday === 'function') ? wasContactedToday(l) : false;
 
         // Se o vendedor já conversou ou interagiu HOJE com o cliente:
-        // O cliente cumpriu o follow-up de hoje e é automaticamente retirado das listas urgentes (Atrasados e Chamar Hoje).
-        // A data de follow-up é recalculada para a próxima etapa da cadência (mínimo +2 dias de respiro).
         if (isContactedToday) {
           l.called_today = true;
           l.last_contact_date = todayStr;
@@ -7932,25 +7944,33 @@
 
         l.called_today = false;
 
-        if (!l.followup_date || l.followup_date === '') {
-          const rawDate = l.last_interaction || l.data_ultima_interacao || l.created_at;
-          if (rawDate) {
-            try {
-              const d = new Date(rawDate);
-              if (!isNaN(d.getTime())) {
-                const nextContact = new Date(d.getTime() + 86400000);
-                l.followup_date = nextContact.toISOString().split('T')[0];
-              }
-            } catch (e) {}
-          }
+        // Regra "3 dias a fio": Se interagiu ontem ou nos últimos 3 dias e ainda não falou hoje,
+        // a data de follow-up é OBRIGATORIAMENTE HOJE
+        const rawDate = l.last_interaction || l.data_ultima_interacao || l.updated_at || l.created_at;
+        let diffHours = 999;
+        if (rawDate) {
+          try {
+            const d = new Date(rawDate);
+            if (!isNaN(d.getTime())) {
+              diffHours = (Date.now() - d.getTime()) / (1000 * 3600);
+            }
+          } catch (e) {}
         }
 
-        if (!l.followup_date) {
+        // Se interagiu ontem (entre 10h e 96h atrás, cobrindo os 3 dias a fio), entra em Chamar Hoje
+        const isConsecutive3Days = (diffHours >= 10 && diffHours <= 96);
+        l.is_consecutive_3days = isConsecutive3Days;
+
+        if (isConsecutive3Days && (!l.followup_date || l.followup_date > todayStr)) {
+          l.followup_date = todayStr;
+        }
+
+        if (!l.followup_date || l.followup_date === '') {
           l.followup_date = todayStr;
         }
 
         if (l.followup_date === todayStr) {
-          l.followup_status = 'Chamar Hoje';
+          l.followup_status = isConsecutive3Days ? '3 Dias a Fio' : 'Chamar Hoje';
         } else if (l.followup_date < todayStr) {
           l.followup_status = 'Atrasado';
         } else {
@@ -7958,9 +7978,36 @@
         }
       });
 
+      // REGRA: "3 dias a fio tem que estar no chamar hoje mesmo que esteja atrasado"
+      // A lista "today" agora inclui:
+      // 1. Leads com followup_date === todayStr (agendados para hoje)
+      // 2. Leads com followup_date < todayStr (atrasados: o vendedor precisa chamar HOJE sem desculpas!)
+      // 3. Leads em cadência dos 3 dias a fio que interagiram ontem/recentemente
+      const isLeadDueForToday = (l) => {
+        if (!l || isFollowupRemoved(l) || l.called_today) return false;
+        if (l.followup_disabled || l.followup_date === '1970-01-01' || l.followup_status === 'Sem Follow-up') return false;
+        // Se a data de follow-up for hoje ou menor que hoje (atrasado): entra no Chamar Hoje
+        if (l.followup_date && l.followup_date <= todayStr) return true;
+        // Se estiver nos 3 dias a fio: entra no Chamar Hoje
+        if (l.is_consecutive_3days) return true;
+        return false;
+      };
+
       const overdue = allFunnelLeads.filter(l => !isFollowupRemoved(l) && !l.called_today && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && l.followup_date < todayStr);
-      const today = allFunnelLeads.filter(l => !isFollowupRemoved(l) && !l.called_today && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && l.followup_date === todayStr);
-      const upcoming = allFunnelLeads.filter(l => !isFollowupRemoved(l) && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && (l.called_today || l.followup_date > todayStr));
+      
+      const today = allFunnelLeads.filter(isLeadDueForToday);
+      
+      // Ordenação prioritária em Chamar Hoje:
+      // 1º Quem interagiu ontem ou está atrasado
+      // 2º Maior valor comercial
+      today.sort((a, b) => {
+        const aUrgent = (a.followup_date < todayStr || a.is_consecutive_3days) ? 1 : 0;
+        const bUrgent = (b.followup_date < todayStr || b.is_consecutive_3days) ? 1 : 0;
+        if (bUrgent !== aUrgent) return bUrgent - aUrgent;
+        return (Number(b.value) || 0) - (Number(a.value) || 0);
+      });
+
+      const upcoming = allFunnelLeads.filter(l => !isFollowupRemoved(l) && l.followup_date && l.followup_date !== '1970-01-01' && l.followup_status !== 'Sem Follow-up' && (l.called_today || (!isLeadDueForToday(l) && l.followup_date > todayStr)));
 
       const countOverdueEl = document.getElementById('count-overdue');
       const countTodayEl = document.getElementById('count-today');
@@ -8000,6 +8047,21 @@
           const safeName = String(lead.name || 'Sem Nome').replace(/"/g, '&quot;');
           const safeId = String(lead.id || '');
 
+          let leadBadgeClass = badgeClass;
+          let leadBadgeText = badgeText;
+          if (listKey === 'today') {
+            if (lead.followup_date < todayStr) {
+              leadBadgeClass = 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm flex items-center gap-1';
+              leadBadgeText = '<i class="ph-bold ph-warning-circle"></i> Atrasado (Chamar Hoje)';
+            } else if (lead.is_consecutive_3days) {
+              leadBadgeClass = 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-sm flex items-center gap-1';
+              leadBadgeText = '<i class="ph-bold ph-fire"></i> 3 Dias a Fio';
+            } else {
+              leadBadgeClass = 'bg-amber-500/20 text-amber-300 border border-amber-500/30';
+              leadBadgeText = '⏰ Chamar Hoje';
+            }
+          }
+
           const item = document.createElement('div');
           item.className = 'p-3.5 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition';
           item.innerHTML = `
@@ -8009,7 +8071,7 @@
                 ${lead.called_today ? `
                   <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1"><i class="ph-bold ph-check-circle"></i> Já Falou Hoje</span>
                 ` : `
-                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeClass}">${badgeText}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${leadBadgeClass}">${leadBadgeText}</span>
                 `}
                 <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isInsta ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}">${isInsta ? '📸 Instagram Direct' : '💬 WhatsApp'}</span>
                 ${lead.followup_status ? `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30" title="${lead.followup_status}">${lead.followup_status}</span>` : ''}
