@@ -974,7 +974,7 @@ export default async function handler(req, res) {
                (ap && (ap === phoneDigits || (phoneDigits.length >= 8 && ap.endsWith(phoneDigits.slice(-8)))));
       });
 
-      const nextCadenceDate = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0];
+      const nextCadenceDate = new Date(Date.now() + 1 * 86400000).toISOString().split('T')[0];
 
       const newLeadPayload = {
         id: newLeadId,
@@ -1097,7 +1097,7 @@ export default async function handler(req, res) {
         const todayYMD = nowISO.split('T')[0];
         let nextFollowDate = existingLead.followup_date;
         if (!nextFollowDate || nextFollowDate <= todayYMD) {
-          const nextD = new Date(Date.now() + 2 * 86400000);
+          const nextD = new Date(Date.now() + 1 * 86400000);
           nextFollowDate = nextD.toISOString().split('T')[0];
         }
         updatePayload.followup_date = nextFollowDate;
