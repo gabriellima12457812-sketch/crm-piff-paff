@@ -1356,7 +1356,7 @@
                   </span>
                 </div>
                 <div id="count-today" class="text-3xl font-heading font-extrabold text-amber-400 mt-1">0</div>
-                <div class="text-[11px] text-amber-300/80 mt-0.5">Contatos agendados + 3 dias a fio + atrasados</div>
+                <div class="text-[11px] text-amber-300/80 mt-0.5">Pendentes de hoje (falou sai da lista, volta à meia-noite)</div>
               </div>
               <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-2xl group-hover:scale-110 group-hover:bg-amber-500/30 transition">
                 <i class="ph-bold ph-calendar-check"></i>
@@ -1400,7 +1400,7 @@
             <div class="flex items-center justify-between border-b border-white/5 pb-3">
               <h2 class="text-base font-heading font-bold text-amber-300 flex items-center gap-2">
                 <i class="ph-bold ph-sun text-lg text-amber-400"></i>
-                <span>Chamar Hoje & 3 Dias a Fio (Aba Amarela)</span>
+                <span>Chamar Hoje (Falou Sai da Lista • Volta à Meia-Noite)</span>
               </h2>
               <button type="button" onclick="scrollToFollowupTop()" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer" title="Voltar ao topo">
                 <i class="ph-bold ph-arrow-up text-xs"></i> <span>Topo</span>
@@ -7871,7 +7871,7 @@
       renderKanban();
       updateMetrics();
 
-      showToast(`✅ Conversa com "${leadName}" registrada hoje! Saiu do follow-up urgente e foi agendado para ${formatDateBR(nextDate)}.`, 'success');
+      showToast(`✅ Conversa com "${leadName}" concluída hoje! Saiu da lista e voltará automaticamente após a meia-noite.`, 'success');
 
       // 3. Sincroniza em segundo plano com o Supabase
       try {
@@ -7978,18 +7978,30 @@
         }
       });
 
-      // REGRA: "3 dias a fio tem que estar no chamar hoje mesmo que esteja atrasado"
-      // A lista "today" agora inclui:
-      // 1. Leads com followup_date === todayStr (agendados para hoje)
-      // 2. Leads com followup_date < todayStr (atrasados: o vendedor precisa chamar HOJE sem desculpas!)
-      // 3. Leads em cadência dos 3 dias a fio que interagiram ontem/recentemente
+      // REGRA SOLICITADA: "Falou hoje ele sai da lista, passou da meia noite ele volta novamente"
       const isLeadDueForToday = (l) => {
-        if (!l || isFollowupRemoved(l) || l.called_today) return false;
+        if (!l || isFollowupRemoved(l)) return false;
         if (l.followup_disabled || l.followup_date === '1970-01-01' || l.followup_status === 'Sem Follow-up') return false;
-        // Se a data de follow-up for hoje ou menor que hoje (atrasado): entra no Chamar Hoje
+
+        // 1. REGRA: FALOU HOJE -> SAI DA LISTA IMEDIATAMENTE!
+        if (l.called_today || (typeof wasContactedToday === 'function' && wasContactedToday(l))) {
+          return false;
+        }
+
+        // 2. REGRA: PASSOU DA MEIA-NOITE -> VOLTA NOVAMENTE PARA A LISTA!
+        // Se a data de follow-up é hoje ou anterior (vencido/virou o dia)
         if (l.followup_date && l.followup_date <= todayStr) return true;
-        // Se estiver nos 3 dias a fio: entra no Chamar Hoje
+
+        // Se a última conversa ocorreu em dias anteriores (passou da meia-noite e ainda não falou hoje)
+        const rawDate = l.last_interaction || l.data_ultima_interacao || l.updated_at || l.created_at;
+        if (rawDate) {
+          const interYMD = typeof formatYMD === 'function' ? formatYMD(rawDate) : String(rawDate).slice(0, 10);
+          if (interYMD && interYMD < todayStr) return true;
+        }
+
+        // Se estiver na sequência ativa dos 3 dias a fio
         if (l.is_consecutive_3days) return true;
+
         return false;
       };
 
