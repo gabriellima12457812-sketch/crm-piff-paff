@@ -92,6 +92,14 @@ const SELLERS = {
     phone: '554796890192',
     leadPrefix: 'CRM-YAS-WA',
     origem: 'WhatsApp Yasmim'
+  },
+  nathaly: {
+    user_id: '33333333-3333-3333-3333-333333333333',
+    vendedor_id: 'nathaly',
+    name: 'Nathaly',
+    phone: '554796583495',
+    leadPrefix: 'CRM-NAT-WA',
+    origem: 'WhatsApp Nathaly'
   }
 };
 

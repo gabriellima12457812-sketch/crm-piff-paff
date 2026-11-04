@@ -419,7 +419,9 @@
           <option value="kasio">💼 Kasio</option>
           <option value="diana">💼 Diana</option>
           <option value="sebastiao">💼 Sebastião</option>
-          <option value="yasmim">🌸 Yasmim</option>
+          <option value="yasmim">Yasmim</option>
+            <option value="nathaly">Nathaly</option>
+            <!--🌸 Yasmim</option>
         </select>
       </div>
 
@@ -3772,7 +3774,8 @@
       kasio:   { id: '77777777-7777-7777-7777-777777777777', email: 'kasio@piffpaff.com.br',   name: 'Kasio',                prefix: 'CRM-KAS-', role: 'vendedor' },
       diana:   { id: '88888888-8888-8888-8888-888888888888', email: 'diana@piffpaff.com',      name: 'Diana',                prefix: 'CRM-DIA-', role: 'vendedor' },
       sebastiao: { id: '528bdca6-62a3-4dd5-bc45-0e77e9174e67', email: 'sebastiao@piffpaff.com.br', name: 'Sebastião', prefix: 'CRM-SEB-', role: 'vendedor' },
-      yasmim:  { id: 'bbbbbbbb-9999-4999-a999-999999999999', email: 'yasmim@piffpaff.com.br', name: 'Yasmim',               prefix: 'CRM-YAS-', role: 'vendedor' }
+      yasmim:  { id: 'bbbbbbbb-9999-4999-a999-999999999999', email: 'yasmim@piffpaff.com.br', name: 'Yasmim',               prefix: 'CRM-YAS-', role: 'vendedor' },
+      nathaly: { id: '33333333-3333-3333-3333-333333333333', email: 'nathaly@piffpaff.com.br', name: 'Nathaly',              prefix: 'CRM-NAT-', role: 'vendedor' }
     };
     try {
       const savedCustomSellers = JSON.parse(localStorage.getItem('piffpaff_custom_sellers') || '{}');
@@ -3808,6 +3811,7 @@
 
       const UUID_KEY_MAP = {
         'bbbbbbbb-9999-4999-a999-999999999999': 'yasmim',
+        '33333333-3333-3333-3333-333333333333': 'nathaly',
         'd4444444-4444-4444-4444-444444444444': 'eduardo',
         'a1111111-1111-1111-1111-111111111111': 'gabriel',
         'b2222222-2222-2222-2222-222222222222': 'mayara',
@@ -3828,6 +3832,7 @@
       if (s.includes('eduardo')) return 'eduardo';
       if (s.includes('kasio') || s.includes('cassio')) return 'kasio';
       if (s.includes('yasmim') || s.includes('yasmin')) return 'yasmim';
+      if (s.includes('nathaly') || s.includes('natalhy')) return 'nathaly';
       if (s.includes('rodrigo')) return 'rodrigo';
       if (s.includes('diana')) return 'diana';
       if (s.includes('sebastiao')) return 'sebastiao';
@@ -3850,6 +3855,7 @@
       // 1. Mapeamento explícito e imutável de UUIDs para nomes amigáveis
       const UUID_NAME_MAP = {
         'bbbbbbbb-9999-4999-a999-999999999999': 'Yasmim',
+        '33333333-3333-3333-3333-333333333333': 'Nathaly',
         'd4444444-4444-4444-4444-444444444444': 'Eduardo',
         'a1111111-1111-1111-1111-111111111111': 'Gabriel Lima',
         'b2222222-2222-2222-2222-222222222222': 'Mayara',
@@ -3867,6 +3873,8 @@
       const SLUG_NAME_MAP = {
         'yasmim': 'Yasmim',
         'yasmin': 'Yasmim',
+        'nathaly': 'Nathaly',
+        'natalhy': 'Nathaly',
         'eduardo': 'Eduardo',
         'gabriel': 'Gabriel Lima',
         'mayara': 'Mayara',
