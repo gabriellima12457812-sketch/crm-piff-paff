@@ -452,6 +452,8 @@ export default async function handler(req, res) {
       seller = SELLERS.kasio;
     } else if (rawSeller.includes('yasmim') || rawSeller.includes('yasmin')) {
       seller = SELLERS.yasmim;
+    } else if (rawSeller.includes('nathaly') || rawSeller.includes('nataly') || rawSeller.includes('natalhy')) {
+      seller = SELLERS.nathaly;
     } else if (SELLERS[rawSeller]) {
       seller = SELLERS[rawSeller];
     }
@@ -651,11 +653,12 @@ export default async function handler(req, res) {
 
       const contactMap = new Map();
       contacts.forEach(c => {
-        if (!c.remoteJid || c.remoteJid.includes('@g.us') || c.remoteJid.includes('@lid') || c.remoteJid.includes('broadcast')) return;
+        if (!c.remoteJid || c.remoteJid.includes('@g.us') || c.remoteJid.includes('broadcast')) return;
         const phone = c.remoteJid.replace(/@.*$/, '').replace(/\D/g, '');
         if (phone.length >= 8) {
           contactMap.set(phone, {
             phone,
+            isLid: c.remoteJid.includes('@lid'),
             name: c.pushName || '',
             updatedAt: c.updatedAt || c.createdAt || new Date().toISOString()
           });
@@ -665,18 +668,41 @@ export default async function handler(req, res) {
       chats.forEach(ch => {
         const alt = ch.lastMessage?.key?.remoteJidAlt;
         const jid = ch.remoteJid || '';
+        if (jid.includes('@g.us') || jid.includes('broadcast')) return;
+
         let phone = '';
+        let isLid = false;
         if (alt && alt.includes('@s.whatsapp.net')) {
           phone = alt.replace(/@.*$/, '').replace(/\D/g, '');
         } else if (jid.includes('@s.whatsapp.net')) {
           phone = jid.replace(/@.*$/, '').replace(/\D/g, '');
+        } else if (jid.includes('@lid')) {
+          isLid = true;
+          phone = jid.replace(/@.*$/, '').replace(/\D/g, '');
         }
+
+        const lastMsgText = ch.lastMessage?.message?.conversation || ch.lastMessage?.message?.extendedTextMessage?.text || '';
+        let extractedName = '';
+
+        // Se for LID e tiver dados no texto da mensagem, extrai telefone real e nome
+        if (isLid && lastMsgText) {
+          const pMatch = lastMsgText.match(/(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
+          if (pMatch) {
+            phone = `55${pMatch[1]}9${pMatch[2]}${pMatch[3]}`;
+            isLid = false;
+          }
+          const nMatch = lastMsgText.match(/Nome(?:\s+Completo)?\s*:\s*([^\n\r,]+)/i);
+          if (nMatch && nMatch[1].trim().length > 2) {
+            extractedName = nMatch[1].trim();
+          }
+        }
+
         if (phone.length >= 8) {
           const existing = contactMap.get(phone) || { phone };
-          const lastMsgText = ch.lastMessage?.message?.conversation || ch.lastMessage?.message?.extendedTextMessage?.text || '';
           contactMap.set(phone, {
             ...existing,
-            name: existing.name || ch.pushName || '',
+            isLid,
+            name: extractedName || existing.name || (ch.pushName !== 'Você' ? ch.pushName : '') || '',
             lastText: lastMsgText,
             updatedAt: ch.updatedAt || existing.updatedAt || new Date().toISOString()
           });
@@ -708,10 +734,11 @@ export default async function handler(req, res) {
       } catch (exErr) {}
 
       for (const [phone, item] of contactMap.entries()) {
-        const leadId = `${seller.leadPrefix}-${phone}`;
+        const prefix = item.isLid ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
+        const leadId = `${prefix}-${phone}`;
         const cleanName = item.name && item.name.trim().length > 1
           ? item.name.trim()
-          : `Cliente WhatsApp (${phone.slice(-4)})`;
+          : (item.isLid ? `WhatsApp (${phone.slice(-4)})` : `Cliente WhatsApp (${phone.slice(-4)})`);
 
         const existing = existingLeadsMap.get(String(leadId).toUpperCase()) || (phone && existingLeadsMap.get(phone)) || (phone.length >= 8 && existingLeadsMap.get(phone.slice(-8)));
         const targetStage = existing?.stage || 'novos';
@@ -859,15 +886,30 @@ export default async function handler(req, res) {
       } catch (e) {}
     }
 
-    const rawPhone = realPhone || body.telefone || body.phone || rawJid.replace(/@.*$/, '') || '';
+    let isLid = rawJid.includes('@lid');
+    let rawPhone = realPhone || body.telefone || body.phone || '';
+
+    // Se for um contato @lid e ainda não tivermos o telefone real, tenta extrair da mensagem
+    if (!rawPhone && isLid) {
+      const textMatch = extractedText.match(/(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
+      if (textMatch) {
+        rawPhone = `55${textMatch[1]}9${textMatch[2]}${textMatch[3]}`;
+        isLid = false;
+      } else {
+        rawPhone = rawJid.replace(/@.*$/, '');
+      }
+    } else if (!rawPhone) {
+      rawPhone = rawJid.replace(/@.*$/, '');
+    }
+
     const phoneDigits = cleanPhone(rawPhone);
 
-    // Se o número obtido for um LID numérico (>13 dígitos sem DDI 55), descarta para evitar criar contatos fake
-    if (!phoneDigits || phoneDigits.length < 8 || (phoneDigits.length > 13 && !phoneDigits.startsWith('55'))) {
+    // Validação: precisa ter pelo menos 8 dígitos
+    if (!phoneDigits || phoneDigits.length < 8) {
       return res.status(200).json({
         success: true,
         ignored: true,
-        reason: 'Número de telefone não identificado ou LID interno não resolvido',
+        reason: 'Número de telefone não identificado',
         event: body.event || 'unknown',
         rawPhone: phoneDigits
       });
@@ -875,12 +917,21 @@ export default async function handler(req, res) {
 
     // 1.6 Nome do Cliente
     const pushName = evoData?.pushName || '';
+    let extractedNameFromText = '';
+    if (extractedText) {
+      const nMatch = extractedText.match(/Nome(?:\s+Completo)?\s*:\s*([^\n\r,]+)/i);
+      if (nMatch && nMatch[1].trim().length > 2) {
+        extractedNameFromText = nMatch[1].trim();
+      }
+    }
+
     const clientName = (
       body.nome ||
       body.client ||
       body.name ||
-      (!isFromMe ? pushName : '') ||
-      `Lead WhatsApp ${phoneDigits.slice(-4)}`
+      extractedNameFromText ||
+      (!isFromMe && pushName && pushName !== 'Você' ? pushName : '') ||
+      (isLid ? `WhatsApp (${phoneDigits.slice(-4)})` : `Lead WhatsApp ${phoneDigits.slice(-4)}`)
     ).toString().trim();
 
     // 1.7 Resumo e Intenção Comercial (Bidirecional)
@@ -991,7 +1042,8 @@ export default async function handler(req, res) {
       // =======================================================================
       // 4. INSERT COM ID DETERMINÍSTICO (PREVINE DUPLICATAS POR RACE CONDITION)
       // =======================================================================
-      const newLeadId = `${seller.leadPrefix}-${phoneDigits}`;
+      const prefix = isLid ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
+      const newLeadId = `${prefix}-${phoneDigits}`;
       logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
 
       const initialStage = pipelineInference ? pipelineInference.stage : 'novos';
