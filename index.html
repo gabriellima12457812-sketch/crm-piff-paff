@@ -7127,7 +7127,12 @@
       return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     }
 
+    let hasAppliedInitialLayout = false;
     function renderKanban() {
+      if (!hasAppliedInitialLayout && typeof initKanbanLayoutSettings === 'function') {
+        hasAppliedInitialLayout = true;
+        initKanbanLayoutSettings();
+      }
       const viewKanban = document.getElementById('view-kanban');
       const isKanbanVisible = viewKanban && !viewKanban.classList.contains('hidden');
 
