@@ -5644,6 +5644,25 @@
     }
     window.isInstagramLead = isInstagramLead;
 
+    function getPhoneCoreKey(raw) {
+      if (!raw) return '';
+      let digits = String(raw).replace(/\D/g, '');
+      if (!digits) return '';
+      if (digits.startsWith('55') && digits.length >= 10 && digits.length <= 13) {
+        digits = digits.slice(2);
+      }
+      if (digits.length === 10 || digits.length === 11) {
+        const ddd = digits.slice(0, 2);
+        const last7 = digits.slice(-7);
+        return `${ddd}_${last7}`;
+      }
+      if (digits.length >= 8) {
+        return digits.slice(-8);
+      }
+      return digits;
+    }
+    window.getPhoneCoreKey = getPhoneCoreKey;
+
     // Normalizador e Comparador Robusto de Telefones Brasileiros (DDD, DDI 55 e 9º Dígito)
     function isMatchingPhone(phoneA, phoneB) {
       if (!phoneA || !phoneB) return false;
@@ -5651,6 +5670,9 @@
       const cleanB = String(phoneB).replace(/\D/g, '');
       if (!cleanA || !cleanB) return false;
       if (cleanA === cleanB) return true;
+      const coreA = getPhoneCoreKey(cleanA);
+      const coreB = getPhoneCoreKey(cleanB);
+      if (coreA && coreB && coreA === coreB) return true;
       if (cleanA.length >= 8 && cleanB.length >= 8) {
         return cleanA.slice(-8) === cleanB.slice(-8);
       }
