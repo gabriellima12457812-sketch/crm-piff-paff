@@ -1,13 +1,7 @@
 # ==============================================================================
-# RENDER BLUEPRINT — EVOLUTION API v2 + POSTGRESQL NATIVO (100% AUTOMÁTICO)
+# RENDER BLUEPRINT — EVOLUTION API v2 + SUPABASE POSTGRESQL VITALÍCIO
 # CRM PIFF-PAFF PRO AUTOMATION
 # ==============================================================================
-
-databases:
-  - name: piffpaff-postgres
-    plan: free
-    databaseName: evolution
-    user: evolution
 
 services:
   - type: web
@@ -30,9 +24,7 @@ services:
       - key: DATABASE_PROVIDER
         value: postgresql
       - key: DATABASE_CONNECTION_URI
-        fromDatabase:
-          name: piffpaff-postgres
-          property: connectionString
+        value: postgresql://postgres:aA12457812%40085208@db.ukuaujxvdziiaxxuuidw.supabase.co:5432/postgres?sslmode=require
       - key: CACHE_REDIS_ENABLED
         value: "false"
       - key: CACHE_LOCAL_ENABLED
