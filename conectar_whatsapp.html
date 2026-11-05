@@ -5,23 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Conectar WhatsApp — Piff Paff CRM (Nuvem)</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .smooth-progress {
+      transition: width 1s linear;
+    }
+  </style>
 </head>
 <body class="bg-[#050B14] text-white min-h-screen flex items-center justify-center p-4">
   <div class="max-w-md w-full bg-[#0B1522] border border-white/10 rounded-2xl p-6 shadow-2xl text-center space-y-6">
     <div class="space-y-1">
       <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        Servidor na Nuvem Ativo
+        Servidor na Nuvem 100% Online
       </span>
       <h1 class="text-xl font-bold text-white pt-2">Conectar WhatsApp Business</h1>
-      <p class="text-xs text-slate-400">Escaneie o código abaixo com o WhatsApp do vendedor</p>
+      <p class="text-xs text-slate-400">Atualização em tempo real igual ao WhatsApp Web</p>
     </div>
 
     <!-- Seletor de Vendedor -->
     <div class="flex items-center justify-center gap-2">
       <label class="text-xs text-slate-400 font-semibold uppercase">Vendedor:</label>
-      <select id="sel-seller" onchange="loadQrCode()" class="bg-[#121F30] border border-white/10 text-emerald-400 font-bold text-sm px-3 py-1.5 rounded-xl focus:outline-none">
+      <select id="sel-seller" onchange="onSellerChange()" class="bg-[#121F30] border border-white/10 text-emerald-400 font-bold text-sm px-3 py-1.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
         <option value="gabriel">Gabriel (47 99986-2448)</option>
+        <option value="nathaly">Nathaly (47 99658-3495)</option>
         <option value="sebastiao">Sebastião</option>
         <option value="diana">Diana (47 99641-3082)</option>
         <option value="mayara">Mayara (47 99661-0600)</option>
@@ -29,91 +40,165 @@
         <option value="rodrigo">Rodrigo</option>
         <option value="kasio">Kasio</option>
         <option value="yasmim">Yasmim (47 9689-0192)</option>
-        <option value="nathaly">Nathaly (47 99658-3495)</option>
         <option value="felipe">Felipe</option>
         <option value="eduardo">Eduardo</option>
       </select>
     </div>
 
-    <!-- Caixa do QR Code -->
-    <div class="relative bg-white p-4 rounded-2xl w-64 h-64 mx-auto flex items-center justify-center shadow-lg border-2 border-emerald-500/30">
+    <!-- Caixa do QR Code (Estilo WhatsApp Web) -->
+    <div class="relative bg-white p-4 rounded-2xl w-64 h-64 mx-auto flex items-center justify-center shadow-lg border-2 border-emerald-500/30 overflow-hidden group">
+      
+      <!-- Estado Carregando Inicial -->
       <div id="loading" class="flex flex-col items-center gap-2 text-slate-700">
         <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-        <span class="text-xs font-semibold text-slate-500">Gerando QR Code ao vivo...</span>
+        <span class="text-xs font-semibold text-slate-500">Gerando QR Code...</span>
       </div>
-      <img id="qr-img" src="" alt="QR Code" class="w-full h-full object-contain hidden rounded-lg">
-      <div id="connected" class="hidden flex flex-col items-center gap-2 text-emerald-600">
-        <svg class="w-16 h-16 text-emerald-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        <span class="text-sm font-bold text-emerald-700">CONECTADO COM SUCESSO!</span>
+
+      <!-- Imagem do QR Code (Nunca some ao atualizar para não piscar) -->
+      <img id="qr-img" src="" alt="QR Code WhatsApp" class="w-full h-full object-contain hidden rounded-lg transition-opacity duration-300">
+
+      <!-- Overlay de QR Code Expirado (WhatsApp Web Style) -->
+      <div id="expired-overlay" onclick="refreshQrCode(true)" class="hidden absolute inset-0 bg-[#0B1522]/90 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center p-4 text-center cursor-pointer transition hover:bg-[#0B1522]/95">
+        <div class="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-2 shadow-inner border border-emerald-500/30">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+        </div>
+        <span class="text-sm font-bold text-white">Código QR expirou</span>
+        <span class="text-xs text-emerald-400 mt-1 font-semibold underline underline-offset-2">Clique aqui para atualizar</span>
+      </div>
+
+      <!-- Estado Conectado com Sucesso -->
+      <div id="connected" class="hidden flex flex-col items-center gap-3 text-emerald-600 p-2">
+        <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+          <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <div class="space-y-0.5">
+          <span class="text-sm font-bold text-emerald-700 block">CONECTADO!</span>
+          <span id="conn-details" class="text-[11px] font-semibold text-slate-500 block">Sessão ativa e sincronizada</span>
+        </div>
       </div>
     </div>
 
-    <!-- Contador e Atualização -->
+    <!-- Barra de Progresso Suave e Status (WhatsApp Web Style) -->
+    <div id="progress-container" class="space-y-2">
+      <div class="w-64 mx-auto bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+        <div id="progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full smooth-progress" style="width: 100%;"></div>
+      </div>
+      <div class="flex items-center justify-between text-xs text-slate-400 max-w-[260px] mx-auto px-1">
+        <span id="status-hint">Mudando automaticamente</span>
+        <span id="countdown" class="font-mono text-emerald-400 font-bold">25s</span>
+      </div>
+    </div>
+
+    <!-- Botões de Ação -->
     <div class="space-y-2">
-      <p id="timer-text" class="text-xs text-slate-400">
-        Atualiza automaticamente em: <span id="countdown" class="font-bold text-emerald-400 text-sm">25s</span>
-      </p>
-      <button onclick="loadQrCode()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-500/20 active:scale-95">
+      <button onclick="refreshQrCode(true)" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-500/20 active:scale-95">
         🔄 Gerar Novo QR Code Agora
+      </button>
+      <button onclick="restartInstanceSession()" class="w-full py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold text-[11px] transition border border-white/5">
+        ⚡ Limpar Conexão Travada / Reiniciar Sessão
       </button>
     </div>
 
     <!-- Aviso Importante -->
-    <div class="text-left bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-200/90 space-y-1">
-      <p class="font-bold text-amber-300">⚠️ Dica importante para WhatsApp Business:</p>
-      <p>1. No celular, vá em <strong>Aparelhos Conectados</strong>.</p>
-      <p>2. Se houver sessões antigas listadas, <strong>desconecte-as</strong> primeiro.</p>
-      <p>3. Toque em <strong>Conectar um aparelho</strong> e aponte para o quadro branco acima!</p>
+    <div class="text-left bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-[11px] text-emerald-200/90 space-y-1">
+      <p class="font-bold text-emerald-300">💡 Como conectar:</p>
+      <p>1. Abra o WhatsApp no celular > <strong>Aparelhos Conectados</strong>.</p>
+      <p>2. Toque em <strong>Conectar um aparelho</strong> e aponte para o código.</p>
+      <p>3. O código atualiza sozinho a cada 25s sem sumir da tela!</p>
     </div>
   </div>
 
   <script>
     const EVO_URL = 'https://piffpaff-evolution-api.onrender.com';
     const API_KEY = 'PiffPaffEvoSecretKey2026!';
-    let countdownVal = 25;
-    let timerInterval = null;
+    const REFRESH_INTERVAL_SECONDS = 25;
+    const MAX_CYCLES_BEFORE_EXPIRE = 6; // ~2.5 minutos de inatividade antes de exibir overlay
 
+    let countdownVal = REFRESH_INTERVAL_SECONDS;
+    let cycleCount = 0;
+    let isFetchingQr = false;
+    let isConnected = false;
+    let timerInterval = null;
+    let statusInterval = null;
+
+    function getSelectedSeller() {
+      return document.getElementById('sel-seller').value;
+    }
+
+    // Verifica status continuamente (a cada 1.5s)
     async function checkStatus() {
-      const seller = document.getElementById('sel-seller').value;
+      if (isConnected) return true;
+      const seller = getSelectedSeller();
       try {
         const res = await fetch(`${EVO_URL}/instance/connectionState/${seller}`, {
           headers: { 'apikey': API_KEY }
         });
+        if (!res.ok) return false;
         const data = await res.json();
+        
         if (data?.instance?.state === 'open') {
-          document.getElementById('loading').classList.add('hidden');
-          document.getElementById('qr-img').classList.add('hidden');
-          document.getElementById('connected').classList.remove('hidden');
-          document.getElementById('timer-text').textContent = '✅ WhatsApp Conectado e Ativo na Nuvem!';
-          clearInterval(timerInterval);
+          setConnectedUI(data.instance);
           return true;
         }
       } catch (e) {}
       return false;
     }
 
-    async function loadQrCode() {
-      const seller = document.getElementById('sel-seller').value;
-      const loading = document.getElementById('loading');
+    function setConnectedUI(instanceData) {
+      isConnected = true;
+      clearInterval(timerInterval);
+      clearInterval(statusInterval);
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('qr-img').classList.add('hidden');
+      document.getElementById('expired-overlay').classList.add('hidden');
+      document.getElementById('progress-container').classList.add('hidden');
+      
+      const connectedEl = document.getElementById('connected');
+      connectedEl.classList.remove('hidden');
+
+      const detailsEl = document.getElementById('conn-details');
+      if (detailsEl && instanceData?.ownerJid) {
+        const phone = instanceData.ownerJid.split('@')[0];
+        detailsEl.textContent = `Número: +${phone}`;
+      }
+    }
+
+    // Atualiza o QR Code suavemente em segundo plano (SEM piscar a tela)
+    async function refreshQrCode(manualReset = false) {
+      if (isConnected || isFetchingQr) return;
+      isFetchingQr = true;
+
+      const seller = getSelectedSeller();
       const img = document.getElementById('qr-img');
-      const connected = document.getElementById('connected');
+      const loading = document.getElementById('loading');
+      const expiredOverlay = document.getElementById('expired-overlay');
 
-      loading.classList.remove('hidden');
-      img.classList.add('hidden');
-      connected.classList.add('hidden');
-      countdownVal = 25;
+      expiredOverlay.classList.add('hidden');
 
-      const isConnected = await checkStatus();
-      if (isConnected) return;
+      if (manualReset) {
+        cycleCount = 0;
+        countdownVal = REFRESH_INTERVAL_SECONDS;
+        updateProgressBar();
+      }
+
+      // Se for a primeira vez e ainda não tem imagem carregada, mostra loading
+      if (!img.src || img.src === '' || img.classList.contains('hidden')) {
+        loading.classList.remove('hidden');
+      }
 
       try {
         let res = await fetch(`${EVO_URL}/instance/connect/${seller}`, {
           headers: { 'apikey': API_KEY }
         });
+        
         let data = {};
         if (!res.ok) {
+          // Cria caso não exista
           const createRes = await fetch(`${EVO_URL}/instance/create`, {
             method: 'POST',
             headers: { 'apikey': API_KEY, 'Content-Type': 'application/json' },
@@ -142,24 +227,82 @@
           loading.classList.add('hidden');
           img.classList.remove('hidden');
         } else {
+          // Pode ter acabado de conectar!
           await checkStatus();
         }
       } catch (err) {
-        console.error(err);
+        console.error('Erro ao buscar QR code:', err);
+      } finally {
+        isFetchingQr = false;
       }
     }
 
-    function startTimer() {
+    function updateProgressBar() {
+      const pct = Math.max(0, (countdownVal / REFRESH_INTERVAL_SECONDS) * 100);
+      const bar = document.getElementById('progress-bar');
+      const txt = document.getElementById('countdown');
+      if (bar) bar.style.width = `${pct}%`;
+      if (txt) txt.textContent = `${countdownVal}s`;
+    }
+
+    function startLoops() {
       clearInterval(timerInterval);
+      clearInterval(statusInterval);
+      countdownVal = REFRESH_INTERVAL_SECONDS;
+      updateProgressBar();
+
+      // Loop do Relógio / Countdown do WhatsApp Web
       timerInterval = setInterval(async () => {
+        if (isConnected) return;
         countdownVal--;
-        document.getElementById('countdown').textContent = `${countdownVal}s`;
+        updateProgressBar();
+
         if (countdownVal <= 0) {
-          await loadQrCode();
-        } else if (countdownVal % 5 === 0) {
-          await checkStatus();
+          cycleCount++;
+          // Se exceder o limite de inatividade (ex: 2.5 minutos), mostra o overlay do WhatsApp Web
+          if (cycleCount >= MAX_CYCLES_BEFORE_EXPIRE) {
+            document.getElementById('expired-overlay').classList.remove('hidden');
+            return;
+          }
+          countdownVal = REFRESH_INTERVAL_SECONDS;
+          updateProgressBar();
+          await refreshQrCode();
         }
       }, 1000);
+
+      // Loop Rápido de Status (a cada 1.5s para detectar a conexão no mesmo instante em que escanear)
+      statusInterval = setInterval(checkStatus, 1500);
+    }
+
+    async function restartInstanceSession() {
+      const seller = getSelectedSeller();
+      const hint = document.getElementById('status-hint');
+      if (hint) hint.textContent = 'Reiniciando instância...';
+      try {
+        await fetch(`${EVO_URL}/instance/restart/${seller}`, {
+          method: 'POST',
+          headers: { 'apikey': API_KEY }
+        });
+      } catch (e) {}
+      setTimeout(() => {
+        if (hint) hint.textContent = 'Mudando automaticamente';
+        refreshQrCode(true);
+      }, 1500);
+    }
+
+    async function onSellerChange() {
+      isConnected = false;
+      cycleCount = 0;
+      document.getElementById('connected').classList.add('hidden');
+      document.getElementById('progress-container').classList.remove('hidden');
+      document.getElementById('expired-overlay').classList.add('hidden');
+      
+      const alreadyOpen = await checkStatus();
+      if (!alreadyOpen) {
+        document.getElementById('qr-img').src = '';
+        await refreshQrCode(true);
+        startLoops();
+      }
     }
 
     async function initSellerOptions() {
@@ -189,8 +332,12 @@
       if (querySeller && Array.from(select.options).some(o => o.value === querySeller)) {
         select.value = querySeller;
       }
-      await loadQrCode();
-      startTimer();
+
+      const alreadyOpen = await checkStatus();
+      if (!alreadyOpen) {
+        await refreshQrCode(true);
+        startLoops();
+      }
     }
 
     initSellerOptions();
