@@ -108,14 +108,32 @@ function cleanPhone(raw) {
   return String(raw).replace(/\D/g, '').trim();
 }
 
+function getPhoneCoreKey(raw) {
+  if (!raw) return '';
+  let digits = cleanPhone(raw);
+  if (!digits) return '';
+  if (digits.startsWith('55') && digits.length >= 10 && digits.length <= 13) {
+    digits = digits.slice(2);
+  }
+  if (digits.length === 10 || digits.length === 11) {
+    const ddd = digits.slice(0, 2);
+    const last7 = digits.slice(-7);
+    return `${ddd}_${last7}`;
+  }
+  if (digits.length >= 8) {
+    return digits.slice(-8);
+  }
+  return digits;
+}
+
 function normalizePhoneVariants(raw) {
   const digits = cleanPhone(raw);
   if (!digits) return [];
   const variants = new Set([digits]);
 
   let core = digits;
-  // Se começar com 55 e tiver 12 ou 13 dígitos, extrai o DDD + número
-  if (core.startsWith('55') && (core.length === 12 || core.length === 13)) {
+  // Se começar com 55 e tiver 10 a 13 dígitos, extrai o número nacional
+  if (core.startsWith('55') && core.length >= 10 && core.length <= 13) {
     core = core.substring(2);
   }
 
@@ -125,19 +143,20 @@ function normalizePhoneVariants(raw) {
     const rest = core.substring(2);
 
     if (rest.length === 8) {
-      // Formato antigo sem o 9 (ex: 47 9959-0571) -> cria com 9
+      // Formato sem o 9 (ex: 47 9959-0571) -> gera com 9
       const with9 = ddd + '9' + rest;
-      variants.add(core); // 4799590571
-      variants.add('55' + core); // 554799590571
-      variants.add(with9); // 47999590571
-      variants.add('55' + with9); // 5547999590571
-    } else if (rest.length === 9 && rest.startsWith('9')) {
-      // Formato moderno com 9 (ex: 47 99959-0571) -> cria sem 9
-      const without9 = ddd + rest.substring(1);
-      variants.add(core); // 47999590571
-      variants.add('55' + core); // 5547999590571
-      variants.add(without9); // 4799590571
-      variants.add('55' + without9); // 554799590571
+      variants.add(core);
+      variants.add('55' + core);
+      variants.add(with9);
+      variants.add('55' + with9);
+    } else if (rest.length === 9) {
+      variants.add(core);
+      variants.add('55' + core);
+      if (rest.startsWith('9')) {
+        const without9 = ddd + rest.substring(1);
+        variants.add(without9);
+        variants.add('55' + without9);
+      }
     }
   }
 
@@ -539,21 +558,24 @@ export default async function handler(req, res) {
       if (clientPhone && clientPhone.length >= 8) {
         try {
           const variants = normalizePhoneVariants(clientPhone);
-          const last8 = clientPhone.slice(-8);
+          const incomingCore = getPhoneCoreKey(clientPhone);
+          const last7 = clientPhone.slice(-7);
           const orParts = variants.map(v => `phone.eq.${v}`);
-          if (last8.length === 8) {
-            orParts.push(`phone.ilike.%${last8}%`);
-            orParts.push(`phone.ilike.%${last8.slice(0, 4)}-${last8.slice(4)}%`);
+          if (last7.length === 7) {
+            orParts.push(`phone.ilike.%${last7}%`);
           }
           const orFilter = orParts.join(',');
-          const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&limit=10&select=id,name,phone,notes`;
+          const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&limit=15&select=id,name,phone,notes`;
           const sRes = await fetch(searchUrl, { headers: supabaseHeaders });
           if (sRes.ok) {
             const sData = await sRes.json();
             if (Array.isArray(sData) && sData.length > 0) {
               const best = sData.find(l => {
+                const cCore = getPhoneCoreKey(l.phone);
+                return cCore && incomingCore && cCore === incomingCore;
+              }) || sData.find(l => {
                 const cP = cleanPhone(l.phone);
-                return cP && (cP === clientPhone || cP.endsWith(last8));
+                return cP && (cP === clientPhone || cP.endsWith(last7));
               }) || sData[0];
               matchedLeadId = best.id;
             }
@@ -907,32 +929,38 @@ export default async function handler(req, res) {
     // 3. BUSCA DE LEAD EXISTENTE (POR TELEFONE OU ID DETERMINÍSTICO)
     // =======================================================================
     const phoneVariants = normalizePhoneVariants(phoneDigits);
+    const incomingCore = getPhoneCoreKey(phoneDigits);
     let existingLead = null;
 
     try {
-      const last8 = phoneDigits.slice(-8);
+      const last7 = phoneDigits.slice(-7);
       const orFilters = phoneVariants.map(p => `phone.eq.${p}`);
-      if (last8 && last8.length === 8) {
-        orFilters.push(`phone.ilike.%${last8}%`);
-        orFilters.push(`phone.ilike.%${last8.slice(0, 4)}-${last8.slice(4)}%`);
+      if (last7 && last7.length === 7) {
+        orFilters.push(`phone.ilike.%${last7}%`);
+        orFilters.push(`phone.ilike.%${last7.slice(0, 3)}-${last7.slice(3)}%`);
       }
       const orFilter = orFilters.join(',');
 
-      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&order=created_at.asc&select=*&limit=10`;
+      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&order=created_at.asc&select=*&limit=25`;
       const searchRes = await fetch(searchUrl, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const searchData = await searchRes.json();
         if (Array.isArray(searchData) && searchData.length > 0) {
-          // 1. Prioriza lead existente que pertence a este vendedor e cujo telefone limpo bate com o final
+          // 1. Prioriza lead existente que pertence a este vendedor e cujo core do telefone é idêntico
           existingLead = searchData.find(l => {
             const sellerMatch = String(l.user_id) === String(seller.user_id) || String(l.vendedor_id) === String(seller.vendedor_id);
-            const phoneMatch = cleanPhone(l.phone).endsWith(last8);
-            return sellerMatch && phoneMatch;
+            const coreMatch = incomingCore && getPhoneCoreKey(l.phone) === incomingCore;
+            return sellerMatch && coreMatch;
           });
 
-          // 2. Se não encontrou do próprio vendedor, pega qualquer lead cadastrado para este telefone
+          // 2. Se não encontrou do próprio vendedor, pega qualquer lead cadastrado com o mesmo core de telefone
+          if (!existingLead && incomingCore) {
+            existingLead = searchData.find(l => getPhoneCoreKey(l.phone) === incomingCore);
+          }
+
+          // 3. Fallback: pelo menos termina com os mesmos últimos 7 dígitos
           if (!existingLead) {
-            existingLead = searchData.find(l => cleanPhone(l.phone).endsWith(last8)) || searchData[0];
+            existingLead = searchData.find(l => cleanPhone(l.phone).endsWith(last7)) || searchData[0];
           }
         }
       }
@@ -1138,10 +1166,18 @@ export default async function handler(req, res) {
       }
 
       // Se o nome atual do lead for genérico e agora temos pushName do WhatsApp
-      if (
-        clientName &&
-        (!existingLead.name || existingLead.name.startsWith('Lead ') || existingLead.name.startsWith('+55') || existingLead.name.startsWith('Cliente WhatsApp'))
-      ) {
+      const isExistingGeneric = !existingLead.name ||
+        existingLead.name.toLowerCase().startsWith('lead') ||
+        existingLead.name.toLowerCase().startsWith('cliente') ||
+        existingLead.name.toLowerCase().startsWith('+55') ||
+        cleanPhone(existingLead.name).length >= 8;
+
+      const isNewNameReal = clientName &&
+        !clientName.toLowerCase().startsWith('lead') &&
+        !clientName.toLowerCase().startsWith('+55') &&
+        cleanPhone(clientName).length < 8;
+
+      if (isExistingGeneric && isNewNameReal) {
         updatePayload.name = clientName;
       }
 
