@@ -24,7 +24,7 @@ services:
       - key: DATABASE_PROVIDER
         value: postgresql
       - key: DATABASE_CONNECTION_URI
-        value: postgresql://postgres.ukuaujxvdziiaxxuuidw:aA12457812%40085208@aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+        value: postgresql://postgres.ukuaujxvdziiaxxuuidw:teGiuM3KUzHdExx1@aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
       - key: CACHE_REDIS_ENABLED
         value: "false"
       - key: CACHE_LOCAL_ENABLED
