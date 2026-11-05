@@ -1142,84 +1142,84 @@
 
         <!-- KANBAN BOARD (6 COLUNAS) -->
         <div class="flex-1 overflow-x-auto pb-4">
-          <div class="grid grid-flow-col auto-cols-[300px] sm:auto-cols-[320px] gap-4 min-h-[580px]">
+          <div class="grid grid-flow-col auto-cols-[245px] sm:auto-cols-[265px] xl:auto-cols-[280px] gap-3 min-h-[580px]">
 
-            <!-- Col 1: Novos -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-blue-500/30 p-3" data-stage="novos">
-              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
-                <div class="flex items-center gap-2">
-                  <div class="w-2.5 h-2.5 rounded-full bg-blue-400"></div>
-                  <h3 class="font-heading font-bold text-sm text-blue-200">📥 Novos</h3>
-                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-blue-300 font-bold">0</span>
+            <!-- Col 1: Fechamento -->
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-rose-500/30 p-2.5 sm:p-3" data-stage="fechamento">
+              <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
+                <div class="flex items-center gap-1.5">
+                  <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                  <h3 class="font-heading font-bold text-xs sm:text-sm text-rose-300">🤝 Fechamento</h3>
+                  <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-rose-400 font-bold">0</span>
                 </div>
                 <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
               </div>
-              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="novos"></div>
+              <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="fechamento"></div>
             </div>
 
-            <!-- Col 2: Investigação -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-amber-500/30 p-3" data-stage="investigacao">
-              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
-                <div class="flex items-center gap-2">
-                  <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-                  <h3 class="font-heading font-bold text-sm text-amber-200">🔍 Investigação</h3>
-                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-amber-300 font-bold">0</span>
+            <!-- Col 2: Novos -->
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-blue-500/30 p-2.5 sm:p-3" data-stage="novos">
+              <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
+                <div class="flex items-center gap-1.5">
+                  <div class="w-2.5 h-2.5 rounded-full bg-blue-400"></div>
+                  <h3 class="font-heading font-bold text-xs sm:text-sm text-blue-200">📥 Novos</h3>
+                  <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-blue-300 font-bold">0</span>
                 </div>
                 <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
               </div>
-              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="investigacao"></div>
+              <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="novos"></div>
             </div>
 
             <!-- Col 3: Projetos -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-purple-500/30 p-3" data-stage="projetos">
-              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
-                <div class="flex items-center gap-2">
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-purple-500/30 p-2.5 sm:p-3" data-stage="projetos">
+              <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
+                <div class="flex items-center gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-purple-400"></div>
-                  <h3 class="font-heading font-bold text-sm text-purple-200">📐 Projetos</h3>
-                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-purple-300 font-bold">0</span>
+                  <h3 class="font-heading font-bold text-xs sm:text-sm text-purple-200">📐 Projetos</h3>
+                  <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-purple-300 font-bold">0</span>
                 </div>
                 <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
               </div>
-              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="projetos"></div>
+              <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="projetos"></div>
             </div>
 
             <!-- Col 4: Proposta -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-cyan-500/30 p-3" data-stage="proposta">
-              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
-                <div class="flex items-center gap-2">
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-cyan-500/30 p-2.5 sm:p-3" data-stage="proposta">
+              <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
+                <div class="flex items-center gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-[#00D2D3]"></div>
-                  <h3 class="font-heading font-bold text-sm text-[#00D2D3]">💬 Proposta</h3>
-                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-[#00D2D3] font-bold">0</span>
+                  <h3 class="font-heading font-bold text-xs sm:text-sm text-[#00D2D3]">💬 Proposta</h3>
+                  <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-[#00D2D3] font-bold">0</span>
                 </div>
                 <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
               </div>
-              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="proposta"></div>
+              <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="proposta"></div>
             </div>
 
-            <!-- Col 5: Fechamento -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-rose-500/30 p-3" data-stage="fechamento">
-              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
-                <div class="flex items-center gap-2">
-                  <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
-                  <h3 class="font-heading font-bold text-sm text-rose-300">🤝 Fechamento</h3>
-                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-rose-400 font-bold">0</span>
+            <!-- Col 5: Investigação -->
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-amber-500/30 p-2.5 sm:p-3" data-stage="investigacao">
+              <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
+                <div class="flex items-center gap-1.5">
+                  <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                  <h3 class="font-heading font-bold text-xs sm:text-sm text-amber-200">🔍 Investigação</h3>
+                  <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-amber-300 font-bold">0</span>
                 </div>
                 <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
               </div>
-              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="fechamento"></div>
+              <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="investigacao"></div>
             </div>
 
             <!-- Col 6: Concluídas -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-emerald-500/30 p-3" data-stage="concluidas">
-              <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
-                <div class="flex items-center gap-2">
+            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-emerald-500/30 p-2.5 sm:p-3" data-stage="concluidas">
+              <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
+                <div class="flex items-center gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
-                  <h3 class="font-heading font-bold text-sm text-emerald-300">🎉 Concluídas</h3>
-                  <span class="col-count text-xs px-2 py-0.5 rounded-full bg-black/40 text-emerald-400 font-bold">0</span>
+                  <h3 class="font-heading font-bold text-xs sm:text-sm text-emerald-300">🎉 Concluídas</h3>
+                  <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-emerald-400 font-bold">0</span>
                 </div>
                 <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
               </div>
-              <div class="cards-container flex-1 space-y-3 overflow-y-auto pr-1" data-stage="concluidas"></div>
+              <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="concluidas"></div>
             </div>
 
           </div>
@@ -6111,10 +6111,46 @@
       } catch (err) {
         console.error('[Realtime] Erro ao iniciar inscrição WebSockets:', err);
       }
+
+      // Polling de redundância ultra-leve (a cada 4s) para garantir atualização 100% em tempo real mesmo se WebSockets oscilar
+      startRealtimePolling();
     }
     window.setupSupabaseRealtime = setupSupabaseRealtime;
 
+    let realtimePollingInterval = null;
+    let lastRealtimeSyncTimestamp = new Date(Date.now() - 30000).toISOString();
+
+    function startRealtimePolling() {
+      if (realtimePollingInterval) clearInterval(realtimePollingInterval);
+      realtimePollingInterval = setInterval(async () => {
+        try {
+          if (!authUser) return;
+          const sUrl = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
+          const sKey = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
+          
+          const res = await fetch(`${sUrl}/rest/v1/leads?updated_at=gt.${encodeURIComponent(lastRealtimeSyncTimestamp)}&order=updated_at.asc&limit=20`, {
+            headers: { 'apikey': sKey, 'Authorization': `Bearer ${sKey}` }
+          });
+          if (res.ok) {
+            const updatedRows = await res.json();
+            if (Array.isArray(updatedRows) && updatedRows.length > 0) {
+              updatedRows.forEach(row => {
+                if (row.updated_at && row.updated_at > lastRealtimeSyncTimestamp) {
+                  lastRealtimeSyncTimestamp = row.updated_at;
+                }
+                handleRealtimeDbChange({ eventType: 'UPDATE', new: row });
+              });
+            }
+          }
+        } catch (e) {}
+      }, 4000);
+    }
+
     function cleanupSupabaseRealtime() {
+      if (realtimePollingInterval) {
+        clearInterval(realtimePollingInterval);
+        realtimePollingInterval = null;
+      }
       const client = getSupabaseClient();
       if (client && realtimeChannel) {
         try {
@@ -6317,6 +6353,9 @@
         activeLead = { ...activeLead, ...row };
         const notesCont = document.getElementById('detail-notes-container');
         if (notesCont) notesCont.textContent = activeLead.notes || '';
+        if (typeof renderLeadProductivityTimeline === 'function') {
+          renderLeadProductivityTimeline(activeLead);
+        }
       }
 
       updateMetrics();
@@ -6692,7 +6731,7 @@
     // ==========================================
     // 3. RENDERIZAÇÃO DO KANBAN
     // ==========================================
-    const STAGES = ['novos', 'investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas'];
+    const STAGES = ['fechamento', 'novos', 'projetos', 'proposta', 'investigacao', 'concluidas'];
 
     function formatBRL(val) {
       if (!val && val !== 0) return 'R$ 0';
@@ -6901,8 +6940,8 @@
       const isOwner = (typeof isOwnerMode === 'function') && isOwnerMode();
       const card = document.createElement('div');
       card.className = isOwner 
-        ? 'lead-card p-4 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-amber-500/40 shadow-lg cursor-pointer transition-all space-y-2.5'
-        : 'lead-card p-4 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-[#00D2D3]/40 shadow-lg cursor-grab active:cursor-grabbing transition-all space-y-2.5';
+        ? 'lead-card p-3 sm:p-3.5 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-amber-500/40 shadow-lg cursor-pointer transition-all space-y-2'
+        : 'lead-card p-3 sm:p-3.5 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 hover:border-[#00D2D3]/40 shadow-lg cursor-grab active:cursor-grabbing transition-all space-y-2';
       card.setAttribute('draggable', isOwner ? 'false' : 'true');
       card.setAttribute('data-id', lead.id);
 
