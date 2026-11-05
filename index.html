@@ -6111,10 +6111,46 @@
       } catch (err) {
         console.error('[Realtime] Erro ao iniciar inscrição WebSockets:', err);
       }
+
+      // Polling de redundância ultra-leve (a cada 4s) para garantir atualização 100% em tempo real mesmo se WebSockets oscilar
+      startRealtimePolling();
     }
     window.setupSupabaseRealtime = setupSupabaseRealtime;
 
+    let realtimePollingInterval = null;
+    let lastRealtimeSyncTimestamp = new Date(Date.now() - 30000).toISOString();
+
+    function startRealtimePolling() {
+      if (realtimePollingInterval) clearInterval(realtimePollingInterval);
+      realtimePollingInterval = setInterval(async () => {
+        try {
+          if (!authUser) return;
+          const sUrl = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
+          const sKey = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
+          
+          const res = await fetch(`${sUrl}/rest/v1/leads?updated_at=gt.${encodeURIComponent(lastRealtimeSyncTimestamp)}&order=updated_at.asc&limit=20`, {
+            headers: { 'apikey': sKey, 'Authorization': `Bearer ${sKey}` }
+          });
+          if (res.ok) {
+            const updatedRows = await res.json();
+            if (Array.isArray(updatedRows) && updatedRows.length > 0) {
+              updatedRows.forEach(row => {
+                if (row.updated_at && row.updated_at > lastRealtimeSyncTimestamp) {
+                  lastRealtimeSyncTimestamp = row.updated_at;
+                }
+                handleRealtimeDbChange({ eventType: 'UPDATE', new: row });
+              });
+            }
+          }
+        } catch (e) {}
+      }, 4000);
+    }
+
     function cleanupSupabaseRealtime() {
+      if (realtimePollingInterval) {
+        clearInterval(realtimePollingInterval);
+        realtimePollingInterval = null;
+      }
       const client = getSupabaseClient();
       if (client && realtimeChannel) {
         try {
@@ -6317,6 +6353,9 @@
         activeLead = { ...activeLead, ...row };
         const notesCont = document.getElementById('detail-notes-container');
         if (notesCont) notesCont.textContent = activeLead.notes || '';
+        if (typeof renderLeadProductivityTimeline === 'function') {
+          renderLeadProductivityTimeline(activeLead);
+        }
       }
 
       updateMetrics();
