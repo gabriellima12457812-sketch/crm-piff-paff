@@ -1,6 +1,6 @@
 # ==============================================================================
 # RENDER BLUEPRINT — EVOLUTION API v2 + SUPABASE POSTGRESQL VITALÍCIO
-# CRM PIFF-PAFF PRO AUTOMATION
+# CRM PIFF-PAFF PRO AUTOMATION (ISOLATED SCHEMA: evolution)
 # ==============================================================================
 
 services:
@@ -24,7 +24,7 @@ services:
       - key: DATABASE_PROVIDER
         value: postgresql
       - key: DATABASE_CONNECTION_URI
-        value: postgresql://postgres.ukuaujxvdziiaxxuuidw:teGiuM3KUzHdExx1@aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+        value: postgresql://postgres.ukuaujxvdziiaxxuuidw:teGiuM3KUzHdExx1@aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require&schema=evolution
       - key: CACHE_REDIS_ENABLED
         value: "false"
       - key: CACHE_LOCAL_ENABLED
