@@ -1130,94 +1130,147 @@
             <p class="text-xs text-slate-400 mt-0.5">Arraste os cards para mover de estágio ou clique para abrir a análise comercial detalhada.</p>
           </div>
 
-          <!-- Filtro rápido de temperatura -->
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400 hidden md:inline">Temperatura:</span>
-            <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/10 text-white border border-white/10 hover:bg-white/20 transition ring-2 ring-[#00D2D3]" data-temp="all">Todos</button>
-            <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 transition" data-temp="quente">🔥 Quente</button>
-            <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition" data-temp="morno">🟡 Morno</button>
-            <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition" data-temp="frio">❄️ Frio</button>
+          <!-- Filtro rápido de temperatura + Controle de Tamanho e Ordem -->
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Temperatura -->
+            <div class="flex items-center gap-1 bg-[#0A1118] border border-white/10 rounded-xl p-1">
+              <span class="text-xs text-slate-400 px-1.5 hidden sm:inline font-medium">Temperatura:</span>
+              <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/10 text-white border border-white/10 hover:bg-white/20 transition ring-2 ring-[#00D2D3]" data-temp="all">Todos</button>
+              <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 transition" data-temp="quente">🔥 Quente</button>
+              <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition" data-temp="morno">🟡 Morno</button>
+              <button class="filter-temp px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition" data-temp="frio">❄️ Frio</button>
+            </div>
+
+            <!-- Controles de Tamanho das Colunas (Zoom / Largura) -->
+            <div class="flex items-center gap-1 bg-[#0A1118] border border-white/10 rounded-xl p-1">
+              <span class="text-[11px] text-slate-400 px-1 hidden md:inline font-medium">Largura:</span>
+              <button type="button" onclick="setKanbanColumnWidth('compacto')" id="btn-col-compacto" class="px-2 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition" title="Colunas mais estreitas (230px)">Compacto</button>
+              <button type="button" onclick="setKanbanColumnWidth('medio')" id="btn-col-medio" class="px-2 py-1 rounded-lg text-xs font-semibold bg-[#00D2D3]/20 text-[#00D2D3] border border-[#00D2D3]/30 transition" title="Tamanho padrão (270px)">Médio</button>
+              <button type="button" onclick="setKanbanColumnWidth('amplo')" id="btn-col-amplo" class="px-2 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition" title="Colunas mais largas (330px)">Amplo</button>
+            </div>
+
+            <!-- Botão de Reordenar Colunas -->
+            <button type="button" onclick="openKanbanOrderModal()" class="px-2.5 py-1.5 rounded-xl bg-[#0A1118] border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95" title="Personalizar sequência das colunas">
+              <i class="ph-bold ph-faders text-cyan-400 text-sm"></i>
+              <span>Ordem das Colunas</span>
+            </button>
           </div>
         </div>
 
-        <!-- KANBAN BOARD (6 COLUNAS) -->
+        <!-- KANBAN BOARD (COLUNAS DINÂMICAS) -->
         <div class="flex-1 overflow-x-auto pb-4">
-          <div class="grid grid-flow-col auto-cols-[245px] sm:auto-cols-[265px] xl:auto-cols-[280px] gap-3 min-h-[580px]">
+          <div id="kanban-board-grid" class="grid grid-flow-col auto-cols-[270px] gap-3 min-h-[580px]">
 
-            <!-- Col 1: Fechamento -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-rose-500/30 p-2.5 sm:p-3" data-stage="fechamento">
+            <!-- Col: Fechamento -->
+            <div class="kanban-col group flex flex-col rounded-2xl bg-[#0E1722] border border-rose-500/30 p-2.5 sm:p-3" data-stage="fechamento">
               <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
                 <div class="flex items-center gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
                   <h3 class="font-heading font-bold text-xs sm:text-sm text-rose-300">🤝 Fechamento</h3>
                   <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-rose-400 font-bold">0</span>
                 </div>
-                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                  <div class="flex items-center opacity-40 group-hover:opacity-100 transition">
+                    <button type="button" onclick="moveKanbanColumn('fechamento', -1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a esquerda">◀</button>
+                    <button type="button" onclick="moveKanbanColumn('fechamento', 1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a direita">▶</button>
+                  </div>
+                </div>
               </div>
               <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="fechamento"></div>
             </div>
 
-            <!-- Col 2: Novos -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-blue-500/30 p-2.5 sm:p-3" data-stage="novos">
+            <!-- Col: Novos -->
+            <div class="kanban-col group flex flex-col rounded-2xl bg-[#0E1722] border border-blue-500/30 p-2.5 sm:p-3" data-stage="novos">
               <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
                 <div class="flex items-center gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-blue-400"></div>
                   <h3 class="font-heading font-bold text-xs sm:text-sm text-blue-200">📥 Novos</h3>
                   <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-blue-300 font-bold">0</span>
                 </div>
-                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                  <div class="flex items-center opacity-40 group-hover:opacity-100 transition">
+                    <button type="button" onclick="moveKanbanColumn('novos', -1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a esquerda">◀</button>
+                    <button type="button" onclick="moveKanbanColumn('novos', 1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a direita">▶</button>
+                  </div>
+                </div>
               </div>
               <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="novos"></div>
             </div>
 
-            <!-- Col 3: Projetos -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-purple-500/30 p-2.5 sm:p-3" data-stage="projetos">
+            <!-- Col: Projetos -->
+            <div class="kanban-col group flex flex-col rounded-2xl bg-[#0E1722] border border-purple-500/30 p-2.5 sm:p-3" data-stage="projetos">
               <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
                 <div class="flex items-center gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-purple-400"></div>
                   <h3 class="font-heading font-bold text-xs sm:text-sm text-purple-200">📐 Projetos</h3>
                   <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-purple-300 font-bold">0</span>
                 </div>
-                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                  <div class="flex items-center opacity-40 group-hover:opacity-100 transition">
+                    <button type="button" onclick="moveKanbanColumn('projetos', -1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a esquerda">◀</button>
+                    <button type="button" onclick="moveKanbanColumn('projetos', 1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a direita">▶</button>
+                  </div>
+                </div>
               </div>
               <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="projetos"></div>
             </div>
 
-            <!-- Col 4: Proposta -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-cyan-500/30 p-2.5 sm:p-3" data-stage="proposta">
+            <!-- Col: Proposta -->
+            <div class="kanban-col group flex flex-col rounded-2xl bg-[#0E1722] border border-cyan-500/30 p-2.5 sm:p-3" data-stage="proposta">
               <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
                 <div class="flex items-center gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-[#00D2D3]"></div>
                   <h3 class="font-heading font-bold text-xs sm:text-sm text-[#00D2D3]">💬 Proposta</h3>
                   <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-[#00D2D3] font-bold">0</span>
                 </div>
-                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                  <div class="flex items-center opacity-40 group-hover:opacity-100 transition">
+                    <button type="button" onclick="moveKanbanColumn('proposta', -1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a esquerda">◀</button>
+                    <button type="button" onclick="moveKanbanColumn('proposta', 1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a direita">▶</button>
+                  </div>
+                </div>
               </div>
               <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="proposta"></div>
             </div>
 
-            <!-- Col 5: Investigação -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-amber-500/30 p-2.5 sm:p-3" data-stage="investigacao">
+            <!-- Col: Investigação -->
+            <div class="kanban-col group flex flex-col rounded-2xl bg-[#0E1722] border border-amber-500/30 p-2.5 sm:p-3" data-stage="investigacao">
               <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
                 <div class="flex items-center gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
                   <h3 class="font-heading font-bold text-xs sm:text-sm text-amber-200">🔍 Investigação</h3>
                   <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-amber-300 font-bold">0</span>
                 </div>
-                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                  <div class="flex items-center opacity-40 group-hover:opacity-100 transition">
+                    <button type="button" onclick="moveKanbanColumn('investigacao', -1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a esquerda">◀</button>
+                    <button type="button" onclick="moveKanbanColumn('investigacao', 1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a direita">▶</button>
+                  </div>
+                </div>
               </div>
               <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="investigacao"></div>
             </div>
 
-            <!-- Col 6: Concluídas -->
-            <div class="kanban-col flex flex-col rounded-2xl bg-[#0E1722] border border-emerald-500/30 p-2.5 sm:p-3" data-stage="concluidas">
+            <!-- Col: Concluídas -->
+            <div class="kanban-col group flex flex-col rounded-2xl bg-[#0E1722] border border-emerald-500/30 p-2.5 sm:p-3" data-stage="concluidas">
               <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
                 <div class="flex items-center gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
                   <h3 class="font-heading font-bold text-xs sm:text-sm text-emerald-300">🎉 Concluídas</h3>
                   <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-emerald-400 font-bold">0</span>
                 </div>
-                <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="col-value text-xs font-bold text-slate-300 font-heading">R$ 0</span>
+                  <div class="flex items-center opacity-40 group-hover:opacity-100 transition">
+                    <button type="button" onclick="moveKanbanColumn('concluidas', -1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a esquerda">◀</button>
+                    <button type="button" onclick="moveKanbanColumn('concluidas', 1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a direita">▶</button>
+                  </div>
+                </div>
               </div>
               <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="concluidas"></div>
             </div>
@@ -2017,6 +2070,44 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: PERSONALIZAR ORDEM DAS COLUNAS DO KANBAN         -->
+  <!-- ======================================================== -->
+  <div id="modal-kanban-order" onclick="if(event.target === this) closeKanbanOrderModal()" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-[#101C27] border border-cyan-500/40 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+      <div class="px-5 py-4 bg-[#14212E] border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg">
+            <i class="ph-bold ph-faders"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-bold text-sm text-white">Sequência do Kanban</h3>
+            <p class="text-[10px] text-slate-400">Reordene as colunas na sua ordem preferida</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeKanbanOrderModal()" class="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 cursor-pointer">
+          <i class="ph-bold ph-x text-base"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <p class="text-[11px] text-slate-400">Use as setas para mover as etapas para a esquerda ou direita:</p>
+        <div id="kanban-stage-order-list" class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+          <!-- Renderizado via renderKanbanOrderModalList() -->
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
+          <button type="button" onclick="resetKanbanStageOrder()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition cursor-pointer">
+            Restaurar Padrão
+          </button>
+          <button type="button" onclick="closeKanbanOrderModal()" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 font-bold text-xs transition shadow-lg cursor-pointer">
+            Salvar e Concluir
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ======================================================== -->
@@ -6729,9 +6820,181 @@
     }
 
     // ==========================================
-    // 3. RENDERIZAÇÃO DO KANBAN
+    // 3. RENDERIZAÇÃO DO KANBAN & PERSONALIZAÇÃO DE LAYOUT
     // ==========================================
-    const STAGES = ['fechamento', 'novos', 'projetos', 'proposta', 'investigacao', 'concluidas'];
+    const STAGE_META = {
+      fechamento: { name: 'Fechamento', icon: '🤝', color: 'rose' },
+      novos: { name: 'Novos', icon: '📥', color: 'blue' },
+      projetos: { name: 'Projetos', icon: '📐', color: 'purple' },
+      proposta: { name: 'Proposta', icon: '💬', color: 'cyan' },
+      investigacao: { name: 'Investigação', icon: '🔍', color: 'amber' },
+      concluidas: { name: 'Concluídas', icon: '🎉', color: 'emerald' }
+    };
+    const DEFAULT_STAGE_ORDER = ['fechamento', 'novos', 'projetos', 'proposta', 'investigacao', 'concluidas'];
+    let STAGES = [...DEFAULT_STAGE_ORDER];
+
+    function getSavedStageOrder() {
+      try {
+        const saved = localStorage.getItem('piffpaff_kanban_stage_order');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length === DEFAULT_STAGE_ORDER.length) {
+            const allValid = DEFAULT_STAGE_ORDER.every(s => parsed.includes(s));
+            if (allValid) return parsed;
+          }
+        }
+      } catch (e) {}
+      return [...DEFAULT_STAGE_ORDER];
+    }
+
+    function applyKanbanStageOrder(newOrder, save = true) {
+      if (!Array.isArray(newOrder) || newOrder.length === 0) return;
+      STAGES = [...newOrder];
+      if (save) {
+        try {
+          localStorage.setItem('piffpaff_kanban_stage_order', JSON.stringify(STAGES));
+        } catch (e) {}
+      }
+
+      // Reordena as colunas no DOM sem recriar os elementos
+      const grid = document.getElementById('kanban-board-grid');
+      if (grid) {
+        STAGES.forEach(stKey => {
+          const colEl = grid.querySelector(`.kanban-col[data-stage="${stKey}"]`);
+          if (colEl) grid.appendChild(colEl);
+        });
+      }
+
+      if (typeof renderKanban === 'function') {
+        renderKanban();
+      }
+    }
+    window.applyKanbanStageOrder = applyKanbanStageOrder;
+
+    function moveKanbanColumn(stageKey, direction) {
+      const order = getSavedStageOrder();
+      const idx = order.indexOf(stageKey);
+      if (idx < 0) return;
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= order.length) return;
+
+      const temp = order[idx];
+      order[idx] = order[targetIdx];
+      order[targetIdx] = temp;
+
+      applyKanbanStageOrder(order, true);
+      const stageName = STAGE_META[stageKey]?.name || stageKey;
+      if (typeof showToast === 'function') {
+        showToast(`Coluna "${stageName}" movida para a ${direction < 0 ? 'esquerda' : 'direita'}!`, 'info');
+      }
+    }
+    window.moveKanbanColumn = moveKanbanColumn;
+
+    function openKanbanOrderModal() {
+      renderKanbanOrderModalList();
+      const modal = document.getElementById('modal-kanban-order');
+      if (modal) modal.classList.remove('hidden');
+    }
+    window.openKanbanOrderModal = openKanbanOrderModal;
+
+    function closeKanbanOrderModal() {
+      const modal = document.getElementById('modal-kanban-order');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeKanbanOrderModal = closeKanbanOrderModal;
+
+    function renderKanbanOrderModalList() {
+      const container = document.getElementById('kanban-stage-order-list');
+      if (!container) return;
+      const order = getSavedStageOrder();
+
+      container.innerHTML = order.map((key, idx) => {
+        const meta = STAGE_META[key] || { name: key, icon: '📌' };
+        const isFirst = idx === 0;
+        const isLast = idx === order.length - 1;
+        return `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#14212E] border border-white/10 hover:border-cyan-400/30 transition">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xs font-mono font-bold text-slate-500 w-4">${idx + 1}.</span>
+              <span class="text-base">${meta.icon}</span>
+              <span class="text-xs font-bold text-white">${meta.name}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button type="button" onclick="moveStageInModal(${idx}, -1)" ${isFirst ? 'disabled class="opacity-20 cursor-not-allowed text-slate-600 p-1"' : 'class="p-1 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white cursor-pointer"'} title="Mover para cima">
+                <i class="ph-bold ph-caret-up text-sm"></i>
+              </button>
+              <button type="button" onclick="moveStageInModal(${idx}, 1)" ${isLast ? 'disabled class="opacity-20 cursor-not-allowed text-slate-600 p-1"' : 'class="p-1 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white cursor-pointer"'} title="Mover para baixo">
+                <i class="ph-bold ph-caret-down text-sm"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    window.renderKanbanOrderModalList = renderKanbanOrderModalList;
+
+    function moveStageInModal(idx, direction) {
+      const order = getSavedStageOrder();
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= order.length) return;
+
+      const temp = order[idx];
+      order[idx] = order[targetIdx];
+      order[targetIdx] = temp;
+
+      applyKanbanStageOrder(order, true);
+      renderKanbanOrderModalList();
+    }
+    window.moveStageInModal = moveStageInModal;
+
+    function resetKanbanStageOrder() {
+      applyKanbanStageOrder(DEFAULT_STAGE_ORDER, true);
+      renderKanbanOrderModalList();
+      if (typeof showToast === 'function') {
+        showToast('Ordem das colunas restaurada para o padrão!', 'success');
+      }
+    }
+    window.resetKanbanStageOrder = resetKanbanStageOrder;
+
+    // CONTROLE DE LARGURA / ZOOM DAS COLUNAS
+    function setKanbanColumnWidth(size = 'medio') {
+      const grid = document.getElementById('kanban-board-grid');
+      if (!grid) return;
+
+      let colWidthPx = '270px';
+      if (size === 'compacto') {
+        colWidthPx = '230px';
+      } else if (size === 'amplo') {
+        colWidthPx = '330px';
+      }
+
+      grid.style.gridAutoColumns = colWidthPx;
+      try {
+        localStorage.setItem('piffpaff_kanban_col_width', size);
+      } catch (e) {}
+
+      // Atualiza botões
+      ['compacto', 'medio', 'amplo'].forEach(s => {
+        const btn = document.getElementById(`btn-col-${s}`);
+        if (btn) {
+          if (s === size) {
+            btn.className = 'px-2 py-1 rounded-lg text-xs font-semibold bg-[#00D2D3]/20 text-[#00D2D3] border border-[#00D2D3]/30 transition';
+          } else {
+            btn.className = 'px-2 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition';
+          }
+        }
+      });
+    }
+    window.setKanbanColumnWidth = setKanbanColumnWidth;
+
+    function initKanbanLayoutSettings() {
+      const savedOrder = getSavedStageOrder();
+      applyKanbanStageOrder(savedOrder, false);
+
+      const savedWidth = localStorage.getItem('piffpaff_kanban_col_width') || 'medio';
+      setKanbanColumnWidth(savedWidth);
+    }
+    window.initKanbanLayoutSettings = initKanbanLayoutSettings;
 
     function formatBRL(val) {
       if (!val && val !== 0) return 'R$ 0';
@@ -11848,6 +12111,9 @@
     // 9. EVENT LISTENERS E NAVEGAÇÃO
     // ==========================================
     document.addEventListener('DOMContentLoaded', () => {
+      if (typeof initKanbanLayoutSettings === 'function') {
+        initKanbanLayoutSettings();
+      }
       // Credenciais oficiais do Supabase (Força migração para o novo banco)
       const storedUrl = localStorage.getItem('supabase_url');
       if (!storedUrl || !storedUrl.includes('ukuaujxvdziiaxxuuidw')) {
