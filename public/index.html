@@ -6050,29 +6050,37 @@
               if (isSpoken) {
                 l.called_today = true;
                 l.last_contact_date = todaySyncStr;
-                if (!l.followup_date || l.followup_date <= todaySyncStr) {
-                  l.followup_date = (localLead && localLead.followup_date > todaySyncStr) ? localLead.followup_date : addDays(1);
+                if (localLead && localLead.followup_date && localLead.followup_date > todaySyncStr) {
+                  l.followup_date = localLead.followup_date;
+                } else if (!l.followup_date || l.followup_date <= todaySyncStr) {
+                  l.followup_date = addDays(1);
                 }
                 l.followup_status = 'Agendado';
               } else {
                 l.called_today = false;
-                // Se o lead interagiu ontem ou nos últimos 3 dias e ainda não foi contatado hoje: regra 3 dias a fio
-                const rawInt = l.last_interaction || l.data_ultima_interacao || l.updated_at || l.created_at;
-                let isYesterdayOrRecent = false;
-                if (rawInt) {
-                  const dInt = new Date(rawInt);
-                  if (!isNaN(dInt.getTime())) {
-                    const diffH = (Date.now() - dInt.getTime()) / (1000 * 3600);
-                    if (diffH >= 10 && diffH <= 96) isYesterdayOrRecent = true;
-                  }
-                }
 
-                if (isYesterdayOrRecent || (l.followup_date && l.followup_date <= todaySyncStr)) {
-                  l.followup_date = todaySyncStr;
-                  l.followup_status = 'Chamar Hoje';
-                } else if (localLead && localLead.followup_date && localLead.followup_date > todaySyncStr) {
+                // PRESERVAÇÃO CRÍTICA: Se o lead local já foi agendado para o futuro pelo vendedor, NUNCA regride para hoje!
+                if (localLead && localLead.followup_date && localLead.followup_date > todaySyncStr) {
                   l.followup_date = localLead.followup_date;
                   l.followup_status = 'Agendado';
+                } else {
+                  // Se o lead interagiu ontem ou nos últimos 3 dias e ainda não foi contatado hoje: regra 3 dias a fio
+                  const rawInt = l.last_interaction || l.data_ultima_interacao || l.updated_at || l.created_at;
+                  let isYesterdayOrRecent = false;
+                  if (rawInt) {
+                    const dInt = new Date(rawInt);
+                    if (!isNaN(dInt.getTime())) {
+                      const diffH = (Date.now() - dInt.getTime()) / (1000 * 3600);
+                      if (diffH >= 10 && diffH <= 96) isYesterdayOrRecent = true;
+                    }
+                  }
+
+                  if (isYesterdayOrRecent || (l.followup_date && l.followup_date <= todaySyncStr)) {
+                    l.followup_date = todaySyncStr;
+                    l.followup_status = 'Chamar Hoje';
+                  } else if (l.followup_date && l.followup_date > todaySyncStr) {
+                    l.followup_status = 'Agendado';
+                  }
                 }
               }
             });
@@ -6433,13 +6441,32 @@
         else if (['proposta', 'orcamento', 'orçamento'].includes(rawSt)) waStage = 'proposta';
         else if (['fechamento', 'fechando'].includes(rawSt)) waStage = 'fechamento';
 
+        const existingLocal = idxWa >= 0 ? leads[idxWa] : null;
+        let preservedFollowupDate = row.followup_date;
+        let preservedCalledToday = false;
+        let preservedLastContactDate = null;
+        const todayRealtimeStr = (typeof formatYMD === 'function') ? formatYMD(new Date()) : new Date().toISOString().slice(0, 10);
+
+        if (existingLocal) {
+          if (existingLocal.called_today || (typeof wasContactedToday === 'function' && wasContactedToday(existingLocal))) {
+            preservedCalledToday = true;
+            preservedLastContactDate = todayRealtimeStr;
+          }
+          if (existingLocal.followup_date && existingLocal.followup_date > todayRealtimeStr) {
+            preservedFollowupDate = existingLocal.followup_date;
+          }
+        }
+
         const merged = {
-          ...(idxWa >= 0 ? leads[idxWa] : {}),
+          ...(existingLocal || {}),
           ...row,
           pipeline: 'whatsapp',
           channel: 'whatsapp',
           stage: waStage,
-          categoria: row.categoria || 1
+          categoria: row.categoria || 1,
+          followup_date: preservedFollowupDate || row.followup_date,
+          called_today: preservedCalledToday,
+          last_contact_date: preservedLastContactDate || (preservedCalledToday ? todayRealtimeStr : null)
         };
 
         if (idxWa >= 0) {
@@ -8311,11 +8338,19 @@
           } catch (e) {}
         }
 
-        // Se interagiu ontem (entre 10h e 96h atrás, cobrindo os 3 dias a fio), entra em Chamar Hoje
+        // Se interagiu ontem (entre 10h e 96h atrás, cobrindo os 3 dias a fio)
         const isConsecutive3Days = (diffHours >= 10 && diffHours <= 96);
         l.is_consecutive_3days = isConsecutive3Days;
 
-        if (isConsecutive3Days && (!l.followup_date || l.followup_date > todayStr)) {
+        // Se o lead JÁ está agendado para o futuro (amanhã ou depois), PRESERVA absolutamente em Agendado!
+        if (l.followup_date && l.followup_date > todayStr) {
+          l.called_today = false;
+          l.followup_status = 'Agendado';
+          return;
+        }
+
+        // Se estiver nos 3 dias a fio e sem data ou atrasado, define para hoje
+        if (isConsecutive3Days && (!l.followup_date || l.followup_date <= todayStr)) {
           l.followup_date = todayStr;
         }
 
