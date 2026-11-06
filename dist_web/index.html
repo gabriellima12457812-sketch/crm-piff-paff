@@ -8091,34 +8091,49 @@
     /**
      * Identifica se houve conversa, mensagem ou ligação com o cliente no dia de HOJE.
      * Avalia last_contact_date, last_interaction, data_ultima_interacao, registro local e notas.
+     * GARANTIA MEIA-NOITE: Qualquer contato de dias anteriores NUNCA é considerado "hoje".
      */
     function wasContactedToday(lead) {
       if (!lead) return false;
       const todayStr = formatYMD(new Date());
       if (!todayStr) return false;
 
-      // 1. Flag explícita em memória ou no objeto
-      if (lead.called_today === true) return true;
-      if (lead.last_contact_date && lead.last_contact_date === todayStr) return true;
+      // Se a última data de contato NÃO for hoje, reseta a flag called_today
+      if (lead.last_contact_date && lead.last_contact_date !== todayStr) {
+        lead.called_today = false;
+      }
 
-      // 2. Registro persistente em localStorage
+      // 1. Flag explícita só é válida se a data de contato for comprovadamente HOJE
+      if (lead.called_today === true && lead.last_contact_date === todayStr) {
+        return true;
+      }
+
+      // 2. Registro persistente em localStorage (chave = ID do lead, valor = 'YYYY-MM-DD')
       try {
         const reg = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
         const id = String(lead.id || '');
-        if (id && reg[id] === todayStr) return true;
+        if (id && reg[id] === todayStr) {
+          lead.called_today = true;
+          lead.last_contact_date = todayStr;
+          return true;
+        }
         let p = String(lead.phone || '').replace(/\D/g, '');
         if (p) {
-          if (reg[p] === todayStr) return true;
-          if (p.startsWith('55') && p.length >= 10 && reg[p.substring(2)] === todayStr) return true;
-          if (p.length >= 8 && reg[p.slice(-8)] === todayStr) return true;
+          if (reg[p] === todayStr || (p.startsWith('55') && p.length >= 10 && reg[p.substring(2)] === todayStr) || (p.length >= 8 && reg[p.slice(-8)] === todayStr)) {
+            lead.called_today = true;
+            lead.last_contact_date = todayStr;
+            return true;
+          }
         }
       } catch (e) {}
 
-      // 3. last_interaction ou data_ultima_interacao ocorrida HOJE
+      // 3. last_interaction ou data_ultima_interacao ocorrida HOJE (no fuso de São Paulo)
       const rawDate = lead.last_interaction || lead.data_ultima_interacao;
       if (rawDate) {
         const interYMD = formatYMD(rawDate);
         if (interYMD && interYMD === todayStr) {
+          lead.called_today = true;
+          lead.last_contact_date = todayStr;
           return true;
         }
       }
@@ -8129,10 +8144,13 @@
       const notes = String(lead.notes || '');
       if (notes) {
         if (notes.includes(`[${todayBR}`) || notes.includes(`[${todayStr}`)) {
+          lead.called_today = true;
+          lead.last_contact_date = todayStr;
           return true;
         }
       }
 
+      lead.called_today = false;
       return false;
     }
     window.wasContactedToday = wasContactedToday;
@@ -8520,6 +8538,80 @@
       renderList('list-today', today, 'bg-amber-500/20 text-amber-300 border border-amber-500/30', 'Hoje', 'today');
       renderList('list-upcoming', upcoming, 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30', 'Agendado', 'upcoming');
     }
+
+    // ==========================================
+    // 6.2 MONITOR AUTOMÁTICO DE TRANSIÇÃO DA MEIA-NOITE (REABERTURA DE DIA)
+    // ==========================================
+    let lastObservedDayStr = (typeof formatYMD === 'function') ? formatYMD(new Date()) : '';
+
+    function checkMidnightTransition() {
+      if (typeof formatYMD !== 'function') return;
+      const currentDayStr = formatYMD(new Date());
+      if (!currentDayStr) return;
+
+      if (!lastObservedDayStr) {
+        lastObservedDayStr = currentDayStr;
+        return;
+      }
+
+      if (currentDayStr !== lastObservedDayStr) {
+        console.log(`[MEIA-NOITE] Virada de dia detectada: ${lastObservedDayStr} -> ${currentDayStr}. Reiniciando cadência e reabrindo contatos do novo dia!`);
+        lastObservedDayStr = currentDayStr;
+
+        // 1. Limpa entradas de dias anteriores no localStorage (piffpaff_contacted_today)
+        try {
+          const reg = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
+          let changed = false;
+          Object.keys(reg).forEach(k => {
+            if (reg[k] !== currentDayStr) {
+              delete reg[k];
+              changed = true;
+            }
+          });
+          if (changed) localStorage.setItem('piffpaff_contacted_today', JSON.stringify(reg));
+        } catch (e) {}
+
+        // 2. Reseta status de chamado hoje em todos os leads em memória
+        const resetLeadDay = (l) => {
+          if (!l) return;
+          if (l.last_contact_date !== currentDayStr) {
+            l.called_today = false;
+          }
+          if (l.followup_date && l.followup_date <= currentDayStr && l.followup_status !== 'Sem Follow-up' && !l.followup_disabled) {
+            l.followup_status = (l.followup_date === currentDayStr) ? 'Chamar Hoje' : 'Atrasado';
+          }
+        };
+
+        if (Array.isArray(leads)) leads.forEach(resetLeadDay);
+        if (typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads)) instagramLeads.forEach(resetLeadDay);
+
+        // 3. Salva estado atualizado no storage
+        if (typeof saveStorage === 'function') saveStorage();
+        if (typeof saveInstagramStorage === 'function') saveInstagramStorage();
+
+        // 4. Re-renderiza todas as telas e quadros
+        if (typeof renderFollowupCenter === 'function') renderFollowupCenter();
+        if (typeof renderKanban === 'function') renderKanban();
+        if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
+        if (typeof renderClientsTable === 'function') renderClientsTable();
+        if (typeof updateMetrics === 'function') updateMetrics();
+
+        // 5. Exibe aviso visual suave
+        if (typeof showToast === 'function') {
+          showToast(`☀️ Novo dia iniciado (${formatDateBR(currentDayStr)})! A lista de contatos para chamar hoje foi reaberta automaticamente.`, 'info');
+        }
+      }
+    }
+    window.checkMidnightTransition = checkMidnightTransition;
+
+    // Monitora a cada 15 segundos se a meia-noite passou
+    setInterval(checkMidnightTransition, 15000);
+
+    // Quando o usuário volta à aba de manhã ou desbloqueia o computador
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') checkMidnightTransition();
+    });
+    window.addEventListener('focus', checkMidnightTransition);
 
     /**
      * Rola com precisão e segurança até o elemento desejado, independente de qual container
