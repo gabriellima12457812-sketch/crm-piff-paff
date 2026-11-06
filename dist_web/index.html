@@ -7163,17 +7163,41 @@
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return '';
       const now = new Date();
-      const diffMs = now - d;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMins / 60);
-      const diffDays = Math.floor(diffHours / 24);
 
-      if (diffMins < 1) return 'Agora';
-      if (diffMins < 60) return `Há ${diffMins} min`;
-      if (diffHours < 24) return `Hoje às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
-      if (diffDays === 1) return 'Ontem';
-      if (diffDays < 7) return `Há ${diffDays} dias`;
-      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      const todayStr = (typeof formatYMD === 'function') ? formatYMD(now) : new Date().toISOString().slice(0, 10);
+      const targetYMD = (typeof formatYMD === 'function') ? formatYMD(d) : d.toISOString().slice(0, 10);
+      const timeStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+
+      // Se ocorreu no dia civil de HOJE:
+      if (targetYMD === todayStr) {
+        const diffMs = Math.max(0, now - d);
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) return 'Agora';
+        if (diffMins < 60) return `Há ${diffMins} min`;
+        return `Hoje às ${timeStr}`;
+      }
+
+      // Se ocorreu ONTEM (dia civil imediatamente anterior):
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = (typeof formatYMD === 'function') ? formatYMD(yesterday) : yesterday.toISOString().slice(0, 10);
+      if (targetYMD === yesterdayStr) {
+        return `Ontem às ${timeStr}`;
+      }
+
+      // Se ocorreu há 2 a 6 dias atrás:
+      try {
+        const [ty, tm, td] = todayStr.split('-').map(Number);
+        const [gy, gm, gd] = targetYMD.split('-').map(Number);
+        const dToday = new Date(ty, tm - 1, td);
+        const dTarget = new Date(gy, gm - 1, gd);
+        const diffCalendarDays = Math.round((dToday - dTarget) / (1000 * 60 * 60 * 24));
+        if (diffCalendarDays > 1 && diffCalendarDays < 7) {
+          return `Há ${diffCalendarDays} dias às ${timeStr}`;
+        }
+      } catch (e) {}
+
+      return `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' })} às ${timeStr}`;
     }
 
     let hasAppliedInitialLayout = false;
@@ -8131,7 +8155,8 @@
       }
 
       // 1. Flag explícita só é válida se a data de contato for comprovadamente HOJE
-      if (lead.called_today === true && lead.last_contact_date === todayStr) {
+      if (lead.called_today === true && (lead.last_contact_date === todayStr || !lead.last_contact_date)) {
+        lead.last_contact_date = todayStr;
         return true;
       }
 
