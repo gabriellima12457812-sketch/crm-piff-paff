@@ -1,3 +1,4 @@
+import { supabaseDirectFetch as fetch } from '../lib/supabase-fetch.js';
 // ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/ai-upsert (ES Module)
 // OTIMIZADO PARA ALTA VELOCIDADE & BAIXA LATÊNCIA (< 1s)
