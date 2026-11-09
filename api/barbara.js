@@ -1,3 +1,4 @@
+import { supabaseDirectFetch as fetch } from '../lib/supabase-fetch.js';
 // ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/Bárbara (ES Module)
 // ENDPOINT EXCLUSIVO E BLINDADO DA Bárbara
