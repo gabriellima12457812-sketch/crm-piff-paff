@@ -4910,11 +4910,15 @@
     let rawCloudAllLeads = []; // Armazena cache global de leads da nuvem para o Admin Gabriel
 
     function getSupabaseClient() {
-      const url = '/api/supabase-proxy?path=';
+      const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
       const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       if (window.supabase && (!window.supabaseClient || window._supabaseUrl !== url)) {
-        window.supabaseClient = window.supabase.createClient(url, key);
-        window._supabaseUrl = url;
+        try {
+          window.supabaseClient = window.supabase.createClient(url, key);
+          window._supabaseUrl = url;
+        } catch (e) {
+          console.warn('[Supabase Client Error]', e);
+        }
       }
       return window.supabaseClient;
     }
@@ -5693,7 +5697,7 @@
       }
 
       const sellerKey = getSellerKey(authUser);
-      const url = '/api/supabase-proxy?path=';
+      const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
       const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
 
