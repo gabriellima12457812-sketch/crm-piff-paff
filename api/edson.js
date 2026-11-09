@@ -1,3 +1,4 @@
+import { supabaseDirectFetch as fetch } from '../lib/supabase-fetch.js';
 // ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/edson (ES Module)
 // ENDPOINT DO SUPER ADMINISTRADOR • ÉDSON (DONO DA EMPRESA)
