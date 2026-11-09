@@ -12377,12 +12377,16 @@
         }
       }, 2000);
 
-      // 2. Polling Contínuo a cada 10 segundos para o CRM atualizar sozinho
+      // 2. Polling Leve de Segurança (apenas a cada 60s como fallback se o Realtime cair, economizando 95% de banda)
       setInterval(() => {
         if (!document.hidden && typeof syncFromSupabase === 'function') {
-          syncFromSupabase(true);
+          // Se o Realtime estiver ativo e conectado, não precisa puxar o banco inteiro
+          const isRealtimeHealthy = realtimeChannel && realtimeChannel.state === 'joined';
+          if (!isRealtimeHealthy) {
+            syncFromSupabase(true);
+          }
         }
-      }, 10000);
+      }, 60000);
 
       // 3. Monitoramento contínuo do WhatsApp (online/offline) a cada 20 segundos
       setInterval(() => {
