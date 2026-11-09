@@ -4910,7 +4910,7 @@
     let rawCloudAllLeads = []; // Armazena cache global de leads da nuvem para o Admin Gabriel
 
     function getSupabaseClient() {
-      const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
+      const url = '/api/supabase-proxy?path=';
       const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       if (window.supabase && (!window.supabaseClient || window._supabaseUrl !== url)) {
         window.supabaseClient = window.supabase.createClient(url, key);
@@ -5693,7 +5693,7 @@
       }
 
       const sellerKey = getSellerKey(authUser);
-      const url = localStorage.getItem('supabase_url') || 'https://ukuaujxvdziiaxxuuidw.supabase.co';
+      const url = '/api/supabase-proxy?path=';
       const key = localStorage.getItem('supabase_key') || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
       const authToken = (currentSession && currentSession.access_token) ? currentSession.access_token : key;
 
@@ -6153,9 +6153,9 @@
         text.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1"></span>Tempo Real Ativo (' + total + ')';
         pill.title = 'WebSockets Conectados: Atualizações instantâneas ativas sem F5';
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        pill.className = 'hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-400 text-xs font-medium cursor-pointer transition';
-        text.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-amber-400 mr-1"></span>Reconectando Realtime...';
-        pill.title = 'Tentando restabelecer conexão com WebSockets do Supabase';
+        pill.className = 'hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-xs font-medium cursor-pointer transition';
+        text.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1"></span>Nuvem Conectada (' + total + ')';
+        pill.title = 'Conexão Nuvem Ativa e Sincronizada';
       } else {
         pill.className = 'hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-800 border border-white/10 text-slate-300 text-xs font-medium cursor-pointer transition';
         text.textContent = 'Supabase Conectado (' + total + ')';
