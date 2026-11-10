@@ -1,1042 +1,24 @@
-﻿// ==============================================================================
+import { supabaseDirectFetch as fetch } from '../lib/supabase-fetch.js';
+// ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/gabriel (ES Module)
 // ENDPOINT EXCLUSIVO E BLINDADO DO GABRIEL LIMA
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
 // ==============================================================================
+
+import {
+  loadGovernanceState,
+  filterActiveRecords,
+  performSoftDeleteLead,
+  recordAuditLog
+} from '../lib/governance.js';
 
 const SELLER_USER_ID = 'a1111111-1111-1111-1111-111111111111';
 const SELLER_NAME = 'Gabriel Lima';
 const SELLER_CREDENTIALS = { email: 'gabriel@piffpaff.com.br', password: 'Gabriel@2026' };
 
 // Leads oficiais do funil de Instagram Direct do Gabriel no CRM
-const DEFAULT_INSTAGRAM_LEADS_GABRIEL = [
-    {
-        "id":  "insta-1789179889571-rbr5h",
-        "name":  "Kerica Almeida",
-        "instagram":  "",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "conversa",
-        "stage_label":  "Em Conversa",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  50200,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Área Externa Premium / Obra em andamento",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[11/09/2026, 23:24:49 - IA ChatGPT (Gabriel Lima)]: Origem: Instagram migrado para WhatsApp. Cliente enviou material/planta da área e demonstrou interesse em sofá modular premium; valores apresentados: sofá branco completo R$46.800, sofá verde completo R$50.200, módulos e poltrona separadamente. Também foram discutidos ombrelone e combinações para o espaço. Cliente rejeitou algumas opções e disse \u0027agora não\u0027; contexto posterior indica aguardar avanço da obra para definir necessidades e cotar. Próxima ação: reabrir pelo projeto, perguntando se já tem medidas finais e quais ambientes serão priorizados. Não usar urgência artificial nem insistir na peça verde sem validar o projeto atual.",
-        "created_at":  "2026-09-12T02:24:49.571+00:00"
-    },
-    {
-        "id":  "CRM-GAB-NATMASSA-20260907",
-        "name":  "Natmassa (@natmassa)",
-        "instagram":  "natmassa",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "conversa",
-        "stage_label":  "Em Conversa",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  46200,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-13",
-        "notes":  "Oportunidade de R$ 46.200 reativada em 07/09/2026.\n\n[10/09/2026, 10:47:17 - IA ChatGPT (Gabriel Lima)]: Atualização em 10/09/2026 às 10:38: lead respondeu anteriormente \u0027Obrigada\u0027 após receber faixa de preço e agora Gabriel retomou perguntando se o valor ficou dentro do que pretende investir, oferecendo mostrar opções a partir de R$ 15 mil e solicitando contato para atendimento exclusivo. Ainda não há telefone/WhatsApp fornecido. Contabilizar este toque como 1 remarketing Instagram na rotina diária. Não contabilizar como ligação, pois não houve chamada neste atendimento. Próximo passo: aguardar resposta sobre faixa de investimento e/ou envio do contato; se responder orçamento, qualificar pela faixa e preferências.",
-        "created_at":  "2026-09-10T14:25:47.212+00:00"
-    },
-    {
-        "id":  "insta-1789179908888-qabm4",
-        "name":  "Wilcimeire",
-        "instagram":  "",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  15000,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Sala de Jantar / Alto Padrão",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[11/09/2026, 23:25:08 - IA ChatGPT (Gabriel Lima)]: Origem: anúncio Facebook/Instagram. Interesse inicial em sala de jantar, mesa oval para 8 lugares, estilo ousado e contemporâneo. Demonstrou forte reação positiva a peça promocional de R$15.000 e posteriormente a conjunto maior, mas relatou compromissos financeiros e em 24/06/2026 disse que precisava pagar ITBI e acompanharia a loja até chegar a hora. Próxima ação: reativação elegante sem pressão, retomando pelo estilo contemporâneo e perguntando se a fase financeira/da casa já permite voltar a montar o ambiente. Não usar abordagem \u0027desistiu da compra?\u0027.",
-        "created_at":  "2026-09-12T02:25:08.888+00:00"
-    },
-    {
-        "id":  "lead-1789086982632-ei9qc",
-        "name":  "Marisa Beux",
-        "instagram":  "marisabeux",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  11999,
-        "temperature":  "quente",
-        "priority":  "ALTA",
-        "commercial_line":  "Leads Instagram",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[10/09/2026, 21:36:22 - IA ChatGPT (Gabriel Lima)]: Lead captada via resposta a anúncio no Instagram em 10/09/2026. Abordagem inicial da cliente: \u0027Qual o valor?\u0027. Gabriel se apresentou como especialista em móveis de alto padrão, enviou referência do conjunto e explicou 4 linhas (Premium, Standard, Internacional e Interna Dubai de Alto Padrão). Informado que há mais de 1.500 possibilidades a partir de R$ 11.999. Próxima melhor ação: responder de forma objetiva sobre o valor do conjunto do anúncio e fazer uma única pergunta de qualificação sobre o ambiente/medidas. Evitar excesso de catálogo/opções antes de entender a necessidade.\n\n[11/09/2026, 11:36:32 - IA ChatGPT (Gabriel Lima)]: Atualização 11/09: Marisa Beux veio de anúncio no Instagram. Foi trabalhado valor de R$ 11.999. Gabriel tentou ligação de áudio às 11:31/11:32 e enviou referências visuais de produtos, incluindo espreguiçadeiras e conjunto para área externa. Próxima ação: identificar qual composição ela gostou mais, confirmar medidas do espaço e cidade/CEP, e então avançar para proposta.",
-        "created_at":  "2026-09-11T14:36:32.028+00:00"
-    },
-    {
-        "id":  "lead-instagram-rogeriosouzaguitar",
-        "name":  "Rogério Augusto de Souza",
-        "instagram":  "rogeriosouzaguitar",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-13",
-        "notes":  "RESTAURA��O 09/09/2026 10:40 � Rog�rio Augusto de Souza, Instagram @rogeriosouzaguitar. Hist�rico: em 07/09 pediu consulta de pre�o; em 08/09 Gabriel apresentou as quatro linhas e perguntou qual interessava. Hoje �s 10:40 Gabriel realizou liga��o de �udio, enviou �udio de 15s e pe�a de reativa��o com condi��es especiais antes do ver�o. Conte�do do �udio n�o foi informado, portanto n�o presumido. Ainda falta identificar produto/linha exata e contexto b�sico de compra. Posse da bola: CLIENT. N�o entra novamente no follow-up do dia.",
-        "created_at":  "2026-09-10T16:15:35.803+00:00"
-    },
-    {
-        "id":  "lead-1789045662791-r6w7u",
-        "name":  "Josiellen Jardim",
-        "instagram":  "josiellenjardim",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Móveis externos",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[10/09/2026, 10:07:42 - IA ChatGPT (Gabriel Lima)]: Lead captado pelo Instagram via resposta a anúncio em 10/09/2026. Cliente iniciou com \u0027Bom dia\u0027. Gabriel se apresentou como especialista em móveis de alto padrão, enviou material institucional/visual de ambiente externo e apresentou 4 linhas: Premium, Standard, Internacional e Interna Dubai de alto padrão. Foi perguntado qual das 4 linhas desperta interesse. Até o momento, ainda não informou ambiente, medidas, linha escolhida, orçamento ou prazo. Próximo passo: diagnosticar qual ambiente deseja mobiliar e pedir foto/medidas antes de aprofundar em catálogo e preço.\n\n[10/09/2026, 10:16:52 - IA ChatGPT (Gabriel Lima)]: Contabilizar como lead novo. 1 ligação realizada/contabilizada na rotina diária.\n\n[10/09/2026, 17:30:33 - IA ChatGPT (Gabriel Lima)]: Lead veio de anúncio no Instagram. Perguntou especificamente qual linha corresponde ao conjunto da foto de área externa. Gabriel apresentou as 4 linhas e depois pediu o contato para enviar mais opções. Ainda não informou telefone/WhatsApp. Interesse visual já demonstrado em conjunto externo; próximo passo é identificar linha da peça, entender ambiente/medidas e captar WhatsApp.",
-        "created_at":  "2026-09-10T20:30:33.896+00:00"
-    },
-    {
-        "id":  "lead-1789046365305-2e5kw",
-        "name":  "Gleise Carvalho",
-        "instagram":  "carvalho.gleise",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Móveis Externos",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[10/09/2026, 10:19:25 - IA ChatGPT (Gabriel Lima)]: Lead captado pelo Instagram. Cliente perguntou: \u0027Quais são suas opções de entrega?\u0027. Gabriel respondeu se apresentando como especialista em móveis de alto padrão e realizou 1 ligação de áudio às 10:14, encerrada às 10:15. Depois perguntou se ela já tem um espaço pronto para receber os móveis ou se está em obra, enviou material institucional e apresentou as linhas disponíveis. Contabilizar 1 ligação na rotina diária. Ainda faltam: cidade/CEP para responder entrega com precisão, ambiente, medidas, peças desejadas, prazo e faixa de investimento. Próximo passo: responder objetivamente sobre entrega e pedir cidade/CEP, sem desviar da pergunta inicial.",
-        "created_at":  "2026-09-10T13:19:25.305+00:00"
-    },
-    {
-        "id":  "insta-1789137602344-3ze1e",
-        "name":  "Pauliane A Souza",
-        "instagram":  "pauli333_",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "quente",
-        "priority":  "ALTA",
-        "commercial_line":  "Leads Instagram",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[11/09/2026, 11:40:02 - IA ChatGPT (Gabriel Lima)]: Lead recorrente do Instagram via anúncios. Já demonstrou interesse anteriormente, perguntando \u0027Quero saber mais\u0027, valor e frete para o CEP 37130442, quais produtos são oferecidos e mais informações. Em 23/08 voltou a perguntar sobre produtos e informações. Em 11/09 perguntou novamente sobre opções de entrega após receber referência de conjunto para área externa; Gabriel se apresentou como especialista em móveis de alto padrão e tentou ligação de áudio às 11:37/11:38. Próxima ação: responder objetivamente condições de entrega para o CEP informado, confirmar se busca área externa ou interna, selecionar 2 a 3 opções e conduzir para orçamento.\n\n[11/09/2026, 11:42:37 - IA ChatGPT (Gabriel Lima)]: Histórico consolidado: lead recorrente do Instagram via anúncios. Em contatos anteriores pediu para saber mais, perguntou valor e frete para o CEP 37130-442, quis saber quais produtos são oferecidos e pediu mais informações. Já foi atendida anteriormente por Felipe e Sebastião. Em 24/08 recebeu apresentação como cliente de móveis de alto padrão; houve tentativa de ligação às 11:20/11:21, envio de áudios e referência de conjunto para área externa. Em 11/09 voltou a perguntar \u0027Quais são suas opções de entrega?\u0027. Gabriel assumiu o atendimento, se apresentou como especialista em móveis de alto padrão, tentou ligação às 11:37/11:38, enviou referência visual de conjunto externo e apresentou as 4 linhas (Premium, Standard, Internacional e Interna Dubai). Próxima ação: responder objetivamente entrega/frete para o CEP 37130-442, confirmar se o uso é externo ou interno, identificar faixa de investimento e separar 2 a 3 opções para orçamento.\n\n[11/09/2026, 11:51:37 - IA ChatGPT (Gabriel Lima)]: [Canal: Instagram] Atualização 11/09 às 11:50: Pauliane visualizou a apresentação das 4 linhas há cerca de 5 minutos e ainda não respondeu. Gabriel enviou três mensagens de follow-up perguntando se ela já adquiriu os móveis, mencionando que ela já entrou em contato várias vezes e pedindo um retorno para poder seguir. Próxima ação: não insistir agora; aguardar resposta. Se não houver retorno até mais tarde ou no próximo contato, enviar mensagem curta e objetiva com duas opções de direção (área externa ou interna) e oferta de orçamento/frete para o CEP 37130-442.",
-        "created_at":  "2026-09-11T14:51:37.773+00:00"
-    },
-    {
-        "id":  "CRM-GAB-ODACIFELIX-20260907",
-        "name":  "Odaci Camelo (@odacifelix)",
-        "instagram":  "odacifelix",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-08",
-        "notes":  "Origem: Instagram @odacifelix. Resposta de anúncio em 07/09.",
-        "created_at":  "2026-09-09T15:51:44.256114+00:00"
-    },
-    {
-        "id":  "lead-instagram-oliviabavaresco",
-        "name":  "Olívia",
-        "instagram":  "oliviabavaresco",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "quente",
-        "priority":  "ALTA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-13",
-        "notes":  "RESTAURA��O 09/09/2026 11:52-12:06 � Novo lead inbound via an�ncio no Instagram. Ol�via perguntou espontaneamente \u0027Como fa�o para encomendar?\u0027. Gabriel se apresentou, enviou pe�a de posicionamento, realizou liga��o de �udio, apresentou as quatro linhas e perguntou qual interessava. Ol�via escolheu Linha Standard, informou que quer m�veis para varanda, enviou uma refer�ncia visual e pediu \u0027fotos, tamanhos e valores\u0027. Gabriel pediu o contato de WhatsApp para agilizar a curadoria e mencionou op��o � pronta entrega com v�deo. Telefone, cidade/UF, medidas, prazo e or�amento ainda n�o informados. Infer�ncia: temperatura ~88/100, probabilidade de avan�o ~75%. Posse da bola: CLIENT. N�o insistir novamente no mesmo dia.\n\n[10/09/2026, 10:48:36 - IA ChatGPT (Gabriel Lima)]: Atualização em 10/09/2026 às 10:45-10:47: Gabriel realizou 2 tentativas de ligação de áudio pelo Instagram. Em seguida informou que o anexo enviado por Olívia apareceu como indisponível e pediu que ela reenviasse a mensagem/arquivo; também sinalizou que, recebendo novamente, pode chamá-la no WhatsApp. Contabilizar 2 ligações na rotina diária. Não contabilizar como ligação de qualidade, pois não houve diagnóstico comercial na chamada. Contabilizar 1 remarketing Instagram por retomada ativa de lead já existente. Próximo passo: aguardar reenvio do anexo e, se houver contato/WhatsApp, migrar a conversa para lá e aprofundar diagnóstico.",
-        "created_at":  "2026-09-10T16:16:26.244+00:00"
-    },
-    {
-        "id":  "CRM-GAB-1002",
-        "name":  "Paulo Cesar da Silveira",
-        "instagram":  "pc.jl60.",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-12",
-        "notes":  "CadÃªncia: Cadência 3 Dias\r\n\r\nHistÃ³rico: Instagram @pc.jl60. Pediu preço conjunto área externa.\n\n[11/09/2026, 16:55 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 12/09/2026.",
-        "created_at":  "2026-09-11T19:55:52.113+00:00"
-    },
-    {
-        "id":  "CRM-GAB-0035",
-        "name":  "MarinÃªs Cavalin Pivetta (@mari_pivetta)",
-        "instagram":  "mari_pivetta",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-07",
-        "notes":  "CadÃªncia: Cadência 7 Dias\r\n\r\nHistÃ³rico: ?udio e tentativa de liga??o enviados.",
-        "created_at":  "2026-09-09T15:51:43.595786+00:00"
-    },
-    {
-        "id":  "CRM-GAB-0036",
-        "name":  "Paula Braga (@paulasbraga)",
-        "instagram":  "paulasbraga",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-07",
-        "notes":  "CadÃªncia: Cadência 7 Dias\r\n\r\nHistÃ³rico: Reuni?o impediu liga??o.",
-        "created_at":  "2026-09-09T15:51:43.595786+00:00"
-    },
-    {
-        "id":  "CRM-GAB-0059",
-        "name":  "CicÃ­lia Amorim Andrade (@ciciliapaes)",
-        "instagram":  "ciciliapaes",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-12",
-        "notes":  "CadÃªncia: Cadência 3 Dias\r\n\r\nHistÃ³rico: Primeiro contato IG.\n\n[11/09/2026, 17:03 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 12/09/2026.",
-        "created_at":  "2026-09-11T20:03:38.196+00:00"
-    },
-    {
-        "id":  "CRM-GAB-VINICIUS-TRPVINI-20260907",
-        "name":  "Vinicius (@trp_vini)",
-        "instagram":  "trp_vini",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Standard",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-08",
-        "notes":  "Origem: Instagram @trp_vini. Resposta a anúncio em 07/09/2026.",
-        "created_at":  "2026-09-09T15:51:44.087126+00:00"
-    },
-    {
-        "id":  "CRM-GAB-1854",
-        "name":  "Paulo Ramos",
-        "instagram":  "",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-07",
-        "notes":  "CadÃªncia: Cadência 3 Dias\r\n\r\nHistÃ³rico: Origem Instagram CTA \u0027Quero saber mais\u0027. Gabriel e [Histórico Antigo]: [24/08/2026]: Instagram CTA \u0027Quero saber mais\u0027. Gabriel explicou as 4",
-        "created_at":  "2026-09-09T15:51:44.087126+00:00"
-    },
-    {
-        "id":  "CRM-GAB-ANATERNICELLI-ANAC2881",
-        "name":  "Ana Ternicelli (@anac2881)",
-        "instagram":  "anac2881",
-        "phone":  "",
-        "city":  "contato/es",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Internacional",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-05",
-        "notes":  "CadÃªncia: Novo toque feito em 04/09 às 11:37. Não insistir novamente hoje. Se continuar sem resposta, próximo follow-up em 05/09/2026; depois 06/09 e então seguir régua normal.\r\n\r\nHistÃ³rico: Lead Instagram @anac2881. Histórico preservado: em 03/09 às 12:51 Ana respondeu anúncio perguntando \u0027Poderia me passar mais informações?\u0027. Gabriel se apresentou como especialista em móveis de alto padrão; houve ligação de áudio entre 13:29 e 13:30, envio de referência e áudio de 17s, e apresentação das 4 linhas: Premium, Standard, Nova Linha Internacional e Linha Interna Dubai. Às 15:41 Ana escolheu explicitamente a Linha Internacional: \u0027Pode me mostrar opções da Linha Internacional?\u0027. Gabriel enviou várias referências visuais e pediu o contato para mandar algo mais assertivo, perguntando se ela já tem o espaço pronto. Atualização 04/09/2026: o pedido de contato/espaço aparecia como visualizado há cerca de 13 horas, sem resposta textual visível. Às 11:37 Gabriel fez nova ligação de áudio no Instagram, encerrada no mesmo minuto, enviou áudio de 13 segundos e mais referências visuais. Não há resposta da Ana visível até 11:38. Fatos pendentes: telefone, cidade/UF, ambiente, peças, medidas, prazo, arquiteto, orçamento e decisores. PIFF-PAFF: Filtro da linha concluído; Investigação pendente e Formação de Valor iniciada. Temperatura estimada 58/100; probabilidade 20% (inferências) devido ao interesse inicial específico, mas ausência de resposta após visualização. Posse da bola: CLIENT.",
-        "created_at":  "2026-09-09T15:51:44.170501+00:00"
-    },
-    {
-        "id":  "CRM-GAB-DOUGLASHELLUS-20260907",
-        "name":  "Douglas Fernandes (@douglashellus)",
-        "instagram":  "douglashellus",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "quente",
-        "priority":  "ALTA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-08",
-        "notes":  "Instagram @douglashellus. Interesse direto em modelo anunciado.",
-        "created_at":  "2026-09-09T15:51:44.256114+00:00"
-    },
-    {
-        "id":  "CRM-GAB-FLAVIA-AFIUNE",
-        "name":  "Flavia Afiune (@flavia_afiune)",
-        "instagram":  "flavia_afiune",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Internacional",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-13",
-        "notes":  "CadÃªncia: Cadência 3 Dias: D1 em 05/09/2026 se não responder, D2 em 06/09 e D3 em 07/09.\r\n\r\nHistÃ³rico: Lead novo Instagram Dluxo em 04/09/2026. Origem: resposta a anúncio da Dluxo/Instagram. Cliente perguntou explicitamente: \u0027Vcs atendem revenda?\u0027. Gabriel se apresentou como especialista em móveis de alto padrão, realizou tentativa/ligação de áudio entre 08:39 e 08:40, enviou referência visual, áudio de 18s e apresentou as 4 linhas: Premium, Standard, Nova Linha Internacional e Linha Interna Dubai de Alto Padrão, perguntando qual linha interessa. Fatos: interesse comercial em revenda; ligação realizada/tentada; ainda sem telefone, cidade, estrutura de revenda, volume, orçamento ou linha escolhida. PIFF-PAFF: Posicionamento + Filtro/Investigação inicial. Temperatura estimada 65/100; probabilidade 25% até qualificação. Posse da bola: CLIENT.\n\n[11/09/2026, 15:31 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 12/09/2026.\n\n[12/09/2026, 15:12 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 13/09/2026.",
-        "created_at":  "2026-09-12T18:12:28.539+00:00"
-    },
-    {
-        "id":  "CRM-GAB-DENISEFERRARINI-20260907",
-        "name":  "Denise Ferrarini Neto Hallgren",
-        "instagram":  "deferrarini.",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Internacional",
-        "followup_status":  "Ativo",
-        "followup_date":  "2024-05-25",
-        "notes":  "CadÃªncia: Relacionamento antigo reativado em 07/09/2026. Histórico visível desde 25/05/2024, com novos contatos em 29/05/2024, 22/07/2026, 23/07/2026, 22/08/2026, 23/08/2026, 24/08/2026 e nova entrada em 07/09/2026. Como há histórico prévio comprovado, tratar como REATIVAÇÃO, não lead novo. Se não responder hoje, retomar em 08/09 com micropergunta objetiva ligada ao ambiente/modelo.\r\n\r\nHistÃ³rico: Denise Ferrarini Neto Hallgren, Instagram @deferrarini. Histórico visível: em 25/05/2024 pediu orçamento; recebeu proposta de conjunto em alumínio, madeira cumaru e estofados impermeáveis por R$ 34.700. Em 29/05/2024 recebeu proposta de conjunto em alumínio com pintura epóxi, tricô náutico e estofados impermeáveis, sofá 160x80, poltrona 80x80 e mesa de centro 80cm, por R$ 33.900. Em 22/07/2026 voltou a pedir informações; em 23/07 houve novo atendimento e ligação. Em 22/08/2026 perguntou \u0027Como faço para encomendar?\u0027; em 23/08 recebeu nova abordagem e em 24/08 houve ligação. Em 07/09/2026 às 13:28 pediu novamente mais informações; às 13:29 Gabriel fez ligação de áudio e enviou dois áudios de 20s e referência visual. Também já foi apresentada às linhas Premium, Standard, Internacional e Interna Dubai e recebeu a pergunta \u0027Será pra área externa ou interna?\u0027. Valores antigos são históricos e NÃO devem ser tratados como orçamento atual. Não há telefone, cidade/UF, medidas atuais, orçamento atual, prazo ou modelo fechado confirmados. Inferência: lead morno/quente por recorrência e pergunta anterior sobre como encomendar, mas com histórico longo sem fechamento; temperatura ~64/100 e probabilidade ~35%. PIFF-PAFF: Investigação/Filtro, com necessidade de retomar necessidade atual antes de proposta. Posse da bola: CLIENT.",
-        "created_at":  "2026-09-09T15:51:44.256114+00:00"
-    },
-    {
-        "id":  "CRM-GAB-JOCILENEMOZER-20260907",
-        "name":  "Jocilene Mozer",
-        "instagram":  "jocilenemozer.",
-        "phone":  "",
-        "city":  "catálogo/or",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-12",
-        "notes":  "CadÃªncia: Lead reativado pelo Instagram em 06/09/2026 às 19:35 ao responder anúncio com \u0027Gostaria de mais informações!\u0027. Em 07/09/2026 às 09:38 houve ligação de áudio e, em seguida, áudio de 9s, peça de apresentação Caribe e perguntas de investigação. Bola com CLIENT. Aplicar D2 em 08/09 e D3 em 09/09 se não houver resposta; depois D+7/D+14.\r\n\r\nHistÃ³rico: Jocilene Mozer, Instagram @jocilenemozer. Histórico disponível mostra primeiro contato em 29/04/2023 via anúncio, quando perguntou \u0027Qual valor\u0027 e disse ter interesse e querer mais informações. Em 30/04/2023 houve atendimento da antiga equipe D_Luxo, com convite para catálogo/orçamento e link de WhatsApp; cliente respondeu \u0027Obrigada\u0027 com coração. Em 01/06 (ano não explicitamente visível no print, no contexto do histórico antigo) Nathaly retomou se apresentando como equipe D_Luxo, especialista em móveis de luxo para áreas externas, houve ligação às 16:11 e envio de material/áudio. Em 06/09/2026 às 19:35 Jocilene respondeu novamente a anúncio: \u0027Gostaria de mais informações!\u0027. Em 07/09/2026 às 09:38 Gabriel realizou ligação de áudio; depois enviou áudio de 9s, peça institucional Caribe e perguntou se o espaço está pronto ou em obra, além de pedir WhatsApp para enviar mais vídeos, fotos e detalhes. Fatos: interesse renovado e origem por anúncio/Instagram; interesse geral em móveis de alto padrão/área externa. Não informado: telefone, cidade/UF, medidas, ambiente exato, orçamento, prazo, decisores e produtos específicos. Inferência: lead quente pela reativação espontânea após longo histórico; temperatura estimada 78/100, probabilidade de fechamento 40% até qualificação. PIFF-PAFF em Posicionamento + Investigação/Filtro. Posse da bola: CLIENT.\n\n[11/09/2026, 15:31 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 12/09/2026.",
-        "created_at":  "2026-09-11T18:31:02.752+00:00"
-    },
-    {
-        "id":  "CRM-GAB-0116",
-        "name":  "Carol (@carolroesner)",
-        "instagram":  "carolroesner",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-12",
-        "notes":  "CadÃªncia: Cadência 3 Dias\r\n\r\nHistÃ³rico: Qualificar espa?o e interesse.\n\n[11/09/2026, 17:35 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 12/09/2026.",
-        "created_at":  "2026-09-11T20:35:09.75+00:00"
-    },
-    {
-        "id":  "CRM-GAB-ANTONIA-DLUXO",
-        "name":  "Antonia Santos (@cidagss)",
-        "instagram":  "cidagss",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Internacional",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-13",
-        "notes":  "CadÃªncia: Cadência 3 Dias\r\n\r\nHistÃ³rico: Lead novo do Instagram. Origem: Dluxo, perfil da própria Caribe Móveis operando com outro nome comercial. Em 29/08/2026 pediu catálogo espontaneamente e selecionou \u0027Quero mais informações\u0027. Gabriel se apresentou, tentou ligação de áudio às 10:11 e apresentou as 4 linhas: Premium, Standard, Internacional e Interna Dubai de Alto Padrão. Aguardando escolha da linha de interesse.\n\n[11/09/2026, 15:30 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 12/09/2026.\n\n[12/09/2026, 15:12 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 13/09/2026.",
-        "created_at":  "2026-09-12T18:12:26.649+00:00"
-    },
-    {
-        "id":  "CRM-GAB-0034",
-        "name":  "Sirley Brito Lobo (@sirleybrito930)",
-        "instagram":  "sirleybrito930",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-19",
-        "notes":  "CadÃªncia: Cadência 3 Dias\r\n\r\nHistÃ³rico: Padr?o IG aplicado.\n\n[11/09/2026, 17:01:38 - IA ChatGPT (Gabriel Lima)]: 11/09/2026 — contato/follow-up realizado hoje pelo Instagram. Tentativa de ligação e mensagem enviada pedindo retorno sobre o interesse nos móveis. Marcar abordagem de hoje como feita/concluída.\n\n[12/09/2026, 14:56 - Follow-up Instagram]: Contato realizado hoje. Próximo contato agendado para 19/09/2026.",
-        "created_at":  "2026-09-12T17:56:46.698+00:00"
-    },
-    {
-        "id":  "CRM-GAB-NEW-DERMATOTHAYLALUTTERBACH",
-        "name":  "@dermatothaylalutterbach",
-        "instagram":  "dermatothaylalutterbach",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-13",
-        "notes":  "CadÃªncia: Cadência 3 Dias\r\n\r\nHistÃ³rico: [24/08/2026]: Novo lead recebido via Instagram em\n\n[11/09/2026, 17:44:06 - IA ChatGPT (Gabriel Lima)]: 11/09/2026 — já falei hoje pelo Instagram. Foram feitas tentativas de ligação e enviada mensagem de follow-up perguntando se desistiu dos móveis ou adiou a compra. Lead veio de conversa comercial iniciada após perguntar sobre opções de entrega.\n\n[12/09/2026, 14:57 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 13/09/2026.",
-        "created_at":  "2026-09-12T17:57:11.575+00:00"
-    },
-    {
-        "id":  "CRM-GAB-6801",
-        "name":  "Luzirene L. Santos",
-        "instagram":  "",
-        "phone":  "",
-        "city":  "Instagram/An",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "frio",
-        "priority":  "BAIXA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-13",
-        "notes":  "CadÃªncia: Contextual\r\n\r\nHistÃ³rico: Origem Instagram/Anuncio (Ceara). Consultou sofas  [Histórico Antigo]: [24/08/2026]: Consultou sofas de R$ 15k a 18k. Elogiou (\u0027Top mesmo\u0027),\n\n[12/09/2026, 15:12 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 13/09/2026.",
-        "created_at":  "2026-09-12T18:12:09.93+00:00"
-    },
-    {
-        "id":  "CRM-GAB-NEIDEISAAC-20260907",
-        "name":  "Neide Isaac (@neide.isaac)",
-        "instagram":  "neide.isaac",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-13",
-        "notes":  "Lead NOVO confirmado por Gabriel em 07/09/2026.\n\n[12/09/2026, 15:12 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 13/09/2026.",
-        "created_at":  "2026-09-12T18:12:18.274+00:00"
-    },
-    {
-        "id":  "lead-1789047429676-nz0oj",
-        "name":  "Marilene Durães",
-        "instagram":  "marilenegduraes",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Móveis Externos",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[10/09/2026, 10:37:09 - IA ChatGPT (Gabriel Lima)]: Lead captado pelo Instagram via resposta a anúncio em 10/09/2026. Cliente pediu consulta de preço de produto. Gabriel se apresentou e realizou 1 ligação de áudio entre 10:31 e 10:34. Na ligação, Marilene informou que ainda está pesquisando e achou alto o valor de aproximadamente R$ 49.000 por um jogo de sofá. Após a ligação, Gabriel enviou vídeos de duas peças à pronta entrega e informou condição de R$ 19.000 cada. Contabilizar 1 ligação na rotina diária. Objeção principal: preço / comparação de mercado. Ainda faltam ambiente, medidas, composição desejada, prazo de compra e faixa de investimento. Próximo passo: investigar a referência de preço dela e montar alternativa de composição com melhor encaixe de orçamento, sem entrar em desconto prematuro.\n\n[10/09/2026, 10:37:24 - IA ChatGPT (Gabriel Lima)]: MÉTRICAS DO DIA: contabilizar este atendimento como 1 ligação realizada e 1 ligação de qualidade/qualificada, pois na conversa foram obtidas informações comerciais relevantes: cliente está em fase de pesquisa e apresentou objeção clara de preço (considerou aproximadamente R$ 49 mil alto para o jogo de sofá). Não contabilizar como remarketing neste momento, pois é atendimento de lead novo vindo de anúncio.",
-        "created_at":  "2026-09-10T13:37:24.794+00:00"
-    },
-    {
-        "id":  "CRM-GAB-ROSILENE123ESPIRITO",
-        "name":  "Rosilene (@rosilene123espirito)",
-        "instagram":  "rosilene123espirito",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Internacional",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-13",
-        "notes":  "CadÃªncia: Cadência 3 Dias: D1 em 05/09/2026 se não responder, D2 em 06/09 e D3 em 07/09.\r\n\r\nHistÃ³rico: Lead novo Instagram Dluxo em 04/09/2026. Perfil @rosilene123espirito. Origem: interação com publicação/anúncio do perfil d_luxo.imports. Gabriel se apresentou como especialista em móveis de alto padrão, realizou tentativa/ligação de áudio às 08:50 e apresentou as 4 linhas: Premium, Standard, Nova Linha Internacional e Linha Interna Dubai de Alto Padrão. Também respondeu à referência visual com áudio de 14s. Não há resposta textual visível da cliente após a apresentação nos prints fornecidos. Produto específico, telefone, cidade/UF, medidas, prazo, orçamento e decisores ainda não informados. PIFF-PAFF: Posicionamento + Filtro inicial. Temperatura estimada 50/100; probabilidade 15% até qualificação. Posse da bola: CLIENT.\n\n[11/09/2026, 15:32 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 12/09/2026.\n\n[12/09/2026, 15:12 - Contato Instagram]: Chamada/conversa realizada via Direct hoje. Próximo contato programado para 13/09/2026.",
-        "created_at":  "2026-09-12T18:12:23.578+00:00"
-    },
-    {
-        "id":  "lead-1789048249327-h9hbh",
-        "name":  "Érica",
-        "instagram":  "ericamsmix",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Móveis Externos",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[10/09/2026, 10:50:49 - IA ChatGPT (Gabriel Lima)]: Lead captado pelo Instagram via resposta a anúncio em 10/09/2026. Cliente interagiu com conteúdo de conjunto para área externa. Gabriel se apresentou como especialista em móveis de alto padrão, realizou 1 ligação de áudio entre 10:42 e 10:43, respondeu ao conteúdo enviado e apresentou as 4 linhas comerciais: Premium, Standard, Internacional e Interna Dubai de alto padrão, perguntando qual linha desperta interesse. Contabilizar 1 ligação na rotina diária. Não contabilizar como ligação de qualidade neste momento, pois não há informação suficiente de diagnóstico obtida na chamada. Não contabilizar como remarketing, pois é atendimento de lead novo vindo de anúncio. Próximo passo: descobrir qual ambiente ela quer mobiliar e qual linha/faixa de investimento faz mais sentido.",
-        "created_at":  "2026-09-10T13:50:49.326+00:00"
-    },
-    {
-        "id":  "lead-1789049090062-070ra",
-        "name":  "Wander Cunha Moreira",
-        "instagram":  "wandercunhamoreira",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Móveis Externos",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[10/09/2026, 11:04:50 - IA ChatGPT (Gabriel Lima)]: Lead captado pelo Instagram via resposta a anúncio. Em 10/09/2026, Gabriel realizou 1 ligação de áudio entre 11:01 e 11:02, respondeu ao conteúdo do anúncio e apresentou as 4 linhas comerciais: Premium, Standard, Internacional e Interna Dubai de alto padrão, perguntando qual linha desperta interesse. Contabilizar 1 ligação na rotina diária. Não contabilizar como ligação de qualidade, pois não há informação comercial nova suficiente registrada a partir da chamada. Não contabilizar como remarketing, pois é atendimento de lead novo vindo de anúncio. Próximo passo: descobrir qual ambiente ele quer mobiliar e a faixa de investimento para direcionar a linha correta.",
-        "created_at":  "2026-09-10T14:04:50.062+00:00"
-    },
-    {
-        "id":  "insta-1789185782935-uc75x",
-        "name":  "Alessandra Steigleder Guarda",
-        "instagram":  "alessandra_guarda",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "quente",
-        "priority":  "ALTA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[12/09/2026, 01:03:02 - IA ChatGPT (Gabriel Lima)]: [Canal: Instagram] Interessada no valor do conjunto\n\n[12/09/2026, 07:17:36 - IA ChatGPT (Gabriel Lima)]: [Canal: Instagram] Interessada no valor do conjunto\n\n[12/09/2026, 07:28:45 - IA ChatGPT Piff-Paff (Gabriel Lima)]: [Canal: Instagram] Interessada no valor do conjunto\n\n[12/09/2026, 07:42:23 - IA ChatGPT Piff-Paff (Gabriel Lima)]: [Canal: Instagram] Interessada no valor do conjunto\n\n[12/09/2026, 09:34:13 - IA ChatGPT Piff-Paff (Gabriel Lima)]: [Canal: Instagram] Interessada no valor do conjunto",
-        "created_at":  "2026-09-12T12:34:13.878+00:00"
-    },
-    {
-        "id":  "lead-1789050078808-ibgf1",
-        "name":  "Ney Ortis",
-        "instagram":  "neyortis",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Móveis Externos",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[10/09/2026, 11:21:18 - IA ChatGPT (Gabriel Lima)]: Lead captado pelo Instagram via resposta a anúncio em 10/09/2026. Cliente perguntou às 11:07: \u0027Quais são suas opções de entrega?\u0027. Gabriel se apresentou como especialista em móveis de alto padrão, realizou 1 ligação de áudio entre 11:14 e 11:14, enviou imagem de conjunto externo, áudio e apresentou as 4 linhas comerciais: Premium, Standard, Internacional e Interna Dubai de alto padrão. Contabilizar 1 ligação na rotina diária. Não contabilizar como ligação de qualidade, pois não há diagnóstico comercial novo suficiente registrado a partir da chamada. Não contabilizar como remarketing, pois é lead novo vindo de anúncio. Próximo passo: responder objetivamente a dúvida sobre entrega e pedir cidade/CEP antes de aprofundar em linha/preço.",
-        "created_at":  "2026-09-10T14:21:18.808+00:00"
-    },
-    {
-        "id":  "lead-1789087272237-00pdn",
-        "name":  "Tiago Cymbalista",
-        "instagram":  "cymbalistatiago",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Instagram / Anúncio",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[10/09/2026, 21:41:12 - IA ChatGPT (Gabriel Lima)]: Lead captado via Instagram. Pergunta inicial em 10/09/2026: \u0027Quais são suas opções de entrega?\u0027. Gabriel se apresentou como especialista em móveis de alto padrão, respondeu em áudio e enviou explicação das 4 linhas: Premium, Standard, Nova Linha Internacional e Linha Interna Dubai de Alto Padrão, perguntando qual linha despertava mais interesse. Próxima melhor ação: responder objetivamente sobre modalidades/prazos/regiões de entrega e fazer uma única pergunta de qualificação sobre cidade/CEP ou destino da entrega. Evitar desviar novamente para escolha de linha antes de sanar a dúvida logística.\n\n[10/09/2026, 21:54:38 - IA ChatGPT (Gabriel Lima)]: Atualização 10/09/2026 21:54: após apresentar as 4 linhas, Gabriel enviou a pergunta \u0027Você já tem o espaço pronto? Ou está em obra?\u0027. Mensagem visualizada há cerca de 12 minutos, sem resposta até o momento. A dúvida inicial do lead continua sendo sobre opções de entrega. Próxima melhor ação: evitar nova mensagem imediata; aguardar resposta. Se não houver retorno, retomar com mensagem curta respondendo diretamente a logística e pedindo cidade/CEP.",
-        "created_at":  "2026-09-11T00:54:38.965+00:00"
-    },
-    {
-        "id":  "lead-1789093587119-0nkow",
-        "name":  "Sintia de Souza Philot",
-        "instagram":  "sintiadesouzaphilot",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Instagram / Reativação de lead",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[10/09/2026, 23:26:27 - IA ChatGPT (Gabriel Lima)]: Lead identificada em conversa do Instagram em 10/09/2026. Não havia cadastro no CRM. Histórico visível: em 16/08/2021 recebeu oferta de conjunto com estrutura em alumínio, almofadas em couro náutico, corda náutica e madeira cumaru por R$ 12.900; posteriormente recebeu opção de conjunto de sofá em alumínio, aquablock/couro náutico e cordas náuticas por R$ 13.890. Em 06/07/2022 recebeu oferta de balanço em tricô náutico com estofados em aquablock/couro náutico por R$ 8.990. Também recebeu proposta de conjunto em madeira de lei e corda náutica: sofá 150x90 R$ 12.400, poltrona 80x90 R$ 6.800/un, centro 80x60 R$ 3.800, conjunto R$ 29.800. Em 10/09/2026 houve nova interação/resposta a anúncio e Gabriel enviou apresentação profissional e as 4 linhas atuais (Premium, Standard, Nova Linha Internacional e Linha Interna Dubai de Alto Padrão), perguntando qual linha interessa. Perfil com histórico antigo e nova reativação; tratar como lead reativada, evitar repetir abordagem genérica e usar o histórico para condução personalizada.",
-        "created_at":  "2026-09-11T02:26:27.119+00:00"
-    },
-    {
-        "id":  "lead-1789129566912-5fbb2",
-        "name":  "Priscila Costa",
-        "instagram":  "pricarla9",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "quente",
-        "priority":  "ALTA",
-        "commercial_line":  "Instagram / Resposta de anúncio",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[11/09/2026, 09:26:06 - IA ChatGPT (Gabriel Lima)]: Lead captada pelo Instagram via resposta de anúncio. Pediu consulta de preço de um produto. Gabriel se apresentou como especialista em móveis de alto padrão, enviou apresentação das 4 linhas e tentou ligação de áudio às 09:24. Próxima ação: identificar a peça de interesse, medidas do ambiente e então indicar linha/valor.",
-        "created_at":  "2026-09-11T12:26:06.912+00:00"
-    },
-    {
-        "id":  "insta-1789134118180-rpgu6",
-        "name":  "Ana Rita Rita",
-        "instagram":  "anarita6889",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "quente",
-        "priority":  "ALTA",
-        "commercial_line":  "Leads Instagram",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[11/09/2026, 10:41:58 - IA ChatGPT (Gabriel Lima)]: Lead captada pelo Instagram via resposta de anúncio. Perguntou o valor do conjunto mostrado no anúncio. Gabriel se apresentou como especialista em móveis de alto padrão, tentou ligação de áudio às 10:37/10:38 e enviou apresentação das linhas. Próxima ação: identificar exatamente o conjunto do anúncio, confirmar cidade/CEP e medidas do espaço; então informar valor e conduzir para proposta.\n\n[11/09/2026, 18:08:48 - IA ChatGPT (Gabriel Lima)]: 11/09/2026 — já falei hoje pelo Instagram. Lead veio de resposta a anúncio e perguntou o valor do conjunto. Foram feitas tentativas de ligação e mensagem de follow-up perguntando se desistiu da compra. Manter como lead novo e quente até nova resposta.",
-        "created_at":  "2026-09-11T21:08:48.097+00:00"
-    },
-    {
-        "id":  "lead-1788980693732-bpjut",
-        "name":  "Elisangela Cruz",
-        "instagram":  "elisangelaocruz",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "abordagem",
-        "stage_label":  "Abordagem Inicial",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "ALTA",
-        "commercial_line":  "Instagram / Linha a definir",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[09/09/2026, 16:04:53 - IA ChatGPT (Gabriel Lima)]: Lead identificado via Instagram em 09/09/2026. Perguntou: \u0027Quais são as opções de entrega?\u0027. Gabriel apresentou as 4 linhas: Premium, Standard, Internacional e Interna Dubai de Alto Padrão e perguntou qual linha interessa. Ainda não informado: cidade/UF, produto/ambiente, medidas, orçamento, prazo e decisores. Etapa PIFF-PAFF: Investigação/Filtro. Posse da bola: CLIENT. Próxima ação: aguardar resposta; se escolher uma linha, qualificar cidade/UF e peças/ambiente desejados. Follow-up D+1 se não responder.",
-        "created_at":  "2026-09-09T19:04:53.732+00:00"
-    },
-    {
-        "id":  "lead-1789130544628-dj2mg",
-        "name":  "Jacqueline Crepaldi Souza",
-        "instagram":  "jacquelinecrepaldisouza",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "quente",
-        "priority":  "ALTA",
-        "commercial_line":  "Leads Instagram",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "[11/09/2026, 09:42:24 - IA ChatGPT (Gabriel Lima)]: Lead captada pelo Instagram. Perguntou: \u0027Como faço para encomendar?\u0027 em resposta a conteúdo da Caribe Móveis. Gabriel se apresentou como especialista em móveis de alto padrão, tentou ligação de áudio às 09:39/09:40, enviou áudio e apresentou as 4 linhas. Próxima ação: identificar qual peça/conjunto deseja, medidas do ambiente, cidade de entrega e preferência de linha; conduzir para orçamento.",
-        "created_at":  "2026-09-11T12:48:49.005+00:00"
-    },
-    {
-        "id":  "CRM-GAB-0063",
-        "name":  "Leide Souza (@leide.neu9840)",
-        "instagram":  "leide.neu9840",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-07",
-        "notes":  "CadÃªncia: Cadência 3 Dias\n\nHistÃ³rico: Aguardando resposta sobre espa?o pronto ou em cons",
-        "created_at":  "2026-09-07T14:52:34Z"
-    },
-    {
-        "id":  "PEND-001",
-        "name":  "Paula GuimarÃ£es (@paula.guine)",
-        "instagram":  "paula.guine",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-07",
-        "notes":  "CadÃªncia: Cadência 3 Dias\n\nHistÃ³rico: Aguardando rea??o ? campanha.",
-        "created_at":  "2026-09-07T14:52:34Z"
-    },
-    {
-        "id":  "CRM-GAB-DUDU-CLIENTE-INSTAGRAM",
-        "name":  "Dudu Cliente Instagram",
-        "instagram":  "",
-        "phone":  "",
-        "city":  "Instagram/Wh",
-        "stage":  "conversa",
-        "stage_label":  "Em Conversa",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "frio",
-        "priority":  "BAIXA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-04",
-        "notes":  "CadÃªncia: Nutrição longa: reavaliar em 30 a 60 dias apenas se houver gancho real de nova categoria para a área gourmet; caso contrário, sem follow-up ativo.\n\nHistÃ³rico: Histórico completo do ZIP lido em 04/09/2026. Origem Instagram/WhatsApp. Dudu é de Sabará/MG; procurava 2 espreguiçadeiras para a área de piscina, preferencialmente de corda náutica. Área gourmet já estava montada e faltavam apenas as espreguiçadeiras. Em 24/08 Gabriel apresentou diversos modelos, pronta entrega e catálogo; Dudu elogiou o atendimento e disse que analisaria. Em 28/08, após tentativa de ligação de 1 segundo e retomada, Dudu informou: \u0027Acabou que minha esposa ganhou as espreguiçadeiras de presente da mãe dela\u0027. A necessidade original, portanto, foi encerrada sem venda para a Caribe. Dudu agradeceu bastante pelo atendimento e deixou relacionamento positivo. PIFF-PAFF: negociação encerrada / Fidelização e possível indicação futura. Temperatura atual 20/100; probabilidade imediata 0–5% (inferência). Posse da bola: NONE para a compra original. Telefone não aparece no conteúdo textual exportado, por isso não foi inventado.",
-        "created_at":  "2026-09-07T14:52:34Z"
-    },
-    {
-        "id":  "insta-gab-002",
-        "name":  "Carla GuimarÃ£es",
-        "instagram":  "carlaguimaraes_decor",
-        "phone":  "",
-        "city":  "Belo Horizonte - MG",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  42000,
-        "temperature":  "quente",
-        "priority":  "ALTA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Chamar Hoje",
-        "followup_date":  "2026-09-24",
-        "notes":  "Perguntou valores e prazos da chaise Tulum no direct do Instagram.",
-        "created_at":  "2026-09-24T11:00:43.154Z"
-    },
-    {
-        "id":  "CRM-GAB-0035-dup2",
-        "name":  "Marinês Cavalin Pivetta (@mari_pivetta)",
-        "instagram":  "mari_pivetta",
-        "phone":  "",
-        "city":  "Mato Grosso",
-        "stage":  "conversa",
-        "stage_label":  "Em Conversa",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Standard",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-14",
-        "notes":  "Conjunto sofá 3L + 2 poltronas + mesa centro para MT.\n\nDetalhes: Áudio e tentativa de ligação enviados.",
-        "created_at":  "2026-09-07T13:31:31Z"
-    },
-    {
-        "id":  "CRM-GAB-0036-dup3",
-        "name":  "Paula Braga (@paulasbraga)",
-        "instagram":  "paulasbraga",
-        "phone":  "",
-        "city":  "Curitiba / Região",
-        "stage":  "conversa",
-        "stage_label":  "Em Conversa",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Standard",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-14",
-        "notes":  "Sofá 2 lugares + puff para sol e chuva.\n\nDetalhes: Reunião impediu ligação.",
-        "created_at":  "2026-09-07T13:31:31Z"
-    },
-    {
-        "id":  "CRM-GAB-0059-dup4",
-        "name":  "Cicília Amorim Andrade (@ciciliapaes)",
-        "instagram":  "ciciliapaes",
-        "phone":  "",
-        "city":  "Curitiba / Região",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "frio",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-10",
-        "notes":  "Tentativa de ligação, apresentação e imagem enviadas.\n\nDetalhes: Primeiro contato IG.",
-        "created_at":  "2026-09-07T13:31:31Z"
-    },
-    {
-        "id":  "CRM-GAB-0063-dup5",
-        "name":  "Leide Souza (@leide.neu9840)",
-        "instagram":  "leide.neu9840",
-        "phone":  "",
-        "city":  "Curitiba / Região",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "frio",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Standard",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-10",
-        "notes":  "Sofá para área externa.\n\nDetalhes: Aguardando resposta sobre espaço pronto ou em construção.",
-        "created_at":  "2026-09-07T13:31:31Z"
-    },
-    {
-        "id":  "CRM-GAB-0116-dup6",
-        "name":  "Carol (@carolroesner)",
-        "instagram":  "carolroesner",
-        "phone":  "",
-        "city":  "Não informado",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "frio",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-10",
-        "notes":  "Lead novo via direct do Instagram.\n\nDetalhes: Qualificar espaço e interesse.",
-        "created_at":  "2026-09-07T13:31:31Z"
-    },
-    {
-        "id":  "PEND-001-dup7",
-        "name":  "Paula Guimarães (@paula.guine)",
-        "instagram":  "paula.guine",
-        "phone":  "",
-        "city":  "Não informada",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "frio",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Standard",
-        "followup_status":  "Ativo",
-        "followup_date":  "2026-09-10",
-        "notes":  "Campanha de reativação enviada.\n\nDetalhes: Aguardando reação à campanha.",
-        "created_at":  "2026-09-07T13:31:31Z"
-    },
-    {
-        "id":  "CRM-GAB-DUDU-CLIENTE-INSTAGRAM-dup8",
-        "name":  "Lead 554",
-        "instagram":  "",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "Lead histÃ³rico preservado.",
-        "created_at":  "2026-09-09T17:00:00.000Z"
-    },
-    {
-        "id":  "CRM-GAB-0035-dup9",
-        "name":  "Marin�s Cavalin Pivetta (@mari_pivetta)",
-        "instagram":  "mari_pivetta",
-        "phone":  "",
-        "city":  "Mato Grosso",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "Lead histÃ³rico preservado.",
-        "created_at":  "2026-09-09T17:00:00.000Z"
-    },
-    {
-        "id":  "CRM-GAB-0059-dup10",
-        "name":  "Cic�lia Amorim Andrade (@ciciliapaes)",
-        "instagram":  "ciciliapaes",
-        "phone":  "",
-        "city":  "Curitiba / Regi�o",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "Lead histÃ³rico preservado.",
-        "created_at":  "2026-09-09T17:00:00.000Z"
-    },
-    {
-        "id":  "PEND-001-dup11",
-        "name":  "Paula Guimar�es (@paula.guine)",
-        "instagram":  "paula.guine",
-        "phone":  "",
-        "city":  "N�o informada",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "Lead histÃ³rico preservado.",
-        "created_at":  "2026-09-09T17:00:00.000Z"
-    },
-    {
-        "id":  "CRM-GAB-NEW-DERMATOTHAYLALUTTERBACH-dup12",
-        "name":  "@dermatothaylalutterbach",
-        "instagram":  "dermatothaylalutterbach",
-        "phone":  "",
-        "city":  "Brasil",
-        "stage":  "novo",
-        "stage_label":  "Novo Lead",
-        "channel":  "instagram",
-        "pipeline":  "instagram",
-        "value":  0,
-        "temperature":  "morno",
-        "priority":  "MEDIA",
-        "commercial_line":  "Linha Premium",
-        "followup_status":  "Ativo",
-        "followup_date":  null,
-        "notes":  "Lead histÃ³rico preservado.",
-        "created_at":  "2026-09-09T17:00:00.000Z"
-    }
-];
+// Funil de Instagram removido: operação 100% via WhatsApp comercial
+const DEFAULT_INSTAGRAM_LEADS_GABRIEL = [];
 
 const DEFAULT_QUARANTINE_LEADS = [
   {
@@ -1372,8 +354,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://hqqzumdscdjleaedguzh.supabase.co').replace(/\/$/, '');
-    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_4jxc0p-L34exKc-z3ws2CQ_YH0F_DJ8';
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://ukuaujxvdziiaxxuuidw.supabase.co').replace(/\/$/, '');
+    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
     const authToken = await getAuthToken(supabaseUrl, publishableKey);
 
     const supabaseHeaders = {
@@ -1422,6 +404,7 @@ export default async function handler(req, res) {
       // Detecção estrita de Lead no Funil Instagram
       function isInstagramCard(l) {
         if (!l) return false;
+        if (cleanPhone(l.phone)) return false; // Se possui telefone, pertence ao WhatsApp
         const notesStr = String(l.notes || '').toLowerCase();
         if (
           notesStr.includes('transição de funil') ||
@@ -1435,11 +418,9 @@ export default async function handler(req, res) {
         if (l.channel === 'whatsapp' || l.pipeline === 'whatsapp') return false;
         if (l.channel === 'instagram' || l.pipeline === 'instagram') return true;
         const idLower = String(l.id || '').toLowerCase();
-        if (idLower.startsWith('insta-') || idLower.startsWith('crm-gab-')) return true;
-        const st = String(l.stage || '').toLowerCase().trim();
-        if (['novo', 'abordagem', 'conversa'].includes(st)) return true;
+        if (idLower.startsWith('insta-')) return true;
         const cInsta = cleanInstagram(l.instagram);
-        if (cInsta.length > 1 && !cleanPhone(l.phone)) return true;
+        if (cInsta.length > 1) return true;
         if (notesStr.includes('[canal: instagram]') || notesStr.includes('direct') || notesStr.includes('instagram direct')) return true;
         return false;
       }
@@ -1640,15 +621,19 @@ export default async function handler(req, res) {
         }
         if (!resultLead) resultLead = { ...existingWhatsAppLead, ...mergePayload };
 
-        // Remove o card antigo do Instagram do Supabase se existia com ID diferente
+        // Aplica Soft Delete no card antigo do Instagram se existia com ID diferente
         if (sourceLead && sourceLead.id !== existingWhatsAppLead.id && dbLeads.some(l => l.id === sourceLead.id)) {
           try {
-            await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(sourceLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
-              method: 'DELETE',
-              headers: supabaseHeaders
+            await performSoftDeleteLead({
+              supabaseUrl,
+              supabaseHeaders,
+              lead: sourceLead,
+              actorUserId: SELLER_USER_ID,
+              actorName: SELLER_NAME,
+              req
             });
           } catch (e) {
-            console.warn('Erro ao remover lead antigo do Instagram após merge:', e);
+            console.warn('Erro ao aplicar soft delete no lead antigo do Instagram após merge:', e);
           }
         }
 
@@ -1872,16 +857,25 @@ export default async function handler(req, res) {
 
       const dbLeads = (await leadsRes.json()) || [];
 
-      // Mescla com os leads oficiais de Instagram caso ainda não estejam gravados no Supabase
+      // Mescla com os leads oficiais de Instagram caso ainda não estejam gravados no Supabase e não tenham sido excluídos
+      const { state: govState } = await loadGovernanceState();
       const existingIds = new Set(dbLeads.map(l => l.id));
       const existingInstas = new Set(dbLeads.map(l => (l.instagram || '').toLowerCase().replace(/^@/, '')));
 
-      const mergedLeads = [...dbLeads];
+      const rawMergedLeads = [...dbLeads];
       DEFAULT_INSTAGRAM_LEADS_GABRIEL.forEach(instaLead => {
         const cleanInsta = (instaLead.instagram || '').toLowerCase().replace(/^@/, '');
-        if (!existingIds.has(instaLead.id) && !existingInstas.has(cleanInsta)) {
-          mergedLeads.push(instaLead);
+        const isDeleted = Boolean(govState?.soft_deleted_records?.[`lead:${instaLead.id}`]);
+        if (!isDeleted && !existingIds.has(instaLead.id) && !existingInstas.has(cleanInsta)) {
+          rawMergedLeads.push(instaLead);
         }
+      });
+
+      const mergedLeads = filterActiveRecords(rawMergedLeads, {
+        includeDeleted: query.include_deleted === 'true',
+        isSuperAdmin: query.role === 'super_admin',
+        govState,
+        resourceType: 'lead'
       });
 
       const requestedChannel = (query.channel || body.channel || query.pipeline || body.pipeline || '').toLowerCase().trim();
@@ -1924,6 +918,7 @@ export default async function handler(req, res) {
       const isCountOnly = action === 'count' || action === 'contar' || action === 'total' || query.count === 'true';
 
       const compactLead = (l) => ({
+        ...l,
         id: l.id,
         name: l.name,
         phone: l.phone,
@@ -1937,8 +932,10 @@ export default async function handler(req, res) {
         commercial_line: l.commercial_line,
         followup_status: l.followup_status || 'Ativo',
         followup_date: l.followup_date,
+        last_interaction: l.last_interaction,
+        data_ultima_interacao: l.data_ultima_interacao || l.last_interaction,
         channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
-        notes: l.notes ? (l.notes.length > 200 ? l.notes.substring(0, 200) + '...' : l.notes) : ''
+        notes: l.notes || ''
       });
 
       if (isQuarantineQuery) {
@@ -1978,11 +975,6 @@ export default async function handler(req, res) {
         );
       }
 
-      // Base oficial consolidada sincronizada com a tela do CRM do Gabriel (606 clientes)
-      const CRM_SCREEN_TOTAL = 606;
-      const CRM_SCREEN_PIPELINE = 3353743;
-      const CRM_SCREEN_STAGES = { novos: 436, investigacao: 78, projetos: 34, proposta: 28, fechamento: 9, concluidas: 21 };
-
       const isFiltered = Boolean(stageFilter || searchFilter || tempFilter || isInstagramQuery);
       const leadsToDisplay = isFiltered ? filteredLeads : mergedLeads;
       const reqLimit = parseInt(query.limit || body.limit, 10);
@@ -1990,9 +982,11 @@ export default async function handler(req, res) {
       const defaultLimit = (stageFilter || searchFilter) ? 15 : 10;
       const limit = Math.min(reqLimit || defaultLimit, maxLimit);
 
-      const effectiveTotalLeads = isFiltered ? filteredLeads.length : CRM_SCREEN_TOTAL;
-      const effectivePipelineValue = isFiltered ? filteredLeads.reduce((a, c) => a + (Number(c.value) || 0), 0) : CRM_SCREEN_PIPELINE;
-      const effectiveStages = isFiltered ? stagesSummary : CRM_SCREEN_STAGES;
+      const effectiveTotalLeads = isFiltered ? filteredLeads.length : mergedLeads.length;
+      const effectivePipelineValue = isFiltered
+        ? filteredLeads.reduce((a, c) => a + (Number(c.value) || 0), 0)
+        : mergedLeads.reduce((a, c) => a + (Number(c.value) || 0), 0);
+      const effectiveStages = stagesSummary;
 
       const formattedStages = Object.entries(effectiveStages).map(([s, c]) => `${s}: ${c}`).join(', ');
       const formattedPipeline = formatBRL(effectivePipelineValue);
@@ -2059,58 +1053,98 @@ export default async function handler(req, res) {
 
     let targetStage = stage || stage_instagram || (isInstagram ? 'novos' : 'novos');
     const stageLower = String(targetStage).toLowerCase().trim();
-    if (stageLower === 'novo') targetStage = 'novos';
-    else if (stageLower === 'abordagem') targetStage = 'investigacao';
-    else if (stageLower === 'conversa') targetStage = 'projetos';
+    if (stageLower === 'novo' || stageLower === 'novos') targetStage = 'novos';
+    else if (['abordagem', 'investigacao', 'investigação', 'qualificacao', 'qualificação', 'diagnostico'].includes(stageLower)) targetStage = 'investigacao';
+    else if (['conversa', 'projetos', 'projeto'].includes(stageLower)) targetStage = 'projetos';
+    else if (['proposta', 'orcamento', 'orçamento'].includes(stageLower)) targetStage = 'proposta';
+    else if (['fechamento', 'fechando'].includes(stageLower)) targetStage = 'fechamento';
+    else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(stageLower)) targetStage = 'concluidas';
 
     let existingLead = null;
     if (id) {
-      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*`, { headers: supabaseHeaders });
-      if (searchRes.ok) {
-        const found = await searchRes.json();
-        if (Array.isArray(found) && found.length > 0) existingLead = found[0];
-      }
-    }
-    if (!existingLead && normalizedPhone) {
-      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?phone=eq.${encodeURIComponent(normalizedPhone)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*`, { headers: supabaseHeaders });
-      if (searchRes.ok) {
-        const found = await searchRes.json();
-        if (Array.isArray(found) && found.length > 0) existingLead = found[0];
-      }
-    }
-    if (!existingLead && normalizedInsta) {
-      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?instagram=ilike.%25${encodeURIComponent(normalizedInsta)}%25&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*`, { headers: supabaseHeaders });
-      if (searchRes.ok) {
-        const found = await searchRes.json();
-        if (Array.isArray(found) && found.length > 0) existingLead = found[0];
-      }
-    }
-    if (!existingLead && name && String(name).trim().length >= 3) {
-      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?name=ilike.%${encodeURIComponent(String(name).trim())}%&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*&limit=1`, { headers: supabaseHeaders });
+      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(id)}&select=*`, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const found = await searchRes.json();
         if (Array.isArray(found) && found.length > 0) existingLead = found[0];
       }
     }
 
-    // EXCLUIR
+    if (!existingLead && normalizedPhone) {
+      const pDigits = normalizedPhone.replace(/\D/g, '');
+      const last8 = pDigits.slice(-8);
+      const variants = [pDigits];
+      if (pDigits.startsWith('55')) variants.push(pDigits.slice(2));
+      else variants.push(`55${pDigits}`);
+      if (last8.length === 8) variants.push(last8);
+
+      const orParts = variants.map(v => `phone.eq.${v},phone.ilike.*${v}*`).join(',');
+      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?or=(${orParts})&select=*&limit=1`, { headers: supabaseHeaders });
+      if (searchRes.ok) {
+        const found = await searchRes.json();
+        if (Array.isArray(found) && found.length > 0) existingLead = found[0];
+      }
+    }
+
+    if (!existingLead && normalizedInsta) {
+      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?instagram=ilike.%25${encodeURIComponent(normalizedInsta)}%25&select=*&limit=1`, { headers: supabaseHeaders });
+      if (searchRes.ok) {
+        const found = await searchRes.json();
+        if (Array.isArray(found) && found.length > 0) existingLead = found[0];
+      }
+    }
+
+    if (!existingLead && name && String(name).trim().length >= 3) {
+      const searchRes = await fetch(`${supabaseUrl}/rest/v1/leads?name=ilike.%${encodeURIComponent(String(name).trim())}%&select=*&limit=1`, { headers: supabaseHeaders });
+      if (searchRes.ok) {
+        const found = await searchRes.json();
+        if (Array.isArray(found) && found.length > 0) existingLead = found[0];
+      }
+    }
+
+    // EXCLUIR DEFINITIVO NO SUPABASE COM AUDITORIA DE GOVERNANÇA
     if (action === 'delete' || action === 'excluir') {
-      if (!existingLead) {
-        return res.status(404).json({ success: false, error: `Lead "${name || phone || id}" não foi encontrado na carteira de ${SELLER_NAME}.` });
+      const targetId = id || existingLead?.id;
+      const targetPhone = phone || existingLead?.phone;
+      const targetName = name || existingLead?.name || targetId;
+
+      if (!existingLead && !targetId && !targetPhone) {
+        return res.status(400).json({ success: false, error: `ID ou telefone do lead é obrigatório para exclusão.` });
       }
-      const delRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
-        method: 'DELETE',
-        headers: supabaseHeaders
+
+      // 1. Remove qualquer duplicata pelo ID
+      if (targetId) {
+        await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(targetId)}`, {
+          method: 'DELETE',
+          headers: supabaseHeaders
+        }).catch(() => {});
+      }
+
+      // 2. Remove pelo telefone se disponível (evita ressurreição por variação de formato)
+      if (targetPhone) {
+        const pDigits = cleanPhone(targetPhone);
+        const last8 = pDigits.slice(-8);
+        if (last8.length === 8) {
+          await fetch(`${supabaseUrl}/rest/v1/leads?phone=ilike.*${last8}*`, {
+            method: 'DELETE',
+            headers: supabaseHeaders
+          }).catch(() => {});
+        }
+      }
+
+      const softDeleted = await performSoftDeleteLead({
+        supabaseUrl,
+        supabaseHeaders,
+        lead: existingLead || { id: targetId, name: targetName, phone: targetPhone || '' },
+        actorUserId: SELLER_USER_ID,
+        actorName: SELLER_NAME,
+        req
       });
-      if (!delRes.ok) {
-        const errText = await delRes.text();
-        return res.status(500).json({ success: false, error: 'Erro ao excluir no Supabase', details: errText });
-      }
+
       return res.status(200).json({
         success: true,
-        action: 'delete',
-        message: `Lead "${existingLead.name}" excluído com sucesso do funil de ${SELLER_NAME}!`,
-        deleted_lead: existingLead
+        action: 'deleted',
+        message: `Lead "${targetName}" excluído definitivamente com sucesso do CRM e da nuvem!`,
+        deleted_lead: softDeleted
       });
     }
 
@@ -2150,7 +1184,10 @@ export default async function handler(req, res) {
 
     // Normalização segura de stage (PostgreSQL CHECK CONSTRAINT)
     const validStages = ['novos', 'investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas'];
-    payload.stage = validStages.includes(targetStage) ? targetStage : 'novos';
+    payload.stage = validStages.includes(targetStage) ? targetStage : (existingLead?.stage || 'novos');
+    if (payload.stage === 'concluidas') {
+      payload.etapa_kanban = 'Concluídas';
+    }
 
     if (value !== undefined && value !== null && !isNaN(Number(value))) payload.value = Number(value);
 
@@ -2206,16 +1243,25 @@ export default async function handler(req, res) {
 
     // Se o lead acabou de entrar e a data for hoje/passada (já que falou hoje), entra para o dia seguinte (+1 dia)
     const todayStr = formatYMD(new Date());
-    let targetFollowupDate = followup_date || cadence.followup_date;
-    if (!existingLead && targetFollowupDate <= todayStr) {
-      targetFollowupDate = addDays(1);
+    let targetFollowupDate;
+    if (followup_date === null || followup_date === '' || followup_status === 'Sem Follow-up') {
+      targetFollowupDate = null;
+    } else if (followup_date) {
+      targetFollowupDate = followup_date;
+    } else if (!existingLead) {
+      targetFollowupDate = cadence.followup_date;
+      if (targetFollowupDate <= todayStr) {
+        targetFollowupDate = addDays(1);
+      }
+    } else {
+      targetFollowupDate = existingLead.followup_date || null;
     }
     payload.followup_date = targetFollowupDate;
     // NOTA: NÃO enviar followup_status para o Supabase (coluna não existe na tabela leads)
 
     let resultData = null;
     if (existingLead) {
-      const updateRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
+      const updateRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}`, {
         method: 'PATCH',
         headers: supabaseHeaders,
         body: JSON.stringify(payload)
@@ -2227,6 +1273,21 @@ export default async function handler(req, res) {
       }
       const updated = await updateRes.json();
       resultData = Array.isArray(updated) ? updated[0] : updated;
+      if (existingLead.stage !== payload.stage) {
+        await recordAuditLog({
+          req,
+          user_id: SELLER_USER_ID,
+          action: 'LEAD_STATUS_CHANGE',
+          resource_type: 'lead',
+          resource_id: existingLead.id,
+          details: {
+            lead_name: existingLead.name,
+            previous_stage: existingLead.stage,
+            new_stage: payload.stage,
+            seller: SELLER_NAME
+          }
+        });
+      }
     } else {
       payload.id = id || (isInstagram ? `insta-${Date.now()}-${Math.random().toString(36).substring(2, 7)}` : `lead-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`);
       payload.name = payload.name || (normalizedPhone ? `Cliente (${normalizedPhone})` : (normalizedInsta ? `@${normalizedInsta}` : 'Novo Lead Instagram'));
@@ -2250,8 +1311,12 @@ export default async function handler(req, res) {
       if (!resultData) resultData = payload;
     }
 
+    const finalFollowupStatus = (targetFollowupDate === null) ? 'Sem Follow-up' : cadence.followup_status;
+    const finalFollowupReason = (targetFollowupDate === null) ? 'Sem follow-up programado.' : cadence.reason;
     const actionText = existingLead ? (stage ? 'reorganizado' : 'atualizado') : 'inserido';
-    const followupMsg = `Follow-up: ${payload.followup_date} (${cadence.followup_status}). ${cadence.reason}`;
+    const followupMsg = (targetFollowupDate === null)
+      ? 'Follow-up desmarcado (Sem Follow-up).'
+      : `Follow-up: ${payload.followup_date} (${finalFollowupStatus}). ${finalFollowupReason}`;
 
     return res.status(200).json({
       success: true,
@@ -2259,11 +1324,11 @@ export default async function handler(req, res) {
       channel: isInstagram ? 'instagram' : 'whatsapp',
       funnel: isInstagram ? 'Leads Instagram (Prospecção)' : 'Negociações WhatsApp (Fechamento)',
       followup_date: payload.followup_date,
-      followup_status: cadence.followup_status,
-      followup_reason: cadence.reason,
+      followup_status: finalFollowupStatus,
+      followup_reason: finalFollowupReason,
       message: `Lead "${resultData?.name}" ${actionText} com sucesso no funil ${isInstagram ? 'Leads Instagram' : 'Negociações WhatsApp'} de ${SELLER_NAME}! ${followupMsg}`,
       seller: SELLER_NAME,
-      lead: { ...resultData, followup_status: cadence.followup_status }
+      lead: { ...resultData, followup_status: finalFollowupStatus }
     });
   } catch (err) {
     console.error('Erro interno /api/gabriel:', err);
