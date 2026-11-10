@@ -555,14 +555,14 @@
         <!-- Metric Summary -->
         <div class="p-3.5 rounded-2xl bg-[#14212E] border border-white/5 space-y-2">
           <div class="text-xs text-slate-400 flex items-center justify-between">
-            <span>Pipeline Total</span>
+            <span>Pipeline em Negociação</span>
             <i class="ph-bold ph-chart-line-up text-emerald-400"></i>
           </div>
           <div id="sidebar-total-pipeline" class="text-xl font-heading font-extrabold text-[#FECA57]">
-            R$ 908.960
+            R$ 0
           </div>
           <div class="text-[11px] text-slate-400">
-            <span id="sidebar-hot-count" class="text-emerald-400 font-semibold">4 clientes</span> com temperatura Quente
+            <span id="sidebar-hot-count" class="text-emerald-400 font-semibold">0 clientes</span> com temperatura Quente
           </div>
         </div>
 
@@ -5455,10 +5455,11 @@
 
       // Filtra estritamente apenas contatos comerciais (exclui Funcionários e Fornecedores das métricas do Dono)
       const activeLeadsList = (Array.isArray(leads) ? leads : []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
+      const openLeads = activeLeadsList.filter(l => l.stage !== 'concluidas' && l.stage !== 'concluida');
       
-      // 1. Pipeline Total
-      const totalPipeline = activeLeadsList.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
-      const leadsCount = activeLeadsList.length;
+      // 1. Pipeline Total em Negociação
+      const totalPipeline = openLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+      const leadsCount = openLeads.length;
       const avgTicket = leadsCount > 0 ? (totalPipeline / leadsCount) : 0;
 
       const pipeEl = document.getElementById('edson-total-pipeline');
@@ -5840,92 +5841,62 @@
             const baseMap = new Map();
             const phoneMap = new Map();
 
-            // Mapeia por ID canônico e por todas as variantes de telefone (com/sem 55 e últimos 8 dígitos)
+            // Mapeia histórico da base estática para enriquecer notas caso a nuvem esteja sem histórico
             baseLeads.forEach(l => {
-              const item = { ...l };
-              if (isLeadMarkedConcluded(item, concludedSet)) {
-                item.stage = 'concluidas';
-              }
-              baseMap.set(String(l.id).toUpperCase(), item);
+              baseMap.set(String(l.id).toUpperCase(), l);
               const cleanP = cleanPhone(l.phone);
               if (cleanP) {
-                phoneMap.set(cleanP, l.id);
+                phoneMap.set(cleanP, l);
                 const last8 = cleanP.slice(-8);
-                if (last8.length === 8) phoneMap.set(last8, l.id);
-                if (cleanP.startsWith('55')) phoneMap.set(cleanP.slice(2), l.id);
-                else phoneMap.set(`55${cleanP}`, l.id);
+                if (last8.length === 8) phoneMap.set(last8, l);
               }
             });
 
-            // Atualiza leads existentes com notas ou status mais recentes do Supabase em nuvem
-            cloudWa.forEach(cL => {
-              if (isLeadDeleted(cL, deletedIds)) return;
+            // Se o Supabase retornou leads em nuvem (fonte de verdade oficial da operação):
+            if (cloudWa.length > 0) {
+              const consolidatedMap = new Map();
+              cloudWa.forEach(cL => {
+                if (isLeadDeleted(cL, deletedIds)) return;
 
-              const cId = String(cL.id || '').toUpperCase();
-              const cPhone = cleanPhone(cL.phone);
-              const cLast8 = cPhone.slice(-8);
+                const cId = String(cL.id || '').toUpperCase();
+                const cPhone = cleanPhone(cL.phone);
+                const cLast8 = cPhone.slice(-8);
 
-              let targetId = null;
-              if (baseMap.has(cId)) {
-                targetId = cId;
-              } else if (cPhone && phoneMap.has(cPhone)) {
-                targetId = phoneMap.get(cPhone);
-              } else if (cLast8.length === 8 && phoneMap.has(cLast8)) {
-                targetId = phoneMap.get(cLast8);
-              }
+                const bL = baseMap.get(cId) || (cPhone ? phoneMap.get(cPhone) : null) || (cLast8.length === 8 ? phoneMap.get(cLast8) : null);
 
-              if (targetId && baseMap.has(targetId)) {
-                const target = baseMap.get(targetId);
-                // Mescla notas com segurança (nunca perde histórico de ligações ou mensagens)
-                if (cL.notes && (!target.notes || cL.notes.length > target.notes.length)) {
-                  target.notes = cL.notes;
-                } else if (cL.notes && target.notes && !target.notes.includes(cL.notes.slice(0, 30))) {
-                  target.notes = `${target.notes}\n\n${cL.notes}`;
+                const item = { ...cL };
+                item.stage = normalizeKanbanStage(cL.stage);
+                item.value = (cL.value !== undefined && cL.value !== null && cL.value !== '') ? (Number(cL.value) || 0) : 0;
+
+                // Enriquece notas de histórico antigo se o Supabase não tiver notas
+                if (bL && bL.notes && (!item.notes || item.notes.length < 15)) {
+                  item.notes = bL.notes;
                 }
 
-                const cLStage = normalizeKanbanStage(cL.stage);
-                const isConcluded = target.stage === 'concluidas' || cLStage === 'concluidas' || isLeadMarkedConcluded(target, concludedSet) || isLeadMarkedConcluded(cL, concludedSet);
+                if (isLeadMarkedConcluded(item, concludedSet)) {
+                  item.stage = 'concluidas';
+                  markLeadConcluded(item.id, item.phone);
+                }
 
-                if (isConcluded) {
-                  target.stage = 'concluidas';
-                  markLeadConcluded(target.id, target.phone);
-                } else if (cLStage && cLStage !== 'novos') {
-                  target.stage = cLStage;
+                if (item.followup_date === '1970-01-01' || isFollowupRemoved(item)) {
+                  item.followup_disabled = true;
+                  item.followup_date = '1970-01-01';
+                  item.followup_status = 'Sem Follow-up';
                 }
-                if (cL.last_interaction) {
-                  target.last_interaction = cL.last_interaction;
-                }
-                if (cL.name && (!target.name || target.name.startsWith('Cliente') || target.name.startsWith('Você') || target.name.startsWith('Lead WhatsApp'))) {
-                  target.name = cL.name;
-                }
-                if (cL.followup_date === '1970-01-01' || isFollowupRemoved(cL)) {
-                  target.followup_disabled = true;
-                  target.followup_date = '1970-01-01';
-                  target.followup_status = 'Sem Follow-up';
-                } else {
-                  target.followup_date = cL.followup_date || target.followup_date || null;
-                  target.followup_status = target.followup_date
-                    ? (target.followup_date === formatYMD(new Date()) ? 'Chamar Hoje' : (target.followup_date < formatYMD(new Date()) ? 'Atrasado' : 'Agendado'))
-                    : (target.followup_status || 'Sem Follow-up');
-                }
-              } else if (cL.id) {
-                // Lead genuinamente novo vindo do WhatsApp/Supabase: preserva sem descartar se não estiver excluído!
-                if (cL.followup_date === '1970-01-01' || isFollowupRemoved(cL)) {
-                  cL.followup_disabled = true;
-                  cL.followup_date = '1970-01-01';
-                  cL.followup_status = 'Sem Follow-up';
-                }
-                baseMap.set(cId, { ...cL });
-                if (cPhone) {
-                  phoneMap.set(cPhone, cL.id);
-                  if (cLast8.length === 8) phoneMap.set(cLast8, cL.id);
-                }
-              }
-            });
 
-            // Constrói lista consolidada sem contatos repetidos ou excluídos
-            cloudWa.length = 0;
-            cloudWa.push(...Array.from(baseMap.values()).filter(l => !isLeadDeleted(l, deletedIds)));
+                consolidatedMap.set(cId, item);
+              });
+              cloudWa.length = 0;
+              cloudWa.push(...Array.from(consolidatedMap.values()));
+            } else {
+              // Fallback seguro caso a nuvem esteja indisponível: usa baseLeads sanitizada
+              cloudWa.length = 0;
+              cloudWa.push(...baseLeads.map(l => ({
+                ...l,
+                stage: normalizeKanbanStage(l.stage),
+                value: Number(l.value) || 0
+              })));
+            }
           }
 
           if (sellerKey === 'edson') {
@@ -11853,12 +11824,8 @@
 
     function renderDashboardCharts() {
       const commercialLeads = (leads || []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
-      let totalPipeline = 0;
-      if (currentTenantSeller === 'mayara') {
-        totalPipeline = 890400;
-      } else {
-        totalPipeline = commercialLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
-      }
+      const openLeads = commercialLeads.filter(l => l.stage !== 'concluidas' && l.stage !== 'concluida');
+      const totalPipeline = openLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
 
       const hotLeads = commercialLeads.filter(l => (l.temperature || '').toLowerCase() === 'quente');
       const warmLeads = commercialLeads.filter(l => (l.temperature || '').toLowerCase() === 'morno');
@@ -12310,8 +12277,17 @@
     function updateMetrics() {
       // Clientes comerciais ativos: exclui estritamente funcionários e fornecedores das métricas de vendas
       const activeCommercialLeads = (leads || []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
-      const totalPipeline = activeCommercialLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
-      document.getElementById('sidebar-total-pipeline').textContent = formatBRL(totalPipeline);
+      
+      // Negociações em Aberto (Pipeline de Vendas Ativo - exclui Concluídas):
+      const openPipelineLeads = activeCommercialLeads.filter(l => l.stage !== 'concluidas' && l.stage !== 'concluida');
+      const openPipeline = openPipelineLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+      const totalAllStages = activeCommercialLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
+      
+      const pipeEl = document.getElementById('sidebar-total-pipeline');
+      if (pipeEl) {
+        pipeEl.textContent = formatBRL(openPipeline);
+        pipeEl.setAttribute('title', `Pipeline em Negociação: ${formatBRL(openPipeline)} | Total do Funil com Concluídas: ${formatBRL(totalAllStages)}`);
+      }
       document.getElementById('badge-kanban-total').textContent = activeCommercialLeads.length;
       document.getElementById('badge-clients-total').textContent = leads.length;
 
