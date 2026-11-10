@@ -6067,6 +6067,10 @@
                 if (localLead && localLead.followup_date && localLead.followup_date > todaySyncStr) {
                   l.followup_date = localLead.followup_date;
                   l.followup_status = 'Agendado';
+                } else if (localLead && localLead.followup_date && localLead.followup_date < todaySyncStr && localLead.followup_date !== '1970-01-01') {
+                  // Preserva data de atraso original definida localmente (não sobrescreve para hoje)
+                  l.followup_date = localLead.followup_date;
+                  l.followup_status = 'Atrasado';
                 } else {
                   // Se o lead interagiu ontem ou nos últimos 3 dias e ainda não foi contatado hoje: regra 3 dias a fio
                   const rawInt = l.last_interaction || l.data_ultima_interacao || l.updated_at || l.created_at;
@@ -6079,9 +6083,12 @@
                     }
                   }
 
-                  if (isYesterdayOrRecent || (l.followup_date && l.followup_date <= todaySyncStr)) {
+                  // PRESERVA DATA PASSADA REAL: Lead atrasado mantém sua data original de follow-up!
+                  if (l.followup_date && l.followup_date < todaySyncStr && l.followup_date !== '1970-01-01') {
+                    l.followup_status = 'Atrasado';
+                  } else if (l.followup_date === todaySyncStr || isYesterdayOrRecent || !l.followup_date) {
                     l.followup_date = todaySyncStr;
-                    l.followup_status = 'Chamar Hoje';
+                    l.followup_status = isYesterdayOrRecent ? '3 Dias a Fio' : 'Chamar Hoje';
                   } else if (l.followup_date && l.followup_date > todaySyncStr) {
                     l.followup_status = 'Agendado';
                   }
@@ -8378,23 +8385,33 @@
           return;
         }
 
-        // Se estiver nos 3 dias a fio e sem data ou atrasado, define para hoje
-        if (isConsecutive3Days && (!l.followup_date || l.followup_date <= todayStr)) {
-          l.followup_date = todayStr;
-        }
-
+        // Se NÃO tem data de follow-up definida:
         if (!l.followup_date || l.followup_date === '') {
           l.followup_date = todayStr;
         }
 
-        if (l.followup_date === todayStr) {
-          l.followup_status = isConsecutive3Days ? '3 Dias a Fio' : 'Chamar Hoje';
-        } else if (l.followup_date < todayStr) {
+        // Determinação de status sem sobrescrever datas passadas para hoje:
+        if (l.followup_date < todayStr && l.followup_date !== '1970-01-01') {
           l.followup_status = 'Atrasado';
+        } else if (l.followup_date === todayStr) {
+          l.followup_status = isConsecutive3Days ? '3 Dias a Fio' : 'Chamar Hoje';
         } else {
           l.followup_status = 'Agendado';
         }
       });
+
+      const getDaysLate = (dateStr, refToday) => {
+        if (!dateStr || dateStr >= refToday) return 0;
+        try {
+          const d1 = new Date(dateStr + 'T00:00:00');
+          const d2 = new Date(refToday + 'T00:00:00');
+          const diffMs = d2.getTime() - d1.getTime();
+          const d = Math.round(diffMs / (1000 * 3600 * 24));
+          return d > 0 ? d : 1;
+        } catch (e) {
+          return 1;
+        }
+      };
 
       // REGRA SOLICITADA: "Falou hoje ele sai da lista, passou da meia noite ele volta novamente"
       const isLeadDueForToday = (l) => {
@@ -8427,13 +8444,38 @@
       
       const today = allFunnelLeads.filter(isLeadDueForToday);
       
-      // Ordenação prioritária em Chamar Hoje:
-      // 1º Quem interagiu ontem ou está atrasado
-      // 2º Maior valor comercial
+      // Ordenação prioritária em Chamar Hoje (Opção 2):
+      // 1º Atrasados: do mais atrasado para o menos atrasado (mais dias de atraso no topo)
+      // 2º 3 Dias a Fio
+      // 3º Demais agendados para hoje, ordenados por maior valor comercial
       today.sort((a, b) => {
-        const aUrgent = (a.followup_date < todayStr || a.is_consecutive_3days) ? 1 : 0;
-        const bUrgent = (b.followup_date < todayStr || b.is_consecutive_3days) ? 1 : 0;
-        if (bUrgent !== aUrgent) return bUrgent - aUrgent;
+        const aIsOverdue = (a.followup_date && a.followup_date < todayStr);
+        const bIsOverdue = (b.followup_date && b.followup_date < todayStr);
+
+        if (aIsOverdue && bIsOverdue) {
+          // Ambos atrasados: o mais antigo (menor data ISO) vem primeiro no topo da lista
+          if (a.followup_date !== b.followup_date) {
+            return a.followup_date.localeCompare(b.followup_date);
+          }
+          return (Number(b.value) || 0) - (Number(a.value) || 0);
+        }
+
+        if (aIsOverdue && !bIsOverdue) return -1;
+        if (!aIsOverdue && bIsOverdue) return 1;
+
+        // Se nenhum é atrasado: prioriza sequência de 3 dias a fio
+        const a3d = a.is_consecutive_3days ? 1 : 0;
+        const b3d = b.is_consecutive_3days ? 1 : 0;
+        if (b3d !== a3d) return b3d - a3d;
+
+        return (Number(b.value) || 0) - (Number(a.value) || 0);
+      });
+
+      // Ordenação dos Atrasados: mais atrasado primeiro
+      overdue.sort((a, b) => {
+        if (a.followup_date !== b.followup_date) {
+          return (a.followup_date || '').localeCompare(b.followup_date || '');
+        }
         return (Number(b.value) || 0) - (Number(a.value) || 0);
       });
 
@@ -8479,10 +8521,13 @@
 
           let leadBadgeClass = badgeClass;
           let leadBadgeText = badgeText;
+          const isOverdue = Boolean(lead.followup_date && lead.followup_date < todayStr && !lead.called_today);
+          const daysLate = isOverdue ? getDaysLate(lead.followup_date, todayStr) : 0;
+
           if (listKey === 'today') {
-            if (lead.followup_date < todayStr) {
-              leadBadgeClass = 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm flex items-center gap-1';
-              leadBadgeText = '<i class="ph-bold ph-warning-circle"></i> Atrasado (Chamar Hoje)';
+            if (isOverdue) {
+              leadBadgeClass = 'bg-rose-500/25 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1 font-bold animate-pulse';
+              leadBadgeText = `<i class="ph-bold ph-warning-circle text-rose-400"></i> 🚨 Atrasado (${daysLate}d)`;
             } else if (lead.is_consecutive_3days) {
               leadBadgeClass = 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-sm flex items-center gap-1';
               leadBadgeText = '<i class="ph-bold ph-fire"></i> 3 Dias a Fio';
@@ -8490,10 +8535,13 @@
               leadBadgeClass = 'bg-amber-500/20 text-amber-300 border border-amber-500/30';
               leadBadgeText = '⏰ Chamar Hoje';
             }
+          } else if (listKey === 'overdue') {
+            leadBadgeClass = 'bg-rose-500/25 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1 font-bold';
+            leadBadgeText = `<i class="ph-bold ph-warning-circle text-rose-400"></i> 🚨 ${daysLate} dia${daysLate > 1 ? 's' : ''} de atraso`;
           }
 
           const item = document.createElement('div');
-          item.className = 'p-3.5 rounded-xl bg-[#14212E] hover:bg-[#1B2C3D] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition';
+          item.className = `p-3.5 rounded-xl ${isOverdue ? 'bg-[#181a2e] border-rose-500/40 hover:border-rose-500/60 shadow-md shadow-rose-950/20' : 'bg-[#14212E] hover:bg-[#1B2C3D] border-white/5'} border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition`;
           item.innerHTML = `
             <div class="space-y-1.5">
               <div class="flex items-center gap-2 flex-wrap">
@@ -8529,7 +8577,7 @@
               </div>
 
               <p class="text-xs text-slate-300"><strong class="text-cyan-300">Ação:</strong> ${lead.next_best_action || 'Entrar em contato para diagnóstico consultivo.'}</p>
-              <div class="text-[11px] text-slate-400">Data programada: <span class="font-semibold text-slate-300">${formatDateBR(lead.followup_date)}</span></div>
+              <div class="text-[11px] text-slate-400">Data programada: <span class="font-semibold ${isOverdue ? 'text-rose-400 font-bold' : 'text-slate-300'}">${formatDateBR(lead.followup_date)} ${isOverdue ? `(venceu há ${daysLate} dia${daysLate > 1 ? 's' : ''})` : ''}</span></div>
               <div class="flex items-center gap-1.5 pt-1 text-[10px]">
                 <span class="text-slate-500 text-[10px]">Classificar:</span>
                 <button onclick="setContactType('${safeId}', 'funcionario')" class="px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5 hover:border-indigo-500/30 transition cursor-pointer active:scale-95" title="Marcar como Funcionário (tira de follow-up e métricas)">
