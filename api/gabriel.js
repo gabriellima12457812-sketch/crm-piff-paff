@@ -975,11 +975,6 @@ export default async function handler(req, res) {
         );
       }
 
-      // Base oficial consolidada sincronizada com a tela do CRM do Gabriel (606 clientes)
-      const CRM_SCREEN_TOTAL = 606;
-      const CRM_SCREEN_PIPELINE = 3353743;
-      const CRM_SCREEN_STAGES = { novos: 436, investigacao: 78, projetos: 34, proposta: 28, fechamento: 9, concluidas: 21 };
-
       const isFiltered = Boolean(stageFilter || searchFilter || tempFilter || isInstagramQuery);
       const leadsToDisplay = isFiltered ? filteredLeads : mergedLeads;
       const reqLimit = parseInt(query.limit || body.limit, 10);
@@ -987,9 +982,11 @@ export default async function handler(req, res) {
       const defaultLimit = (stageFilter || searchFilter) ? 15 : 10;
       const limit = Math.min(reqLimit || defaultLimit, maxLimit);
 
-      const effectiveTotalLeads = isFiltered ? filteredLeads.length : CRM_SCREEN_TOTAL;
-      const effectivePipelineValue = isFiltered ? filteredLeads.reduce((a, c) => a + (Number(c.value) || 0), 0) : CRM_SCREEN_PIPELINE;
-      const effectiveStages = isFiltered ? stagesSummary : CRM_SCREEN_STAGES;
+      const effectiveTotalLeads = isFiltered ? filteredLeads.length : mergedLeads.length;
+      const effectivePipelineValue = isFiltered
+        ? filteredLeads.reduce((a, c) => a + (Number(c.value) || 0), 0)
+        : mergedLeads.reduce((a, c) => a + (Number(c.value) || 0), 0);
+      const effectiveStages = stagesSummary;
 
       const formattedStages = Object.entries(effectiveStages).map(([s, c]) => `${s}: ${c}`).join(', ');
       const formattedPipeline = formatBRL(effectivePipelineValue);
