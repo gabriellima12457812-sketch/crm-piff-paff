@@ -847,7 +847,7 @@ export default async function handler(req, res) {
       (!body.name && !body.phone && !body.instagram && !body.id && !body.notes && req.method === 'POST');
 
     if (isListOrCount) {
-      const fetchUrl = `${supabaseUrl}/rest/v1/leads?user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*&order=value.desc`;
+      const fetchUrl = `${supabaseUrl}/rest/v1/leads?user_id=eq.${encodeURIComponent(SELLER_USER_ID)}&select=*&order=value.desc&limit=3000`;
       const leadsRes = await fetch(fetchUrl, { headers: supabaseHeaders });
 
       if (!leadsRes.ok) {
@@ -978,7 +978,7 @@ export default async function handler(req, res) {
       const isFiltered = Boolean(stageFilter || searchFilter || tempFilter || isInstagramQuery);
       const leadsToDisplay = isFiltered ? filteredLeads : mergedLeads;
       const reqLimit = parseInt(query.limit || body.limit, 10);
-      const maxLimit = reqLimit > 100 ? 1000 : 30;
+      const maxLimit = reqLimit > 100 ? 3000 : 30;
       const defaultLimit = (stageFilter || searchFilter) ? 15 : 10;
       const limit = Math.min(reqLimit || defaultLimit, maxLimit);
 
