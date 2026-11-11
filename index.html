@@ -5712,8 +5712,8 @@
             const apiUrl = sellerKey === 'edson'
               ? '/api/edson?limit=5000'
               : (STATIC_SELLER_ENDPOINTS.includes(sellerKey)
-                  ? `/api/${sellerKey}?channel=todos&limit=1000`
-                  : `/api/edson?seller=${encodeURIComponent(sellerKey)}&limit=1000`);
+                  ? `/api/${sellerKey}?channel=todos&limit=3000`
+                  : `/api/edson?seller=${encodeURIComponent(sellerKey)}&limit=3000`);
             const apiRes = await fetch(apiUrl);
             if (apiRes.ok) {
               const apiData = await apiRes.json();
@@ -5750,7 +5750,7 @@
               console.warn('[Sync Édson] Falha na paginação direta:', edsonErr);
             }
           } else {
-            const queryUrl = `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc&limit=2000`;
+            const queryUrl = `${url}/rest/v1/leads?user_id=eq.${encodeURIComponent(authUser.id)}&select=*&order=value.desc&limit=3000`;
             const res = await fetch(queryUrl, {
               headers: {
                 'apikey': key,
