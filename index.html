@@ -1275,6 +1275,25 @@
               <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="concluidas"></div>
             </div>
 
+            <!-- Col: Desistiu / Já comprou -->
+            <div class="kanban-col group flex flex-col rounded-2xl bg-[#0E1722] border border-slate-700/60 p-2.5 sm:p-3" data-stage="desistiu">
+              <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
+                <div class="flex items-center gap-1.5">
+                  <div class="w-2.5 h-2.5 rounded-full bg-slate-400"></div>
+                  <h3 class="font-heading font-bold text-xs sm:text-sm text-slate-300">🛑 Desistiu / Já comprou</h3>
+                  <span class="col-count text-[11px] px-1.5 py-0.5 rounded-full bg-black/40 text-slate-400 font-bold">0</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="col-value text-xs font-bold text-slate-400 font-heading">R$ 0</span>
+                  <div class="flex items-center opacity-40 group-hover:opacity-100 transition">
+                    <button type="button" onclick="moveKanbanColumn('desistiu', -1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a esquerda">◀</button>
+                    <button type="button" onclick="moveKanbanColumn('desistiu', 1)" class="w-5 h-5 rounded hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center" title="Mover para a direita">▶</button>
+                  </div>
+                </div>
+              </div>
+              <div class="cards-container flex-1 space-y-2.5 overflow-y-auto pr-1" data-stage="desistiu"></div>
+            </div>
+
           </div>
         </div>
       </section>
@@ -1550,6 +1569,7 @@
               <option value="proposta">Proposta</option>
               <option value="fechamento">Fechamento</option>
               <option value="concluidas">Concluídas</option>
+              <option value="desistiu">🛑 Desistiu / Já comprou</option>
             </select>
             <select id="select-filter-temp" class="px-3.5 py-2.5 rounded-xl bg-[#0E1722] border border-white/10 text-sm text-slate-200 focus:outline-none focus:border-[#00D2D3]">
               <option value="all">Todas as Temperaturas</option>
@@ -2489,6 +2509,8 @@
                 <option value="proposta">💬 Proposta</option>
                 <option value="fechamento">🤝 Fechamento</option>
                 <option value="concluidas">🎉 Concluídas</option>
+              <option value="desistiu">🛑 Desistiu / Já comprou</option>
+                <option value="desistiu">🛑 Desistiu / Já comprou</option>
               </select>
             </div>
             <div>
@@ -3105,6 +3127,7 @@
               <option value="proposta">💬 Proposta</option>
               <option value="fechamento">🤝 Fechamento</option>
               <option value="concluidas">🎉 Concluídas</option>
+              <option value="desistiu">🛑 Desistiu / Já comprou</option>
             </select>
           </div>
           <div>
@@ -5528,7 +5551,8 @@
                            (lead.stage === 'projetos') ? 'Projetos' :
                            (lead.stage === 'proposta') ? 'Proposta' :
                            (lead.stage === 'fechamento') ? 'Fechamento' :
-                           (lead.stage === 'concluidas') ? 'Concluída' : (lead.stage || 'Negociação');
+                           (lead.stage === 'concluidas') ? 'Concluída' :
+                           (lead.stage === 'desistiu') ? 'Desistiu / Já comprou' : (lead.stage || 'Negociação');
 
         return `
           <div onclick="openLeadDetail('${lead.id}')" class="p-3 rounded-xl bg-[#0F1A26] hover:bg-[#142332] border border-white/10 hover:border-amber-500/40 transition cursor-pointer flex items-center justify-between gap-3 group">
@@ -5789,6 +5813,7 @@
             if (['proposta', 'orcamento', 'orçamento'].includes(s)) return 'proposta';
             if (['fechamento', 'fechando'].includes(s)) return 'fechamento';
             if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(s)) return 'concluidas';
+            if (['desistiu', 'desistencia', 'desistência', 'perdeu', 'perdido', 'perdidos', 'ja_comprou', 'já comprou', 'ja comprou', 'outra loja', 'outras lojas', 'concorrente'].some(x => s.includes(x))) return 'desistiu';
             return 'novos';
           };
 
@@ -6865,9 +6890,10 @@
       projetos: { name: 'Projetos', icon: '📐', color: 'purple' },
       proposta: { name: 'Proposta', icon: '💬', color: 'cyan' },
       investigacao: { name: 'Investigação', icon: '🔍', color: 'amber' },
-      concluidas: { name: 'Concluídas', icon: '🎉', color: 'emerald' }
+      concluidas: { name: 'Concluídas', icon: '🎉', color: 'emerald' },
+      desistiu: { name: 'Desistiu / Já comprou', icon: '🛑', color: 'slate' }
     };
-    const DEFAULT_STAGE_ORDER = ['fechamento', 'novos', 'projetos', 'proposta', 'investigacao', 'concluidas'];
+    const DEFAULT_STAGE_ORDER = ['fechamento', 'novos', 'projetos', 'proposta', 'investigacao', 'concluidas', 'desistiu'];
     let STAGES = [...DEFAULT_STAGE_ORDER];
 
     function getSavedStageOrder() {
@@ -6875,9 +6901,9 @@
         const saved = localStorage.getItem('piffpaff_kanban_stage_order');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length === DEFAULT_STAGE_ORDER.length) {
-            const allValid = DEFAULT_STAGE_ORDER.every(s => parsed.includes(s));
-            if (allValid) return parsed;
+          if (Array.isArray(parsed) && parsed.length >= 6) {
+            if (!parsed.includes('desistiu')) parsed.push('desistiu');
+            return parsed;
           }
         }
       } catch (e) {}
@@ -7286,6 +7312,8 @@
         } else {
           tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1"><i class="ph-bold ph-check-circle"></i> Concluída</span>`;
         }
+      } else if (lead.stage === 'desistiu') {
+        tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-700/50 text-slate-300 border border-slate-600/50 flex items-center gap-1"><i class="ph-bold ph-prohibit"></i> Desistiu</span>`;
       } else if (effectiveTemp === 'quente') {
         tempBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">🔥 Quente</span>`;
       } else if (effectiveTemp === 'morno') {
@@ -12124,6 +12152,8 @@
           } else {
             stageBadge = `<span class="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold inline-flex items-center gap-1"><i class="ph-bold ph-check-circle"></i> Concluída</span>`;
           }
+        } else if (lead.stage === 'desistiu') {
+          stageBadge = `<span class="px-2 py-0.5 rounded-md bg-slate-700/50 border border-slate-600/50 text-slate-300 text-xs font-bold inline-flex items-center gap-1"><i class="ph-bold ph-prohibit"></i> Desistiu / Já comprou</span>`;
         }
 
         const dateCell = lead.stage === 'concluidas'
@@ -12284,8 +12314,8 @@
       // Clientes comerciais ativos: exclui estritamente funcionários e fornecedores das métricas de vendas
       const activeCommercialLeads = (leads || []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
       
-      // Negociações em Aberto (Pipeline de Vendas Ativo - exclui Concluídas):
-      const openPipelineLeads = activeCommercialLeads.filter(l => l.stage !== 'concluidas' && l.stage !== 'concluida');
+      // Negociações em Aberto (Pipeline de Vendas Ativo - exclui Concluídas e Desistiu/Já comprou):
+      const openPipelineLeads = activeCommercialLeads.filter(l => l.stage !== 'concluidas' && l.stage !== 'concluida' && l.stage !== 'desistiu');
       const openPipeline = openPipelineLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
       const totalAllStages = activeCommercialLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
       
@@ -12307,7 +12337,7 @@
 
       const todayStr = new Date().toISOString().split('T')[0];
       const overdue = activeCommercialLeads.filter(l => {
-        if (l.stage === 'concluidas' || l.stage === 'concluida') return false;
+        if (l.stage === 'concluidas' || l.stage === 'concluida' || l.stage === 'desistiu') return false;
         if (typeof isFollowupRemoved === 'function' && isFollowupRemoved(l)) return false;
         if (typeof wasContactedToday === 'function' && wasContactedToday(l)) return false;
         const fDate = l.followup_date || (l.last_interaction ? l.last_interaction.split('T')[0] : null);
