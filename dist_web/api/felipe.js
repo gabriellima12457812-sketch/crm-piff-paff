@@ -1,9 +1,17 @@
-﻿// ==============================================================================
+import { supabaseDirectFetch as fetch } from '../lib/supabase-fetch.js';
+// ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/felipe (ES Module)
 // ENDPOINT EXCLUSIVO E BLINDADO DO VENDEDOR FELIPE
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
 // SUPORTE COMPLETO AO FUNIL DE INSTAGRAM DIRECT + FUNIL WHATSAPP
 // ==============================================================================
+
+import {
+  loadGovernanceState,
+  filterActiveRecords,
+  performSoftDeleteLead,
+  recordAuditLog
+} from '../lib/governance.js';
 
 const SELLER_USER_ID = 'c3333333-3333-3333-3333-333333333333';
 const SELLER_NAME = 'Felipe';
@@ -700,12 +708,20 @@ export default async function handler(req, res) {
       const existingIds = new Set(dbLeads.map(l => l.id));
       const existingInstas = new Set(dbLeads.map(l => (l.instagram || '').toLowerCase().replace(/^@/, '')));
 
-      const mergedLeads = [...dbLeads];
+      const rawMergedLeads = [...dbLeads];
       DEFAULT_INSTAGRAM_LEADS_FELIPE.forEach(instaLead => {
         const cleanInsta = (instaLead.instagram || '').toLowerCase().replace(/^@/, '');
         if (!existingIds.has(instaLead.id) && !existingInstas.has(cleanInsta)) {
-          mergedLeads.push(instaLead);
+          rawMergedLeads.push(instaLead);
         }
+      });
+
+      const { state: govState } = await loadGovernanceState();
+      const mergedLeads = filterActiveRecords(rawMergedLeads, {
+        includeDeleted: false,
+        isSuperAdmin: false,
+        govState,
+        resourceType: 'lead'
       });
 
       const requestedChannel = (query.channel || body.channel || query.pipeline || body.pipeline || '').toLowerCase().trim();
@@ -762,21 +778,26 @@ export default async function handler(req, res) {
       const isCountOnly = action === 'count' || action === 'contar' || action === 'total' || query.count === 'true';
 
       const compactLead = (l) => ({
+        ...l,
         id: l.id,
         name: l.name,
         phone: l.phone,
         instagram: l.instagram,
-        city: l.city,
+        city: l.city || 'Brasil',
         stage: l.stage,
         stage_label: l.stage_label || l.stage,
-        value: l.value,
-        temperature: l.temperature,
-        priority: l.priority,
-        commercial_line: l.commercial_line,
+        value: Number(l.value) || 0,
+        temperature: l.temperature || 'morno',
+        priority: l.priority || 'MEDIA',
+        commercial_line: l.commercial_line || 'Linha Premium',
         followup_status: l.followup_status || (l.stage === 'novo' ? 'Chamar Hoje' : 'Agendado'),
         followup_date: l.followup_date,
         channel: l.channel || (l.instagram && !l.phone ? 'instagram' : 'whatsapp'),
-        notes: l.notes ? (l.notes.length > 200 ? l.notes.substring(0, 200) + '...' : l.notes) : ''
+        pipeline: l.pipeline || (l.channel === 'instagram' ? 'instagram' : 'whatsapp'),
+        user_id: SELLER_USER_ID,
+        vendedor_id: 'felipe',
+        categoria: l.categoria || 1,
+        notes: l.notes || ''
       });
 
       const requestedLimit = parseInt(query.limit || body.limit, 10);
@@ -830,7 +851,7 @@ export default async function handler(req, res) {
       commercial_moment, predominant_emotion, behavioral_profile, buying_signals,
       main_objection, gabriel_percentage, jhennifer_percentage, strategic_reading,
       next_best_action, desired_micro_advance, what_not_to_do, advance_probability,
-      priority, commercial_line, category, followup_date, notes,
+      priority, commercial_line, category, followup_date, followup_status, notes,
       channel, pipeline, origin, stage_instagram
     } = body;
 
@@ -912,21 +933,22 @@ export default async function handler(req, res) {
       }
     }
 
-    // EXCLUIR
+    // EXCLUIR (SOFT DELETE UNIVERSAL: deleted_at = NOW() + TRILHA DE AUDITORIA)
     if (action === 'delete' || action === 'excluir') {
-      if (existingLead) {
-        try {
-          await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
-            method: 'DELETE',
-            headers: supabaseHeaders
-          });
-        } catch (e) {}
-      }
+      const targetLead = existingLead || { id: id || `temp-${Date.now()}`, name: name || phone || 'Lead', user_id: SELLER_USER_ID };
+      const softDeleted = await performSoftDeleteLead({
+        supabaseUrl,
+        supabaseHeaders,
+        lead: targetLead,
+        actorUserId: SELLER_USER_ID,
+        actorName: SELLER_NAME,
+        req
+      });
       return res.status(200).json({
         success: true,
-        action: 'delete',
-        message: `Lead "${name || phone || id || 'selecionado'}" processado no funil de ${SELLER_NAME}!`,
-        deleted_lead: existingLead || { id: id || 'temp', name: name || 'Lead' }
+        action: 'soft_delete',
+        message: `Lead "${targetLead.name}" arquivado em Soft Delete no funil de ${SELLER_NAME}!`,
+        deleted_lead: softDeleted
       });
     }
 
@@ -1053,9 +1075,18 @@ export default async function handler(req, res) {
 
     // Se o lead acabou de entrar e a data for hoje/passada (já que falou hoje), entra para o dia seguinte (+1 dia)
     const todayStr = formatYMD(new Date());
-    let targetFollowupDate = followup_date || cadence.followup_date;
-    if (!existingLead && targetFollowupDate <= todayStr) {
-      targetFollowupDate = addDays(1);
+    let targetFollowupDate;
+    if (followup_date === null || followup_date === '' || (typeof followup_status !== 'undefined' && followup_status === 'Sem Follow-up')) {
+      targetFollowupDate = null;
+    } else if (followup_date) {
+      targetFollowupDate = followup_date;
+    } else if (!existingLead) {
+      targetFollowupDate = cadence.followup_date;
+      if (targetFollowupDate <= todayStr) {
+        targetFollowupDate = addDays(1);
+      }
+    } else {
+      targetFollowupDate = existingLead.followup_date || null;
     }
     payload.followup_date = targetFollowupDate;
 
@@ -1099,8 +1130,12 @@ export default async function handler(req, res) {
       if (!resultData) resultData = payload;
     }
 
+    const finalFollowupStatus = (targetFollowupDate === null) ? 'Sem Follow-up' : cadence.followup_status;
+    const finalFollowupReason = (targetFollowupDate === null) ? 'Sem follow-up programado.' : cadence.reason;
     const actionText = existingLead ? (targetStage ? 'reorganizado' : 'atualizado') : 'inserido';
-    const followupMsg = `Follow-up: ${payload.followup_date} (${cadence.followup_status}). ${cadence.reason}`;
+    const followupMsg = (targetFollowupDate === null)
+      ? 'Follow-up desmarcado (Sem Follow-up).'
+      : `Follow-up: ${payload.followup_date} (${finalFollowupStatus}). ${finalFollowupReason}`;
 
     return res.status(200).json({
       success: true,
@@ -1108,11 +1143,11 @@ export default async function handler(req, res) {
       channel: isInstagram ? 'instagram' : 'whatsapp',
       funnel: isInstagram ? 'Leads Instagram (Prospecção)' : 'Negociações WhatsApp (Fechamento)',
       followup_date: payload.followup_date,
-      followup_status: cadence.followup_status,
-      followup_reason: cadence.reason,
+      followup_status: finalFollowupStatus,
+      followup_reason: finalFollowupReason,
       message: `Lead "${resultData?.name}" ${actionText} com sucesso no funil ${isInstagram ? 'Leads Instagram' : 'Negociações WhatsApp'} de ${SELLER_NAME}! ${followupMsg}`,
       seller: SELLER_NAME,
-      lead: { ...resultData, followup_status: cadence.followup_status }
+      lead: { ...resultData, followup_status: finalFollowupStatus }
     });
   } catch (err) {
     console.error('Erro interno /api/felipe:', err);
