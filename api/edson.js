@@ -307,6 +307,10 @@ export default async function handler(req, res) {
         const nowIso = new Date().toISOString();
         updatePayload.updated_at = nowIso;
 
+        if (updatePayload.value !== undefined && updatePayload.value !== null && !isNaN(Number(updatePayload.value))) {
+          updatePayload.value = Number(updatePayload.value);
+        }
+
         if (updatePayload.stage) {
           const sLower = String(updatePayload.stage).toLowerCase().trim();
           if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(sLower)) {
