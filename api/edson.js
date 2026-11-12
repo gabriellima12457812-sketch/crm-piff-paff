@@ -312,6 +312,9 @@ export default async function handler(req, res) {
           if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(sLower)) {
             updatePayload.stage = 'concluidas';
             updatePayload.etapa_kanban = 'Concluídas';
+          } else if (['desistiu', 'desistencia', 'desistência', 'perdeu', 'perdido', 'perdidos', 'ja_comprou', 'já comprou', 'ja comprou', 'outra loja', 'outras lojas', 'concorrente'].some(x => sLower.includes(x))) {
+            updatePayload.stage = 'desistiu';
+            updatePayload.etapa_kanban = 'Desistiu';
           }
         }
 
