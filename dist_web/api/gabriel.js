@@ -1041,7 +1041,7 @@ export default async function handler(req, res) {
       commercial_moment, predominant_emotion, behavioral_profile, buying_signals,
       main_objection, gabriel_percentage, jhennifer_percentage, strategic_reading,
       next_best_action, desired_micro_advance, what_not_to_do, advance_probability,
-      priority, commercial_line, category, followup_date, notes,
+      priority, commercial_line, category, followup_date, followup_status, notes,
       channel, pipeline, origin, stage_instagram
     } = body;
 
@@ -1189,10 +1189,12 @@ export default async function handler(req, res) {
     if (city) payload.city = city;
 
     // Normalização segura de stage (PostgreSQL CHECK CONSTRAINT)
-    const validStages = ['novos', 'investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas'];
+    const validStages = ['novos', 'investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas', 'desistiu'];
     payload.stage = validStages.includes(targetStage) ? targetStage : (existingLead?.stage || 'novos');
     if (payload.stage === 'concluidas') {
       payload.etapa_kanban = 'Concluídas';
+    } else if (payload.stage === 'desistiu') {
+      payload.etapa_kanban = 'Desistiu / Já comprou';
     }
 
     if (value !== undefined && value !== null && !isNaN(Number(value))) payload.value = Number(value);
@@ -1250,7 +1252,7 @@ export default async function handler(req, res) {
     // Se o lead acabou de entrar e a data for hoje/passada (já que falou hoje), entra para o dia seguinte (+1 dia)
     const todayStr = formatYMD(new Date());
     let targetFollowupDate;
-    if (followup_date === null || followup_date === '' || followup_status === 'Sem Follow-up') {
+    if (followup_date === null || followup_date === '' || (typeof followup_status !== 'undefined' && followup_status === 'Sem Follow-up')) {
       targetFollowupDate = null;
     } else if (followup_date) {
       targetFollowupDate = followup_date;
