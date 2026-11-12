@@ -4804,6 +4804,10 @@
           if (Array.isArray(parsed) && parsed.length >= minExpected) {
             // Filtra estritamente apenas os leads ativos deste vendedor (removendo excluídos)
             leads = parsed.filter(l => !isLeadDeleted(l, deletedIds) && isLeadOfSeller(l, sellerKey));
+            // Exclusivo Gabriel: apenas contatos com número de WhatsApp válido
+            if (isGabriel) {
+              leads = leads.filter(l => (cleanPhone(l.phone) || '').length >= 8);
+            }
             if (leads.length > 0) {
               sanitizeFollowupList(leads);
               saveStorage();
@@ -4831,10 +4835,10 @@
         return;
       }
 
-      // Para Gabriel Lima (Admin): carrega a base consolidada oficial
+      // Para Gabriel Lima (Admin): carrega a base consolidada oficial (apenas contatos com WhatsApp válido)
       const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
       if (baseLeads && baseLeads.length > 0) {
-        leads = baseLeads.filter(l => !isLeadDeleted(l, deletedIds) && isLeadOfSeller(l, 'gabriel'));
+        leads = baseLeads.filter(l => !isLeadDeleted(l, deletedIds) && isLeadOfSeller(l, 'gabriel') && (cleanPhone(l.phone) || '').length >= 8);
         sanitizeFollowupList(leads);
         saveStorage();
         return;
@@ -4888,7 +4892,7 @@
       const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS)) ? CARIBE_170_LEADS : null;
 
       if (baseLeads && baseLeads.length > 0) {
-        leads = baseLeads.filter(l => !isLeadDeleted(l, deletedIds));
+        leads = baseLeads.filter(l => !isLeadDeleted(l, deletedIds) && (cleanPhone(l.phone) || '').length >= 8);
         saveStorage();
         renderKanban();
         renderFollowupCenter();
@@ -5835,7 +5839,7 @@
           const isGabrielSync = !authUser || !authUser.email || authUser.email.toLowerCase().includes('gabriel');
           if (isGabrielSync) {
             const baseLeads = (typeof CARIBE_170_LEADS !== 'undefined' && Array.isArray(CARIBE_170_LEADS))
-              ? CARIBE_170_LEADS.filter(l => !isLeadDeleted(l, deletedIds) && isLeadOfSeller(l, 'gabriel'))
+              ? CARIBE_170_LEADS.filter(l => !isLeadDeleted(l, deletedIds) && isLeadOfSeller(l, 'gabriel') && (cleanPhone(l.phone) || '').length >= 8)
               : [];
 
             const baseMap = new Map();
@@ -5857,9 +5861,11 @@
               const consolidatedMap = new Map();
               cloudWa.forEach(cL => {
                 if (isLeadDeleted(cL, deletedIds)) return;
+                // Exclusivo Gabriel: apenas contatos com número de WhatsApp válido (mínimo 8 dígitos)
+                const cPhone = cleanPhone(cL.phone);
+                if (!cPhone || cPhone.length < 8) return;
 
                 const cId = String(cL.id || '').toUpperCase();
-                const cPhone = cleanPhone(cL.phone);
                 const cLast8 = cPhone.slice(-8);
 
                 const bL = baseMap.get(cId) || (cPhone ? phoneMap.get(cPhone) : null) || (cLast8.length === 8 ? phoneMap.get(cLast8) : null);
@@ -5889,7 +5895,7 @@
               cloudWa.length = 0;
               cloudWa.push(...Array.from(consolidatedMap.values()));
             } else {
-              // Fallback seguro caso a nuvem esteja indisponível: usa baseLeads sanitizada
+              // Fallback seguro caso a nuvem esteja indisponível: usa baseLeads sanitizada (com WhatsApp)
               cloudWa.length = 0;
               cloudWa.push(...baseLeads.map(l => ({
                 ...l,
