@@ -2509,7 +2509,6 @@
                 <option value="proposta">💬 Proposta</option>
                 <option value="fechamento">🤝 Fechamento</option>
                 <option value="concluidas">🎉 Concluídas</option>
-              <option value="desistiu">🛑 Desistiu / Já comprou</option>
                 <option value="desistiu">🛑 Desistiu / Já comprou</option>
               </select>
             </div>
@@ -4477,6 +4476,51 @@
     // REGISTRO DE VENDAS CONCLUÍDAS (BLINDAGEM DO ESTÁGIO 'CONCLUÍDAS')
     // Impede que leads concluídos sejam rebaixados para 'fechamento' por webhooks ou bases estáticas
     // ==========================================
+    // ==========================================
+    // SISTEMA DE FIXAÇÃO DE ESTÁGIO MANUAL (REGRA: ALTERAÇÃO MANUAL NUNCA É SOBREPOSTA)
+    // ==========================================
+    function getLeadManualStagesRegistry() {
+      try {
+        const raw = localStorage.getItem('piffpaff_manual_stages');
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function setLeadManualStage(leadId, targetStage, leadPhone = null) {
+      if (!leadId || !targetStage) return;
+      try {
+        const reg = getLeadManualStagesRegistry();
+        const entry = { stage: targetStage, updatedAt: new Date().toISOString() };
+        reg[String(leadId).toUpperCase()] = entry;
+        if (leadPhone) {
+          const cp = cleanPhone(leadPhone);
+          if (cp) reg[cp] = entry;
+        }
+        localStorage.setItem('piffpaff_manual_stages', JSON.stringify(reg));
+      } catch (e) {}
+    }
+    window.setLeadManualStage = setLeadManualStage;
+
+    function getLeadManualStage(leadId, leadPhone = null) {
+      try {
+        const reg = getLeadManualStagesRegistry();
+        if (leadId && reg[String(leadId).toUpperCase()]) {
+          return reg[String(leadId).toUpperCase()].stage;
+        }
+        if (leadPhone) {
+          const cp = cleanPhone(leadPhone);
+          if (cp && reg[cp]) return reg[cp].stage;
+        }
+      } catch (e) {}
+      return null;
+    }
+    window.getLeadManualStage = getLeadManualStage;
+
+    // ==========================================
+    // REGISTRO DE VENDAS CONCLUÍDAS
+    // ==========================================
     function getConcludedLeadIds() {
       try {
         const stored = localStorage.getItem('piffpaff_concluded_leads');
@@ -4493,14 +4537,6 @@
         const list = getConcludedLeadIds();
         const set = new Set(list.map(x => String(x).toUpperCase()));
         if (leadId) set.add(String(leadId).toUpperCase());
-        if (leadPhone) {
-          const cp = cleanPhone(leadPhone);
-          if (cp) {
-            set.add(cp);
-            const l8 = cp.slice(-8);
-            if (l8.length === 8) set.add(l8);
-          }
-        }
         localStorage.setItem('piffpaff_concluded_leads', JSON.stringify(Array.from(set)));
       } catch (e) {}
     }
@@ -4513,11 +4549,7 @@
         if (leadId) removeSet.add(String(leadId).toUpperCase());
         if (leadPhone) {
           const cp = cleanPhone(leadPhone);
-          if (cp) {
-            removeSet.add(cp);
-            const l8 = cp.slice(-8);
-            if (l8.length === 8) removeSet.add(l8);
-          }
+          if (cp) removeSet.add(cp);
         }
         const filtered = list.filter(item => !removeSet.has(String(item).toUpperCase()));
         localStorage.setItem('piffpaff_concluded_leads', JSON.stringify(filtered));
@@ -4525,21 +4557,16 @@
     }
     window.unmarkLeadConcluded = unmarkLeadConcluded;
 
-    function isLeadMarkedConcluded(l, concludedSet = null) {
+    function isLeadMarkedConcluded(l) {
       if (!l) return false;
+      const manual = getLeadManualStage(l.id, l.phone);
+      if (manual) {
+        return manual === 'concluidas';
+      }
       const s = String(l.stage || '').toLowerCase().trim();
       const e = String(l.etapa_kanban || '').toLowerCase().trim();
-      if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(s) ||
-          ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(e)) {
-        return true;
-      }
-      const set = concludedSet || new Set(getConcludedLeadIds().map(x => String(x).toUpperCase()));
-      if (l.id && set.has(String(l.id).toUpperCase())) return true;
-      const cp = cleanPhone(l.phone);
-      if (cp && set.has(cp)) return true;
-      const l8 = cp ? cp.slice(-8) : '';
-      if (l8.length === 8 && set.has(l8)) return true;
-      return false;
+      return ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(s) ||
+             ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(e);
     }
     window.isLeadMarkedConcluded = isLeadMarkedConcluded;
 
@@ -4831,6 +4858,14 @@
             if (isGabriel) {
               leads = leads.filter(l => (cleanPhone(l.phone) || '').length >= 8);
             }
+            // Aplica fixação manual se o vendedor alterou o processo do cliente manualmente
+            leads.forEach(l => {
+              const manual = getLeadManualStage(l.id, l.phone);
+              if (manual) {
+                l.stage = manual;
+                l.manual_stage = true;
+              }
+            });
             if (leads.length > 0) {
               sanitizeFollowupList(leads);
               saveStorage();
@@ -5837,14 +5872,13 @@
                 stage: instaStage
               });
             } else {
-              const normStage = normalizeKanbanStage(l.stage);
-              const isConcluded = normStage === 'concluidas' || isLeadMarkedConcluded(l, concludedSet);
-              if (isConcluded) {
-                markLeadConcluded(l.id, l.phone);
-              }
+              // REGRA: Se o estágio foi alterado manualmente pelo vendedor, mantém estritamente o estágio manual
+              const manualSt = getLeadManualStage(l.id, l.phone);
+              const normStage = manualSt || normalizeKanbanStage(l.stage);
               cloudWa.push({
                 ...l,
-                stage: isConcluded ? 'concluidas' : normStage,
+                stage: normStage,
+                manual_stage: Boolean(manualSt),
                 pipeline: 'whatsapp',
                 channel: 'whatsapp'
               });
@@ -6030,12 +6064,16 @@
               const lLast8 = lCleanP.slice(-8);
               const localLead = localLeadsMap.get(lIdUpper) || (lCleanP && localLeadsMap.get(lCleanP)) || (lLast8 && localLeadsMap.get(lLast8));
 
-              // BLINDAGEM DE CONCLUÍDAS: Se o lead estiver concluído localmente ou no registro, preserva 'concluidas'
-              const isConcluded = (localLead && (localLead.stage === 'concluidas' || isLeadMarkedConcluded(localLead, concludedSet))) ||
-                                  (l && (l.stage === 'concluidas' || isLeadMarkedConcluded(l, concludedSet)));
-              if (isConcluded) {
+              // REGRA DE OURO: Se o vendedor alterou o processo/estágio manualmente, JAMAIS sobrescrever!
+              const manualStage = getLeadManualStage(l.id, l.phone) || (localLead && localLead.manual_stage ? localLead.stage : null);
+              if (manualStage) {
+                l.stage = manualStage;
+                l.manual_stage = true;
+              } else if (localLead && localLead.stage && localLead.manual_stage) {
+                l.stage = localLead.stage;
+                l.manual_stage = true;
+              } else if (l.stage === 'concluidas' || (localLead && localLead.stage === 'concluidas' && !manualStage)) {
                 l.stage = 'concluidas';
-                markLeadConcluded(l.id, l.phone);
                 if (!l.purchase_date && localLead && localLead.purchase_date) {
                   l.purchase_date = localLead.purchase_date;
                 }
@@ -6439,22 +6477,32 @@
         saveInstagramStorage();
         renderInstagramBoard();
       } else {
-        let rawSt = (row.stage || row.etapa_kanban || (idxWa >= 0 ? leads[idxWa].stage : 'novos')).toString().toLowerCase().trim();
-        const isConcluded = (idxWa >= 0 && (leads[idxWa].stage === 'concluidas' || isLeadMarkedConcluded(leads[idxWa]))) ||
-                            isLeadMarkedConcluded(row) ||
-                            ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(rawSt);
+        const existingLocal = idxWa >= 0 ? leads[idxWa] : null;
+        // REGRA DE OURO: Se o vendedor alterou o lead manualmente, JAMAIS sobrescrever em tempo real!
+        const manualSt = getLeadManualStage(row.id, row.phone) || (existingLocal && existingLocal.manual_stage ? existingLocal.stage : null);
 
         let waStage = 'novos';
-        if (isConcluded) {
-          waStage = 'concluidas';
-          markLeadConcluded(row.id, row.phone);
-        } else if (rawSt === 'novo' || rawSt === 'novos') waStage = 'novos';
-        else if (['abordagem', 'investigacao', 'investigação', 'qualificacao', 'qualificação'].includes(rawSt)) waStage = 'investigacao';
-        else if (['conversa', 'projetos', 'projeto'].includes(rawSt)) waStage = 'projetos';
-        else if (['proposta', 'orcamento', 'orçamento'].includes(rawSt)) waStage = 'proposta';
-        else if (['fechamento', 'fechando'].includes(rawSt)) waStage = 'fechamento';
+        if (manualSt) {
+          waStage = manualSt;
+        } else {
+          let rawSt = (row.stage || row.etapa_kanban || (existingLocal ? existingLocal.stage : 'novos')).toString().toLowerCase().trim();
+          if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(rawSt)) {
+            waStage = 'concluidas';
+          } else if (rawSt === 'desistiu' || ['desistencia', 'desistência', 'perdeu', 'perdido', 'perdidos', 'ja_comprou', 'já comprou', 'ja comprou', 'outra loja', 'outras lojas', 'concorrente'].some(x => rawSt.includes(x))) {
+            waStage = 'desistiu';
+          } else if (rawSt === 'novo' || rawSt === 'novos') {
+            waStage = 'novos';
+          } else if (['abordagem', 'investigacao', 'investigação', 'qualificacao', 'qualificação'].includes(rawSt)) {
+            waStage = 'investigacao';
+          } else if (['conversa', 'projetos', 'projeto'].includes(rawSt)) {
+            waStage = 'projetos';
+          } else if (['proposta', 'orcamento', 'orçamento'].includes(rawSt)) {
+            waStage = 'proposta';
+          } else if (['fechamento', 'fechando'].includes(rawSt)) {
+            waStage = 'fechamento';
+          }
+        }
 
-        const existingLocal = idxWa >= 0 ? leads[idxWa] : null;
         let preservedFollowupDate = row.followup_date;
         let preservedCalledToday = false;
         let preservedLastContactDate = null;
@@ -6473,6 +6521,7 @@
         const merged = {
           ...(existingLocal || {}),
           ...row,
+          manual_stage: Boolean(manualSt),
           pipeline: 'whatsapp',
           channel: 'whatsapp',
           stage: waStage,
@@ -6639,17 +6688,20 @@
       const sellerKey = getSellerKey(authUser);
 
       let supabaseStage = lead.stage || 'novos';
-      if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(String(supabaseStage).toLowerCase().trim()) || isLeadMarkedConcluded(lead)) {
+      const cleanSt = String(supabaseStage).toLowerCase().trim();
+      if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(cleanSt)) {
         supabaseStage = 'concluidas';
-      } else if (supabaseStage === 'novo') {
+      } else if (cleanSt === 'desistiu' || ['desistencia', 'desistência', 'perdeu', 'perdido', 'perdidos', 'ja_comprou', 'já comprou', 'ja comprou', 'outra loja', 'outras lojas', 'concorrente'].some(x => cleanSt.includes(x))) {
+        supabaseStage = 'desistiu';
+      } else if (cleanSt === 'novo' || cleanSt === 'novos') {
         supabaseStage = 'novos';
-      } else if (['abordagem', 'investigacao', 'investigação'].includes(supabaseStage)) {
+      } else if (['abordagem', 'investigacao', 'investigação', 'qualificacao', 'qualificação', 'diagnostico'].includes(cleanSt)) {
         supabaseStage = 'investigacao';
-      } else if (['conversa', 'projetos', 'projeto'].includes(supabaseStage)) {
+      } else if (['conversa', 'projetos', 'projeto'].includes(cleanSt)) {
         supabaseStage = 'projetos';
-      } else if (['proposta', 'orcamento', 'orçamento'].includes(supabaseStage)) {
+      } else if (['proposta', 'orcamento', 'orçamento'].includes(cleanSt)) {
         supabaseStage = 'proposta';
-      } else if (['fechamento', 'fechando'].includes(supabaseStage)) {
+      } else if (['fechamento', 'fechando'].includes(cleanSt)) {
         supabaseStage = 'fechamento';
       }
 
@@ -6660,7 +6712,7 @@
         instagram: lead.instagram || null,
         city: lead.city || 'Brasil',
         stage: supabaseStage,
-        etapa_kanban: supabaseStage === 'concluidas' ? 'Concluídas' : (lead.etapa_kanban || 'Novos'),
+        etapa_kanban: supabaseStage === 'concluidas' ? 'Concluídas' : (supabaseStage === 'desistiu' ? 'Desistiu / Já comprou' : (lead.etapa_kanban || 'Novos')),
         value: Number(lead.value) || 0,
         temperature: lead.temperature || 'morno',
         priority: lead.priority || 'MEDIA',
@@ -7443,6 +7495,9 @@
             if (lead && lead.stage !== targetStage) {
               const prevStage = lead.stage;
               lead.stage = targetStage;
+              lead.manual_stage = true;
+              lead.manual_stage_at = new Date().toISOString();
+              setLeadManualStage(lead.id, targetStage, lead.phone);
               lead.last_interaction = new Date().toISOString();
               if (targetStage === 'concluidas') {
                 if (!lead.purchase_date) {
@@ -13362,6 +13417,9 @@
           if (!isNaN(editValue)) activeLead.value = editValue;
           if (editStage) {
             activeLead.stage = editStage;
+            activeLead.manual_stage = true;
+            activeLead.manual_stage_at = new Date().toISOString();
+            setLeadManualStage(activeLead.id, editStage, activeLead.phone);
             if (editStage === 'concluidas') {
               if (!activeLead.purchase_date) {
                 activeLead.purchase_date = editDate || formatYMD(new Date());
@@ -13387,6 +13445,7 @@
           activeLead.last_interaction = new Date().toISOString();
 
           saveStorage();
+          syncLeadToSupabase(activeLead); // CRÍTICO: Envia a alteração manual para o Supabase imediatamente!
           if (typeof isInstagramLead === 'function' && isInstagramLead(activeLead)) {
             if (typeof saveInstagramStorage === 'function') saveInstagramStorage();
             if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
