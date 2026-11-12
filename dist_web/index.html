@@ -4493,10 +4493,18 @@
       try {
         const reg = getLeadManualStagesRegistry();
         const entry = { stage: targetStage, updatedAt: new Date().toISOString() };
-        reg[String(leadId).toUpperCase()] = entry;
+        const idKey = String(leadId).toUpperCase().trim();
+        reg[idKey] = entry;
         if (leadPhone) {
-          const cp = cleanPhone(leadPhone);
-          if (cp) reg[cp] = entry;
+          const rawDigits = String(leadPhone).replace(/\D/g, '');
+          if (rawDigits) {
+            reg[rawDigits] = entry;
+            if (rawDigits.length >= 8) reg[rawDigits.slice(-8)] = entry;
+            if (rawDigits.startsWith('55') && rawDigits.length >= 10) reg[rawDigits.slice(2)] = entry;
+            else if (!rawDigits.startsWith('55')) reg['55' + rawDigits] = entry;
+            const core = (typeof getPhoneCoreKey === 'function') ? getPhoneCoreKey(rawDigits) : rawDigits.slice(-8);
+            if (core) reg['core_' + core] = entry;
+          }
         }
         localStorage.setItem('piffpaff_manual_stages', JSON.stringify(reg));
       } catch (e) {}
@@ -4506,12 +4514,28 @@
     function getLeadManualStage(leadId, leadPhone = null) {
       try {
         const reg = getLeadManualStagesRegistry();
-        if (leadId && reg[String(leadId).toUpperCase()]) {
-          return reg[String(leadId).toUpperCase()].stage;
+        if (leadId) {
+          const idKey = String(leadId).toUpperCase().trim();
+          if (reg[idKey] && reg[idKey].stage) return reg[idKey].stage;
         }
         if (leadPhone) {
-          const cp = cleanPhone(leadPhone);
-          if (cp && reg[cp]) return reg[cp].stage;
+          const rawDigits = String(leadPhone).replace(/\D/g, '');
+          if (rawDigits) {
+            if (reg[rawDigits] && reg[rawDigits].stage) return reg[rawDigits].stage;
+            if (rawDigits.startsWith('55') && rawDigits.length >= 10 && reg[rawDigits.slice(2)] && reg[rawDigits.slice(2)].stage) {
+              return reg[rawDigits.slice(2)].stage;
+            }
+            if (!rawDigits.startsWith('55') && reg['55' + rawDigits] && reg['55' + rawDigits].stage) {
+              return reg['55' + rawDigits].stage;
+            }
+            if (rawDigits.length >= 8 && reg[rawDigits.slice(-8)] && reg[rawDigits.slice(-8)].stage) {
+              return reg[rawDigits.slice(-8)].stage;
+            }
+            const core = (typeof getPhoneCoreKey === 'function') ? getPhoneCoreKey(rawDigits) : rawDigits.slice(-8);
+            if (core && reg['core_' + core] && reg['core_' + core].stage) {
+              return reg['core_' + core].stage;
+            }
+          }
         }
       } catch (e) {}
       return null;
@@ -4536,10 +4560,18 @@
       try {
         const reg = getLeadManualValuesRegistry();
         const entry = { value: numVal, updatedAt: new Date().toISOString() };
-        reg[String(leadId).toUpperCase()] = entry;
+        const idKey = String(leadId).toUpperCase().trim();
+        reg[idKey] = entry;
         if (leadPhone) {
-          const cp = cleanPhone(leadPhone);
-          if (cp) reg[cp] = entry;
+          const rawDigits = String(leadPhone).replace(/\D/g, '');
+          if (rawDigits) {
+            reg[rawDigits] = entry;
+            if (rawDigits.length >= 8) reg[rawDigits.slice(-8)] = entry;
+            if (rawDigits.startsWith('55') && rawDigits.length >= 10) reg[rawDigits.slice(2)] = entry;
+            else if (!rawDigits.startsWith('55')) reg['55' + rawDigits] = entry;
+            const core = (typeof getPhoneCoreKey === 'function') ? getPhoneCoreKey(rawDigits) : rawDigits.slice(-8);
+            if (core) reg['core_' + core] = entry;
+          }
         }
         localStorage.setItem('piffpaff_manual_values', JSON.stringify(reg));
       } catch (e) {}
@@ -4549,17 +4581,51 @@
     function getLeadManualValue(leadId, leadPhone = null) {
       try {
         const reg = getLeadManualValuesRegistry();
-        if (leadId && reg[String(leadId).toUpperCase()] !== undefined) {
-          return reg[String(leadId).toUpperCase()].value;
+        if (leadId) {
+          const idKey = String(leadId).toUpperCase().trim();
+          if (reg[idKey] !== undefined && reg[idKey].value !== undefined) return reg[idKey].value;
         }
         if (leadPhone) {
-          const cp = cleanPhone(leadPhone);
-          if (cp && reg[cp] !== undefined) return reg[cp].value;
+          const rawDigits = String(leadPhone).replace(/\D/g, '');
+          if (rawDigits) {
+            if (reg[rawDigits] !== undefined && reg[rawDigits].value !== undefined) return reg[rawDigits].value;
+            if (rawDigits.startsWith('55') && rawDigits.length >= 10 && reg[rawDigits.slice(2)] !== undefined && reg[rawDigits.slice(2)].value !== undefined) {
+              return reg[rawDigits.slice(2)].value;
+            }
+            if (!rawDigits.startsWith('55') && reg['55' + rawDigits] !== undefined && reg['55' + rawDigits].value !== undefined) {
+              return reg['55' + rawDigits].value;
+            }
+            if (rawDigits.length >= 8 && reg[rawDigits.slice(-8)] !== undefined && reg[rawDigits.slice(-8)].value !== undefined) {
+              return reg[rawDigits.slice(-8)].value;
+            }
+            const core = (typeof getPhoneCoreKey === 'function') ? getPhoneCoreKey(rawDigits) : rawDigits.slice(-8);
+            if (core && reg['core_' + core] !== undefined && reg['core_' + core].value !== undefined) {
+              return reg['core_' + core].value;
+            }
+          }
         }
       } catch (e) {}
       return null;
     }
     window.getLeadManualValue = getLeadManualValue;
+
+    function applyManualLocksToList(list) {
+      if (!Array.isArray(list)) return;
+      list.forEach(l => {
+        if (!l) return;
+        const mStage = getLeadManualStage(l.id, l.phone);
+        if (mStage) {
+          l.stage = mStage;
+          l.manual_stage = true;
+        }
+        const mVal = getLeadManualValue(l.id, l.phone);
+        if (mVal !== null && mVal !== undefined) {
+          l.value = Number(mVal);
+          l.manual_value = true;
+        }
+      });
+    }
+    window.applyManualLocksToList = applyManualLocksToList;
 
     // ==========================================
     // REGISTRO DE VENDAS CONCLUÍDAS
@@ -5284,7 +5350,6 @@
 
       filtered.forEach(l => {
         if (isInstagramLead(l)) {
-          // Lead do Instagram excluído da visualização
           return;
         } else {
           cloudWa.push({
@@ -5295,6 +5360,7 @@
         }
       });
 
+      applyManualLocksToList(cloudWa);
       leads = cloudWa;
       instagramLeads = [];
       renderKanban();
@@ -5538,11 +5604,19 @@
         edsonConsolidatedRawLeads = [...leads];
       }
 
-      if (currentEdsonFilterSeller === 'all') {
-        leads = [...edsonConsolidatedRawLeads];
-      } else {
-        leads = edsonConsolidatedRawLeads.filter(l => isLeadOfSeller(l, currentEdsonFilterSeller));
-      }
+      const rawList = (currentEdsonFilterSeller === 'all')
+        ? [...edsonConsolidatedRawLeads]
+        : edsonConsolidatedRawLeads.filter(l => isLeadOfSeller(l, currentEdsonFilterSeller));
+
+      leads = rawList.map(l => {
+        const mStage = getLeadManualStage(l.id, l.phone);
+        const mVal = getLeadManualValue(l.id, l.phone);
+        return {
+          ...l,
+          ...(mStage ? { stage: mStage, manual_stage: true } : {}),
+          ...(mVal !== null && mVal !== undefined ? { value: Number(mVal), manual_value: true } : {})
+        };
+      });
 
       renderKanban();
       renderFollowupCenter();
@@ -6207,6 +6281,9 @@
             lastSyncedWaJson = currentWaJson;
             lastSyncedInstaJson = currentInstaJson;
             leads = cloudWa;
+            if (sellerKey === 'edson') {
+              edsonConsolidatedRawLeads = [...cloudWa];
+            }
             instagramLeads = [];
             saveStorage();
             try {
@@ -6576,14 +6653,22 @@
           }
         }
 
+        // REGRA DE OURO: Se o vendedor alterou o valor do lead manualmente, JAMAIS sobrescrever em tempo real!
+        const manualVal = getLeadManualValue(row.id, row.phone) || (existingLocal && existingLocal.manual_value ? existingLocal.value : null);
+        const resolvedValue = (manualVal !== null && manualVal !== undefined)
+          ? Number(manualVal)
+          : ((row.value !== undefined && row.value !== null && row.value !== '') ? (Number(row.value) || 0) : (existingLocal?.value || 0));
+
         const merged = {
           ...(existingLocal || {}),
           ...row,
           manual_stage: Boolean(manualSt),
+          manual_value: (manualVal !== null && manualVal !== undefined),
           pipeline: 'whatsapp',
           channel: 'whatsapp',
           stage: waStage,
           categoria: row.categoria || 1,
+          value: resolvedValue,
           followup_date: preservedFollowupDate || row.followup_date,
           called_today: preservedCalledToday,
           last_contact_date: preservedLastContactDate || (preservedCalledToday ? todayRealtimeStr : null)
@@ -6609,10 +6694,21 @@
         showToast(`💬 [WhatsApp API] Atualização em tempo real: "${row.name || 'Cliente'}"`, 'info');
       }
 
-      if (activeLead && (activeLead.id === row.id || (row.phone && activeLead.phone && String(activeLead.phone).replace(/\D/g, '') === String(row.phone).replace(/\D/g, '')))) {
-        activeLead = { ...activeLead, ...row };
+      if (activeLead && (activeLead.id === row.id || (row.phone && activeLead.phone && (typeof isMatchingPhone === 'function' ? isMatchingPhone(activeLead.phone, row.phone) : String(activeLead.phone).replace(/\D/g, '') === String(row.phone).replace(/\D/g, ''))))) {
+        const curManualVal = getLeadManualValue(activeLead.id, activeLead.phone) || (activeLead.manual_value ? activeLead.value : null);
+        const curManualSt = getLeadManualStage(activeLead.id, activeLead.phone) || (activeLead.manual_stage ? activeLead.stage : null);
+        activeLead = {
+          ...activeLead,
+          ...row,
+          ...(curManualVal !== null && curManualVal !== undefined ? { value: Number(curManualVal), manual_value: true } : {}),
+          ...(curManualSt ? { stage: curManualSt, manual_stage: true } : {})
+        };
         const notesCont = document.getElementById('detail-notes-container');
         if (notesCont) notesCont.textContent = activeLead.notes || '';
+        const editValInput = document.getElementById('edit-lead-value');
+        if (editValInput && document.activeElement !== editValInput && curManualVal !== null && curManualVal !== undefined) {
+          editValInput.value = curManualVal;
+        }
         if (typeof renderLeadProductivityTimeline === 'function') {
           renderLeadProductivityTimeline(activeLead);
         }
@@ -6781,17 +6877,17 @@
         followup_date: ((typeof getContactType === 'function' && getContactType(lead) !== 'cliente') || lead.followup_disabled || lead.followup_status === 'Sem Follow-up' || lead.followup_date === '1970-01-01' || (typeof isFollowupRemoved === 'function' && isFollowupRemoved(lead))) ? '1970-01-01' : (lead.followup_date || null),
         channel: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.channel || (lead.instagram && !lead.phone ? 'instagram' : 'whatsapp')),
         pipeline: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.pipeline || 'whatsapp'),
-        vendedor_id: sellerKey,
+        vendedor_id: targetSeller,
         last_interaction: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        user_id: (authUser && authUser.id) ? authUser.id : (SELLER_REGISTRY[sellerKey]?.id || 'a1111111-1111-1111-1111-111111111111')
+        user_id: (authUser && authUser.id) ? authUser.id : (SELLER_REGISTRY[targetSeller]?.id || SELLER_REGISTRY[sellerKey]?.id || 'a1111111-1111-1111-1111-111111111111')
       };
 
       // 1. Tenta salvar via API Serverless do vendedor (Autenticação do backend grava 100% no Supabase sem erro RLS)
       try {
-        const targetEndpoint = STATIC_SELLER_ENDPOINTS.includes(sellerKey)
-          ? `/api/${sellerKey}`
-          : `/api/edson?seller=${encodeURIComponent(sellerKey)}`;
+        const targetEndpoint = STATIC_SELLER_ENDPOINTS.includes(targetSeller)
+          ? `/api/${targetSeller}`
+          : `/api/edson?seller=${encodeURIComponent(targetSeller)}`;
         const apiRes = await fetch(targetEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -13462,7 +13558,21 @@
           const editName = document.getElementById('edit-lead-name')?.value.trim();
           const editPhoneRaw = document.getElementById('edit-lead-phone')?.value.replace(/\D/g, '');
           const editCity = document.getElementById('edit-lead-city')?.value.trim();
-          const editValue = parseFloat(document.getElementById('edit-lead-value')?.value);
+          
+          // Parser robusto para valores monetários (aceita formatos 45000, 45.000,00, R$ 45.000)
+          const rawValInput = document.getElementById('edit-lead-value');
+          let editValue = NaN;
+          if (rawValInput && rawValInput.value !== '') {
+            const rawClean = String(rawValInput.value).replace(/R\$\s*/gi, '').replace(/\s/g, '');
+            if (rawClean.includes(',') && rawClean.includes('.')) {
+              editValue = parseFloat(rawClean.replace(/\./g, '').replace(',', '.'));
+            } else if (rawClean.includes(',')) {
+              editValue = parseFloat(rawClean.replace(',', '.'));
+            } else {
+              editValue = parseFloat(rawClean);
+            }
+          }
+
           const editStage = document.getElementById('edit-lead-stage')?.value;
           const editTemp = document.getElementById('edit-lead-temperature')?.value;
           const editPrio = document.getElementById('edit-lead-priority')?.value;
@@ -13477,6 +13587,22 @@
             activeLead.manual_value = true;
             activeLead.value_manually_set_at = new Date().toISOString();
             setLeadManualValue(activeLead.id, editValue, activeLead.phone);
+
+            // Sincroniza em memória imediatamente para todas as coleções ativas
+            (leads || []).forEach(l => {
+              if (l.id === activeLead.id || (activeLead.phone && (typeof isMatchingPhone === 'function' && isMatchingPhone(l.phone, activeLead.phone)))) {
+                l.value = editValue;
+                l.manual_value = true;
+              }
+            });
+            if (Array.isArray(edsonConsolidatedRawLeads)) {
+              edsonConsolidatedRawLeads.forEach(l => {
+                if (l.id === activeLead.id || (activeLead.phone && (typeof isMatchingPhone === 'function' && isMatchingPhone(l.phone, activeLead.phone)))) {
+                  l.value = editValue;
+                  l.manual_value = true;
+                }
+              });
+            }
           }
           if (editStage) {
             activeLead.stage = editStage;
