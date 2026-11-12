@@ -862,12 +862,15 @@ export default async function handler(req, res) {
       const existingIds = new Set(dbLeads.map(l => l.id));
       const existingInstas = new Set(dbLeads.map(l => (l.instagram || '').toLowerCase().replace(/^@/, '')));
 
-      const rawMergedLeads = [...dbLeads];
+      // Gabriel CRM: Filtra estritamente apenas contatos com número de WhatsApp válido (mínimo 8 dígitos)
+      const rawMergedLeads = [...dbLeads].filter(l => cleanPhone(l.phone).length >= 8);
       DEFAULT_INSTAGRAM_LEADS_GABRIEL.forEach(instaLead => {
         const cleanInsta = (instaLead.instagram || '').toLowerCase().replace(/^@/, '');
         const isDeleted = Boolean(govState?.soft_deleted_records?.[`lead:${instaLead.id}`]);
         if (!isDeleted && !existingIds.has(instaLead.id) && !existingInstas.has(cleanInsta)) {
-          rawMergedLeads.push(instaLead);
+          if (cleanPhone(instaLead.phone).length >= 8) {
+            rawMergedLeads.push(instaLead);
+          }
         }
       });
 
