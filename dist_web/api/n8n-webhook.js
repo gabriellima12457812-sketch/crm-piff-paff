@@ -1,8 +1,15 @@
+import { supabaseDirectFetch as fetch } from '../lib/supabase-fetch.js';
 // ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/n8n-webhook (ES Module)
 // WEBHOOK DIRETO MULTI-VENDEDOR (EVOLUTION API NATIVA + N8N + SUPABASE REALTIME)
 // Suporta: Gabriel Lima, Felipe, Mayara, Eduardo e Rodrigo
 // ==============================================================================
+
+import {
+  recordCallEvent,
+  recordInboundContact,
+  recordRemarketingAction
+} from '../lib/productivity.js';
 
 // Mapeamento Oficial de Vendedores no Supabase CRM
 const SELLERS = {
@@ -10,6 +17,8 @@ const SELLERS = {
     user_id: 'a1111111-1111-1111-1111-111111111111',
     vendedor_id: 'gabriel',
     name: 'Gabriel Lima',
+    phone: '554796137630',
+    alt_phone: '5547999158919',
     leadPrefix: 'CRM-GAB-WA',
     origem: 'WhatsApp Gabriel'
   },
@@ -17,6 +26,7 @@ const SELLERS = {
     user_id: 'c3333333-3333-3333-3333-333333333333',
     vendedor_id: 'felipe',
     name: 'Felipe',
+    phone: '554797674120',
     leadPrefix: 'CRM-FEL-WA',
     origem: 'WhatsApp Felipe'
   },
@@ -24,6 +34,7 @@ const SELLERS = {
     user_id: 'b2222222-2222-2222-2222-222222222222',
     vendedor_id: 'mayara',
     name: 'Mayara',
+    phone: '554796610600',
     leadPrefix: 'CRM-MAY-WA',
     origem: 'WhatsApp Mayara'
   },
@@ -31,6 +42,7 @@ const SELLERS = {
     user_id: 'f6666666-6666-6666-6666-666666666666',
     vendedor_id: 'barbara',
     name: 'Especialista Bárbara',
+    phone: '554796487189',
     leadPrefix: 'CRM-BAR-WA',
     origem: 'WhatsApp Bárbara'
   },
@@ -38,6 +50,7 @@ const SELLERS = {
     user_id: 'd4444444-4444-4444-4444-444444444444',
     vendedor_id: 'eduardo',
     name: 'Eduardo',
+    phone: '554730509208',
     leadPrefix: 'CRM-EDU-WA',
     origem: 'WhatsApp Eduardo'
   },
@@ -45,6 +58,7 @@ const SELLERS = {
     user_id: 'e5555555-5555-5555-5555-555555555555',
     vendedor_id: 'rodrigo',
     name: 'Rodrigo',
+    phone: '554797779767',
     leadPrefix: 'CRM-ROD-WA',
     origem: 'WhatsApp Rodrigo'
   },
@@ -52,8 +66,49 @@ const SELLERS = {
     user_id: '77777777-7777-7777-7777-777777777777',
     vendedor_id: 'kasio',
     name: 'Kasio',
+    phone: '554796043717',
     leadPrefix: 'CRM-KAS-WA',
     origem: 'WhatsApp Kasio'
+  },
+  diana: {
+    user_id: '88888888-8888-8888-8888-888888888888',
+    vendedor_id: 'diana',
+    name: 'Diana',
+    phone: '554796413082',
+    leadPrefix: 'CRM-DIA-WA',
+    origem: 'WhatsApp Diana'
+  },
+  sebastiao: {
+    user_id: '528bdca6-62a3-4dd5-bc45-0e77e9174e67',
+    vendedor_id: 'sebastiao',
+    name: 'Sebastião',
+    phone: '554796490322',
+    leadPrefix: 'CRM-SEB-WA',
+    origem: 'WhatsApp Sebastião'
+  },
+  yasmim: {
+    user_id: 'bbbbbbbb-9999-4999-a999-999999999999',
+    vendedor_id: 'yasmim',
+    name: 'Yasmim',
+    phone: '554796890192',
+    leadPrefix: 'CRM-YAS-WA',
+    origem: 'WhatsApp Yasmim'
+  },
+  nathaly: {
+    user_id: '33333333-3333-3333-3333-333333333333',
+    vendedor_id: 'nathaly',
+    name: 'Nathaly',
+    phone: '554796583495',
+    leadPrefix: 'CRM-NAT-WA',
+    origem: 'WhatsApp Nathaly'
+  },
+  thiago: {
+    user_id: '44444444-7777-4444-7777-444444444444',
+    vendedor_id: 'thiago',
+    name: 'Thiago Carvalho',
+    phone: '554797550665',
+    leadPrefix: 'CRM-THI-WA',
+    origem: 'WhatsApp Thiago'
   }
 };
 
@@ -62,14 +117,32 @@ function cleanPhone(raw) {
   return String(raw).replace(/\D/g, '').trim();
 }
 
+function getPhoneCoreKey(raw) {
+  if (!raw) return '';
+  let digits = cleanPhone(raw);
+  if (!digits) return '';
+  if (digits.startsWith('55') && digits.length >= 10 && digits.length <= 13) {
+    digits = digits.slice(2);
+  }
+  if (digits.length === 10 || digits.length === 11) {
+    const ddd = digits.slice(0, 2);
+    const last7 = digits.slice(-7);
+    return `${ddd}_${last7}`;
+  }
+  if (digits.length >= 8) {
+    return digits.slice(-8);
+  }
+  return digits;
+}
+
 function normalizePhoneVariants(raw) {
   const digits = cleanPhone(raw);
   if (!digits) return [];
   const variants = new Set([digits]);
 
   let core = digits;
-  // Se começar com 55 e tiver 12 ou 13 dígitos, extrai o DDD + número
-  if (core.startsWith('55') && (core.length === 12 || core.length === 13)) {
+  // Se começar com 55 e tiver 10 a 13 dígitos, extrai o número nacional
+  if (core.startsWith('55') && core.length >= 10 && core.length <= 13) {
     core = core.substring(2);
   }
 
@@ -79,19 +152,20 @@ function normalizePhoneVariants(raw) {
     const rest = core.substring(2);
 
     if (rest.length === 8) {
-      // Formato antigo sem o 9 (ex: 47 9959-0571) -> cria com 9
+      // Formato sem o 9 (ex: 47 9959-0571) -> gera com 9
       const with9 = ddd + '9' + rest;
-      variants.add(core); // 4799590571
-      variants.add('55' + core); // 554799590571
-      variants.add(with9); // 47999590571
-      variants.add('55' + with9); // 5547999590571
-    } else if (rest.length === 9 && rest.startsWith('9')) {
-      // Formato moderno com 9 (ex: 47 99959-0571) -> cria sem 9
-      const without9 = ddd + rest.substring(1);
-      variants.add(core); // 47999590571
-      variants.add('55' + core); // 5547999590571
-      variants.add(without9); // 4799590571
-      variants.add('55' + without9); // 554799590571
+      variants.add(core);
+      variants.add('55' + core);
+      variants.add(with9);
+      variants.add('55' + with9);
+    } else if (rest.length === 9) {
+      variants.add(core);
+      variants.add('55' + core);
+      if (rest.startsWith('9')) {
+        const without9 = ddd + rest.substring(1);
+        variants.add(without9);
+        variants.add('55' + without9);
+      }
     }
   }
 
@@ -142,63 +216,82 @@ function extractMonetaryValue(text) {
     return val;
   };
 
-  // 0. Padrão "DE X POR Y" (Preço Promocional / Desconto Comercial - O valor REAL é a oferta final "POR Y")
-  // 0.1 De X por Nx de Y (parcelado no desconto, ex: "De 3.600 por 10x de 250")
-  const dePorParcel = clean.match(/(?:de|era|tabela(?:\s*de)?)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(?:mil|k)?.*?(?:por|sai\s*por|fa[çc]o\s*por|fecho\s*por|fica\s*por|consigo\s*(?:fazer\s*)?por|deixo\s*por)\s*(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
-  if (dePorParcel) {
-    const parcelas = parseInt(dePorParcel[2], 10);
-    const vParc = parseAmount(dePorParcel[3]);
-    if (parcelas > 1 && vParc > 0) {
-      const total = parcelas * vParc;
-      if (total >= 500 && total <= 2000000) return Math.round(total * 100) / 100;
-    }
+  // 1. Padrão TOTAL / CONJUNTO / ORÇAMENTO FECHADO explícito (tem prioridade máxima quando citado)
+  // Ex: "Conjunto: R$ 44.300,00", "Total do pedido: R$ 29.900", "Total com desconto: 29900", "o orçamento total é 29900"
+  const totalExplicitMatch = clean.match(/(?:conjunto|total(?:\s*do\s*pedido|\s*com\s*desconto|\s*geral)?|or[çc]amento(?:\s*total|\s*fechado)?|valor\s*total)\s*(?::|[eé]|de|em|ficou|fica)?\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
+  if (totalExplicitMatch) {
+    const val = parseAmount(totalExplicitMatch[1], totalExplicitMatch[2]);
+    if (val >= 500 && val <= 2000000) return Math.round(val * 100) / 100;
   }
 
-  // 0.2 De X por Y (direto à vista / proposta, ex: "De R$ 3.600,00 Por R$ 2.600,00", "de 3600 por 2500")
+  // 2. Padrão "DE X POR Y" (Preço Promocional / Desconto Comercial direto)
+  // Ex: "De 34.000 por 29.900", "De R$ 3.600 por R$ 2.500", "era 34 mil por 29.900"
   const dePorMatch = clean.match(/(?:de|era|tabela(?:\s*de)?)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?\s*(?:reais)?.*?(?:por|sai\s*por|fa[çc]o\s*por|fecho\s*por|fica\s*por|consigo\s*(?:fazer\s*)?por|deixo\s*por)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
   if (dePorMatch) {
     const finalVal = parseAmount(dePorMatch[3], dePorMatch[4]);
     if (finalVal >= 500 && finalVal <= 2000000) return Math.round(finalVal * 100) / 100;
   }
 
-  // 1. Padrão Parcelado: ex "10x de 1.500", "12x de R$ 1.250", "10x 1800"
+  // 3. Padrão DESCONTO / NEGOCIAÇÃO COMERCIAL (Valor de tabela/móvel com desconto -> O que conta é a oferta final)
+  // Ex: "o movel e 34 mil mais fiz desconto e ficou por 29900"
+  // Ex: "34 mil com desconto fica 29900"
+  // Ex: "34 mil, com desconto sai por 29.900"
+  // Ex: "o sofá custa 34 mil. Mas te dou desconto e fica 29900"
+  const discountMatch = clean.match(/(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?.*?(?:desconto|oferta).*?(?:por|sai\s*por|fa[çc]o\s*por|fecho\s*por|fica\s*por|fica\s*em|ficou\s*por|ficou|consigo\s*(?:fazer\s*)?por|deixo\s*por|fica|[eé])\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
+  if (discountMatch) {
+    const finalVal = parseAmount(discountMatch[3], discountMatch[4]);
+    if (finalVal >= 500 && finalVal <= 2000000) return Math.round(finalVal * 100) / 100;
+  }
+
+  // 4. Padrão Desconto Parcelado: "era 34 mil mas no desconto faço em 10x de 2990" ou "De 3600 por 10x de 250"
+  const discountParcelMatch = clean.match(/(?:de|era|desconto|tabela).*?(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
+  if (discountParcelMatch) {
+    const parc = parseInt(discountParcelMatch[1], 10);
+    const vParc = parseAmount(discountParcelMatch[2]);
+    if (parc > 1 && vParc > 0) {
+      const tot = parc * vParc;
+      if (tot >= 500 && tot <= 2000000) return Math.round(tot * 100) / 100;
+    }
+  }
+
+  // 5. Padrão Parcelado Comum: "10x de 1.500", "12x de R$ 1.250", "10x 2990"
   const parcelMatch = clean.match(/(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
   if (parcelMatch) {
     const qtdParcelas = parseInt(parcelMatch[1], 10);
     const valorParcela = parseAmount(parcelMatch[2]);
     if (!isNaN(valorParcela) && qtdParcelas > 1 && qtdParcelas <= 24) {
       const total = qtdParcelas * valorParcela;
-      if (total >= 500 && total <= 2000000) {
-        return Math.round(total * 100) / 100;
-      }
+      if (total >= 500 && total <= 2000000) return Math.round(total * 100) / 100;
     }
   }
 
-  // 2. Padrão Abreviado com 'mil' ou 'k': ex "15 mil", "18,5 mil", "25k", "180 mil"
+  // 6. Padrão Contextual de fechamento / oferta final:
+  // "fecho por 29900", "consigo fazer por 29.900", "fica por 29.900", "faço por 29900"
+  const closingOfferMatch = clean.match(/(?:fecho\s*por|fa[çc]o\s*por|fica\s*por|ficou\s*por|consigo\s*(?:fazer\s*)?por|deixo\s*por|sai\s*por)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
+  if (closingOfferMatch) {
+    const val = parseAmount(closingOfferMatch[1], closingOfferMatch[2]);
+    if (val >= 500 && val <= 2000000) return Math.round(val * 100) / 100;
+  }
+
+  // 7. Padrão Contextual geral: "orçamento de 25000", "valor de 15000", "preço 29900"
+  const contextMatch = clean.match(/(?:valor|or[çc]amento|pre[çc]o)\s*(?:de|em|fica|ficou|[eé])?\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
+  if (contextMatch) {
+    const val = parseAmount(contextMatch[1], contextMatch[2]);
+    if (val >= 500 && val <= 2000000) return Math.round(val * 100) / 100;
+  }
+
+  // 8. Padrão Abreviado com 'mil' ou 'k': ex "15 mil", "29,9 mil", "25k"
   const milMatch = clean.match(/(\d+(?:[.,]\d+)?)\s*(?:mil|k)\b/i);
   if (milMatch) {
     const total = parseAmount(milMatch[1], 'mil');
-    if (total >= 500 && total <= 2000000) {
-      return Math.round(total * 100) / 100;
-    }
+    if (total >= 500 && total <= 2000000) return Math.round(total * 100) / 100;
   }
 
-  // 3. Padrão Direto em R$: ex "R$ 15.000,00", "R$ 15.000", "R$18500", "R$ 8.900"
+  // 9. Padrão Direto em R$: ex "R$ 15.000,00", "R$ 29.900"
   const rsMatch = clean.match(/R\$\s*(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
   if (rsMatch) {
     const total = parseAmount(rsMatch[1]);
-    if (total >= 500 && total <= 2000000) {
-      return Math.round(total * 100) / 100;
-    }
-  }
-
-  // 4. Padrão Contextual: ex "valor de 15000", "orçamento 25.000", "total de 18.000", "fecho por 14000"
-  const contextMatch = clean.match(/(?:valor|or[çc]amento|pre[çc]o|total|fecho por|fica em|fica por)\s*(?:de|em)?\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d{4,6})/i);
-  if (contextMatch) {
-    const total = parseAmount(contextMatch[1]);
-    if (total >= 500 && total <= 2000000) {
-      return Math.round(total * 100) / 100;
-    }
+    if (total >= 500 && total <= 2000000) return Math.round(total * 100) / 100;
   }
 
   return 0;
@@ -210,14 +303,41 @@ function extractMonetaryValue(text) {
 // ==============================================================================
 const STAGE_RANKS = {
   novos: 1,
+  novo: 1,
   investigacao: 2,
+  investigação: 2,
+  qualificacao: 2,
+  qualificação: 2,
+  diagnostico: 2,
+  abordagem: 2,
   projetos: 3,
+  projeto: 3,
+  conversa: 3,
   proposta: 4,
+  orcamento: 4,
+  orçamento: 4,
   fechamento: 5,
-  concluidas: 6
+  fechando: 5,
+  concluidas: 6,
+  concluida: 6,
+  concluídas: 6,
+  concluído: 6,
+  concluido: 6,
+  ganho: 6,
+  ganhos: 6,
+  venda: 6,
+  vendas: 6
 };
 
 function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
+  const curLower = String(currentStage || '').toLowerCase().trim();
+
+  // REGRA DE OURO: Lead Concluído é VENDA FINALIZADA!
+  // NUNCA regride lead concluído para fechamento ou qualquer outro estágio via WhatsApp!
+  if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(curLower)) {
+    return null;
+  }
+
   const lower = (text || '').toLowerCase();
   let candidate = null;
 
@@ -242,7 +362,7 @@ function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
     candidate = {
       stage: 'proposta',
       etapa_kanban: 'Proposta',
-      temperature: 'quente',
+      temperature: (detectedValue >= 35000 || /desconto|fecho|pix|sinal/i.test(lower)) ? 'quente' : 'morno',
       commercial_moment: 'proposta',
       priority: detectedValue >= 30000 ? 'MAXIMA' : 'ALTA',
       advance_probability: 'alta',
@@ -255,7 +375,7 @@ function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
     candidate = {
       stage: 'projetos',
       etapa_kanban: 'Projetos',
-      temperature: 'quente',
+      temperature: 'morno',
       commercial_moment: 'decisao',
       priority: 'ALTA',
       advance_probability: 'media',
@@ -264,8 +384,8 @@ function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
     };
   }
 
-  // Regra de Unidirecionalidade: se o lead já está em estágio superior, preserva o estágio atual
-  const currentRank = STAGE_RANKS[(currentStage || 'novos').toLowerCase()] || 1;
+  // Regra de Unidirecionalidade: se o lead já está em estágio superior ou igual, preserva o estágio atual
+  const currentRank = STAGE_RANKS[curLower] || 1;
   if (candidate) {
     const candidateRank = STAGE_RANKS[candidate.stage] || 1;
     if (candidateRank > currentRank) {
@@ -308,6 +428,391 @@ export default async function handler(req, res) {
     }
     body = body || {};
 
+    const query = req.query || {};
+    const action = String(body.action || query.action || '').toLowerCase();
+
+    // 1.3 Identificação do Vendedor de Destino (Gabriel, Felipe, Mayara, Eduardo, Rodrigo, Kasio ou Diana)
+    const rawSeller = (
+      body.vendedor_id ||
+      body.vendedor ||
+      body.instance ||
+      query.seller ||
+      query.vendedor ||
+      query.instance ||
+      ''
+    ).toString().toLowerCase();
+
+    let seller = SELLERS.gabriel;
+    if (rawSeller.includes('diana')) {
+      seller = SELLERS.diana;
+    } else if (rawSeller.includes('sebastiao')) {
+      seller = SELLERS.sebastiao;
+    } else if (rawSeller.includes('barbara')) {
+      seller = SELLERS.barbara;
+    } else if (rawSeller.includes('eduardo')) {
+      seller = SELLERS.eduardo;
+    } else if (rawSeller.includes('mayara')) {
+      seller = SELLERS.mayara;
+    } else if (rawSeller.includes('felipe')) {
+      seller = SELLERS.felipe;
+    } else if (rawSeller.includes('rodrigo')) {
+      seller = SELLERS.rodrigo;
+    } else if (rawSeller.includes('kasio')) {
+      seller = SELLERS.kasio;
+    } else if (rawSeller.includes('yasmim') || rawSeller.includes('yasmin')) {
+      seller = SELLERS.yasmim;
+    } else if (rawSeller.includes('nathaly') || rawSeller.includes('nataly') || rawSeller.includes('natalhy')) {
+      seller = SELLERS.nathaly;
+    } else if (rawSeller.includes('thiago') || rawSeller.includes('tiago')) {
+      seller = SELLERS.thiago;
+    } else if (SELLERS[rawSeller]) {
+      seller = SELLERS[rawSeller];
+    }
+
+    // =======================================================================
+    // CAPTURA AUTOMÁTICA DE CHAMADAS TELEFÔNICAS / WHATSAPP (CALL:ENDED / VOIP)
+    // =======================================================================
+    const eventName = String(body.event || body.type || query.event || '').toLowerCase();
+    const isCallEvent = eventName === 'call' || eventName === 'call:ended' || eventName === 'calls' ||
+                        eventName.includes('call') || Boolean(body.call) || Boolean(body.data?.call) ||
+                        (Array.isArray(body.data) && body.data.length > 0 && (body.data[0]?.status || body.data[0]?.isVideo !== undefined));
+
+    if (isCallEvent) {
+      const rawData = body.call || body.data?.call || (Array.isArray(body.data) ? body.data[0] : (body.data || body));
+      const callStatusRaw = String(rawData.status || body.status || '').toLowerCase();
+
+      // 1. EXTRAÇÃO E RESOLUÇÃO DE TELEFONE REAL (BLINDAGEM DE LIDs @lid)
+      const rawCaller = String(rawData.caller || rawData.from || rawData.callerNumber || body.sender || body.from || '');
+      const rawRecipient = String(rawData.recipient || rawData.to || rawData.chatId || rawData.remoteJid || rawData.recipientNumber || body.to || '');
+      let altJid = String(rawData.remoteJidAlt || rawData.participantAlt || rawData.jidAlt || rawData.key?.remoteJidAlt || '');
+
+      let clientPhone = '';
+      if (altJid && altJid.includes('@')) {
+        clientPhone = cleanPhone(altJid.split('@')[0]);
+      }
+
+      // Se não temos altJid e um dos lados é um @lid, tenta resolver na Evolution API
+      const targetJid = rawRecipient.includes('@lid') ? rawRecipient : (rawCaller.includes('@lid') ? rawCaller : '');
+      if (!clientPhone && targetJid) {
+        try {
+          const evoUrl = process.env.EVOLUTION_SERVER_URL || 'https://piffpaff-evolution-api.onrender.com';
+          const evoKey = process.env.EVOLUTION_API_KEY || 'PiffPaffEvoSecretKey2026!';
+          const chRes = await fetch(`${evoUrl}/chat/findChats/${seller.vendedor_id}`, {
+            method: 'POST',
+            headers: { apikey: evoKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ where: { remoteJid: targetJid } })
+          });
+          if (chRes.ok) {
+            const chData = await chRes.json();
+            const alt = chData?.lastMessage?.key?.remoteJidAlt || (Array.isArray(chData) && chData[0]?.lastMessage?.key?.remoteJidAlt);
+            if (alt) {
+              clientPhone = cleanPhone(alt.split('@')[0]);
+            }
+          }
+        } catch (e) {}
+      }
+
+      let callerNumber = cleanPhone(rawCaller);
+      let recipientNumber = cleanPhone(rawRecipient);
+
+      // Conjunto com números conhecidos de vendedores para identificar quem é o cliente
+      const sellerPhones = new Set([
+        cleanPhone(seller.phone),
+        cleanPhone(seller.alt_phone),
+        '554796137630',
+        '5547999158919',
+        '47999158919',
+        '554797779767',
+        '554796043717',
+        '554796890192',
+        '554797674120',
+        '554730509208',
+        '554796413082',
+        '554796490322'
+      ].filter(Boolean));
+
+      if (!clientPhone) {
+        if (sellerPhones.has(callerNumber)) {
+          clientPhone = recipientNumber;
+        } else if (sellerPhones.has(recipientNumber)) {
+          clientPhone = callerNumber;
+        } else if (callerNumber && callerNumber.length <= 13 && callerNumber.startsWith('55')) {
+          clientPhone = callerNumber;
+        } else {
+          clientPhone = recipientNumber;
+        }
+      }
+
+      // DESCARTA SE FOR LID BRUTO NÃO RESOLVIDO (ex: 97526040547358)
+      if ((clientPhone && clientPhone.length > 13 && !clientPhone.startsWith('55')) || clientPhone === '97526040547358') {
+        console.warn('[n8n-webhook] Descartando evento de chamada com LID não resolvido:', clientPhone);
+        return res.status(200).json({ success: true, message: 'Evento descartado pois o número é um LID interno não resolvido.', clientPhone });
+      }
+
+      let durationSeconds = parseInt(rawData.duration_seconds || rawData.duration || rawData.latencyMs || body.duration_seconds || '0', 10) || 0;
+
+      let finalStatus = 'NO_ANSWER';
+      if (callStatusRaw.includes('timeout') || callStatusRaw.includes('reject') || callStatusRaw.includes('miss') || callStatusRaw.includes('no_answer') || callStatusRaw.includes('decline')) {
+        finalStatus = 'NO_ANSWER';
+        durationSeconds = 0;
+      } else if (callStatusRaw.includes('accept') || callStatusRaw.includes('terminate') || callStatusRaw.includes('answered') || durationSeconds > 0) {
+        if (durationSeconds > 0) {
+          finalStatus = 'ANSWERED';
+        } else {
+          finalStatus = callStatusRaw.includes('accept') ? 'ANSWERED' : 'NO_ANSWER';
+        }
+      }
+
+      const startedAt = rawData.started_at || rawData.date || rawData.startTime || body.started_at || new Date().toISOString();
+      const endedAt = rawData.ended_at || rawData.endTime || body.ended_at || startedAt;
+      const externalCallId = rawData.id || rawData.callId || body.id || null;
+
+      let matchedLeadId = null;
+      if (clientPhone && clientPhone.length >= 8) {
+        try {
+          const variants = normalizePhoneVariants(clientPhone);
+          const incomingCore = getPhoneCoreKey(clientPhone);
+          const last7 = clientPhone.slice(-7);
+          const orParts = variants.map(v => `phone.eq.${v}`);
+          if (last7.length === 7) {
+            orParts.push(`phone.ilike.%${last7}%`);
+          }
+          const orFilter = orParts.join(',');
+          const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&limit=15&select=id,name,phone,notes`;
+          const sRes = await fetch(searchUrl, { headers: supabaseHeaders });
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            if (Array.isArray(sData) && sData.length > 0) {
+              const best = sData.find(l => {
+                const cCore = getPhoneCoreKey(l.phone);
+                return cCore && incomingCore && cCore === incomingCore;
+              }) || sData.find(l => {
+                const cP = cleanPhone(l.phone);
+                return cP && (cP === clientPhone || cP.endsWith(last7));
+              }) || sData[0];
+              matchedLeadId = best.id;
+            }
+          }
+        } catch (e) {}
+      }
+
+      const callResult = await recordCallEvent({
+        userId: seller.vendedor_id || seller.user_id,
+        leadId: matchedLeadId,
+        callerNumber: callerNumber || 'Comercial Piff-Paff',
+        recipientNumber: clientPhone || recipientNumber,
+        callSource: rawData.source || 'WHATSAPP',
+        status: finalStatus,
+        durationSeconds,
+        recordingUrl: rawData.recording_url || body.recording_url || null,
+        startedAt,
+        endedAt,
+        callId: externalCallId
+      });
+
+      // Só atualiza notas no lead do Supabase se não foi um evento duplicado
+      if (matchedLeadId && !callResult.duplicate && !callResult.ignored) {
+        try {
+          const timeStr = new Date().toLocaleString('pt-BR');
+          const entry = `[${timeStr} - Ligação WhatsApp]: ${finalStatus === 'ANSWERED' ? `Chamada Atendida (${durationSeconds}s)` : '🔴 Ligação Não Atendida / Caixa (0s)'}`;
+          const currentNotesRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(matchedLeadId)}&select=notes`, { headers: supabaseHeaders });
+          if (currentNotesRes.ok) {
+            const currentData = await currentNotesRes.json();
+            const prevNotes = currentData?.[0]?.notes || '';
+            const updatedNotes = prevNotes ? `${prevNotes}\n\n${entry}` : entry;
+            await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(matchedLeadId)}`, {
+              method: 'PATCH',
+              headers: supabaseHeaders,
+              body: JSON.stringify({ notes: updatedNotes, last_interaction: new Date().toISOString() })
+            }).catch(() => {});
+          }
+        } catch (noteErr) {}
+      }
+
+      return res.status(200).json({ success: true, message: callResult.duplicate ? 'Evento duplicado ignorado.' : 'Chamada registrada com sucesso.', call: callResult.call });
+    }
+
+    // =======================================================================
+    // 0. AÇÃO ESPECIAL: SINCRONIZAR CONVERSAS E CONTATOS DO WHATSAPP (IMPORT INICIAL)
+    // =======================================================================
+    if (action === 'sync_whatsapp' || action === 'sync_contacts' || action === 'sync') {
+      const evoUrl = process.env.EVOLUTION_SERVER_URL || 'https://piffpaff-evolution-api.onrender.com';
+      const evoKey = process.env.EVOLUTION_API_KEY || 'PiffPaffEvoSecretKey2026!';
+      const targetSellerKey = seller.vendedor_id;
+
+      // 1. Busca contatos salvos da instância
+      let contacts = [];
+      try {
+        const cRes = await fetch(`${evoUrl}/chat/findContacts/${targetSellerKey}`, {
+          method: 'POST',
+          headers: { apikey: evoKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        if (cRes.ok) contacts = (await cRes.json()) || [];
+      } catch (ce) {}
+
+      // 2. Busca conversas recentes da instância
+      let chats = [];
+      try {
+        const chRes = await fetch(`${evoUrl}/chat/findChats/${targetSellerKey}`, {
+          method: 'POST',
+          headers: { apikey: evoKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        if (chRes.ok) chats = (await chRes.json()) || [];
+      } catch (che) {}
+
+      const contactMap = new Map();
+      contacts.forEach(c => {
+        if (!c.remoteJid || c.remoteJid.includes('@g.us') || c.remoteJid.includes('broadcast')) return;
+        const phone = c.remoteJid.replace(/@.*$/, '').replace(/\D/g, '');
+        if (phone.length >= 8) {
+          contactMap.set(phone, {
+            phone,
+            isLid: c.remoteJid.includes('@lid'),
+            name: c.pushName || '',
+            updatedAt: c.updatedAt || c.createdAt || new Date().toISOString()
+          });
+        }
+      });
+
+      chats.forEach(ch => {
+        const alt = ch.lastMessage?.key?.remoteJidAlt;
+        const jid = ch.remoteJid || '';
+        if (jid.includes('@g.us') || jid.includes('broadcast')) return;
+
+        let phone = '';
+        let isLid = false;
+        if (alt && alt.includes('@s.whatsapp.net')) {
+          phone = alt.replace(/@.*$/, '').replace(/\D/g, '');
+        } else if (jid.includes('@s.whatsapp.net')) {
+          phone = jid.replace(/@.*$/, '').replace(/\D/g, '');
+        } else if (jid.includes('@lid')) {
+          isLid = true;
+          phone = jid.replace(/@.*$/, '').replace(/\D/g, '');
+        }
+
+        const lastMsgText = ch.lastMessage?.message?.conversation || ch.lastMessage?.message?.extendedTextMessage?.text || '';
+        let extractedName = '';
+
+        // Se for LID e tiver dados no texto da mensagem, extrai telefone real e nome
+        if (isLid && lastMsgText) {
+          const pMatch = lastMsgText.match(/(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
+          if (pMatch) {
+            phone = `55${pMatch[1]}9${pMatch[2]}${pMatch[3]}`;
+            isLid = false;
+          }
+          const nMatch = lastMsgText.match(/Nome(?:\s+Completo)?\s*:\s*([^\n\r,]+)/i);
+          if (nMatch && nMatch[1].trim().length > 2) {
+            extractedName = nMatch[1].trim();
+          }
+        }
+
+        if (phone.length >= 8) {
+          const existing = contactMap.get(phone) || { phone };
+          contactMap.set(phone, {
+            ...existing,
+            isLid,
+            name: extractedName || existing.name || (ch.pushName !== 'Você' ? ch.pushName : '') || '',
+            lastText: lastMsgText,
+            updatedAt: ch.updatedAt || existing.updatedAt || new Date().toISOString()
+          });
+        }
+      });
+
+      const leadsToUpsert = [];
+      const nowIso = new Date().toISOString();
+
+      // Busca leads existentes para preservar stage atual (nunca regride lead concluído para 'novos')
+      const existingLeadsMap = new Map();
+      try {
+        const exRes = await fetch(`${supabaseUrl}/rest/v1/leads?user_id=eq.${encodeURIComponent(seller.user_id)}&select=id,phone,stage,etapa_kanban,value,notes`, {
+          headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }
+        });
+        if (exRes.ok) {
+          const exList = await exRes.json();
+          if (Array.isArray(exList)) {
+            exList.forEach(ex => {
+              if (ex.id) existingLeadsMap.set(String(ex.id).toUpperCase(), ex);
+              const cp = cleanPhone(ex.phone);
+              if (cp) {
+                existingLeadsMap.set(cp, ex);
+                if (cp.length >= 8) existingLeadsMap.set(cp.slice(-8), ex);
+              }
+            });
+          }
+        }
+      } catch (exErr) {}
+
+      for (const [phone, item] of contactMap.entries()) {
+        const prefix = item.isLid ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
+        const leadId = `${prefix}-${phone}`;
+        const cleanName = item.name && item.name.trim().length > 1
+          ? item.name.trim()
+          : (item.isLid ? `WhatsApp (${phone.slice(-4)})` : `Cliente WhatsApp (${phone.slice(-4)})`);
+
+        const existing = existingLeadsMap.get(String(leadId).toUpperCase()) || (phone && existingLeadsMap.get(phone)) || (phone.length >= 8 && existingLeadsMap.get(phone.slice(-8)));
+        const targetStage = existing?.stage || 'novos';
+        const targetEtapa = existing?.etapa_kanban || (targetStage === 'concluidas' ? 'Concluídas' : 'Novos');
+        const targetValue = existing?.value !== undefined ? existing.value : 0;
+
+        leadsToUpsert.push({
+          id: leadId,
+          user_id: seller.user_id,
+          vendedor_id: seller.vendedor_id,
+          name: cleanName,
+          phone: phone,
+          city: 'Brasil',
+          stage: targetStage,
+          etapa_kanban: targetEtapa,
+          categoria: 1,
+          origem: 'WhatsApp API',
+          channel: 'whatsapp',
+          pipeline: 'whatsapp',
+          temperature: 'morno',
+          priority: 'MEDIA',
+          value: targetValue,
+          notes: item.lastText ? `[Última mensagem WhatsApp]: ${item.lastText}` : (existing?.notes || `Contato importado do WhatsApp de ${seller.name}.`),
+          last_interaction: item.updatedAt || nowIso,
+          created_at: existing?.created_at || nowIso,
+          updated_at: nowIso
+        });
+      }
+
+      // Upsert em lotes no Supabase
+      const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ukuaujxvdziiaxxuuidw.supabase.co').replace(/\/$/, '');
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_g-9BXuBM-xknIbIlpmF36A_ON6vnkuO';
+      let insertedCount = 0;
+
+      const chunkSize = 50;
+      for (let i = 0; i < leadsToUpsert.length; i += chunkSize) {
+        const batch = leadsToUpsert.slice(i, i + chunkSize);
+        try {
+          const upRes = await fetch(`${supabaseUrl}/rest/v1/leads`, {
+            method: 'POST',
+            headers: {
+              apikey: serviceKey,
+              Authorization: `Bearer ${serviceKey}`,
+              'Content-Type': 'application/json',
+              Prefer: 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify(batch)
+          });
+          if (upRes.ok) insertedCount += batch.length;
+        } catch (upe) {}
+      }
+
+      return res.status(200).json({
+        ok: true,
+        success: true,
+        seller: seller.vendedor_id,
+        seller_name: seller.name,
+        total_contacts_found: contactMap.size,
+        total_leads_upserted: insertedCount,
+        message: `${insertedCount} contatos e conversas do WhatsApp sincronizados com sucesso na carteira de ${seller.name}!`
+      });
+    }
+
     // =======================================================================
     // 1. SUPORTE NATIVO EVOLUTION API v2 (messages.upsert) & N8N
     // =======================================================================
@@ -325,31 +830,6 @@ export default async function handler(req, res) {
         ignored: true,
         reason: 'Mensagem de grupo ou status broadcast ignorada'
       });
-    }
-
-    // 1.3 Identificação do Vendedor de Destino (Gabriel, Felipe, Mayara, Eduardo ou Rodrigo)
-    const rawSeller = (
-      body.vendedor_id ||
-      body.vendedor ||
-      body.instance ||
-      req.query?.seller ||
-      req.query?.instance ||
-      ''
-    ).toString().toLowerCase();
-
-    let seller = SELLERS.gabriel;
-    if (rawSeller.includes('barbara')) {
-      seller = SELLERS.barbara;
-    } else if (rawSeller.includes('eduardo')) {
-      seller = SELLERS.eduardo;
-    } else if (rawSeller.includes('mayara')) {
-      seller = SELLERS.mayara;
-    } else if (rawSeller.includes('felipe')) {
-      seller = SELLERS.felipe;
-    } else if (rawSeller.includes('rodrigo')) {
-      seller = SELLERS.rodrigo;
-    } else if (rawSeller.includes('kasio')) {
-      seller = SELLERS.kasio;
     }
 
     // 1.4 Extração de Texto da Mensagem (suporta todos os formatos WhatsApp)
@@ -390,27 +870,79 @@ export default async function handler(req, res) {
       });
     }
 
-    // 1.5 Extração de Telefone
-    const rawPhone = body.telefone || body.phone || rawJid.replace(/@.*$/, '') || '';
+    // 1.5 Extração e Resolução Blindada de Telefone (suporte total a WhatsApp @lid)
+    let altJid = String(key.remoteJidAlt || evoData?.remoteJidAlt || body.remoteJidAlt || '');
+    let realPhone = '';
+    if (altJid && altJid.includes('@s.whatsapp.net')) {
+      realPhone = cleanPhone(altJid.replace(/@.*$/, ''));
+    }
+
+    // Se o contato veio com @lid e sem altJid no payload, consulta chat na Evolution API para descobrir o número real
+    if (!realPhone && rawJid.includes('@lid')) {
+      try {
+        const evoUrl = process.env.EVOLUTION_SERVER_URL || 'https://piffpaff-evolution-api.onrender.com';
+        const evoKey = process.env.EVOLUTION_API_KEY || 'PiffPaffEvoSecretKey2026!';
+        const chRes = await fetch(`${evoUrl}/chat/findChats/${seller.vendedor_id}`, {
+          method: 'POST',
+          headers: { apikey: evoKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ where: { remoteJid: rawJid } })
+        });
+        if (chRes.ok) {
+          const chData = await chRes.json();
+          const alt = chData?.lastMessage?.key?.remoteJidAlt || (Array.isArray(chData) && chData[0]?.lastMessage?.key?.remoteJidAlt);
+          if (alt) {
+            realPhone = cleanPhone(alt.replace(/@.*$/, ''));
+          }
+        }
+      } catch (e) {}
+    }
+
+    let isLid = rawJid.includes('@lid');
+    let rawPhone = realPhone || body.telefone || body.phone || '';
+
+    // Se for um contato @lid e ainda não tivermos o telefone real, tenta extrair da mensagem
+    if (!rawPhone && isLid) {
+      const textMatch = extractedText.match(/(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
+      if (textMatch) {
+        rawPhone = `55${textMatch[1]}9${textMatch[2]}${textMatch[3]}`;
+        isLid = false;
+      } else {
+        rawPhone = rawJid.replace(/@.*$/, '');
+      }
+    } else if (!rawPhone) {
+      rawPhone = rawJid.replace(/@.*$/, '');
+    }
+
     const phoneDigits = cleanPhone(rawPhone);
 
+    // Validação: precisa ter pelo menos 8 dígitos
     if (!phoneDigits || phoneDigits.length < 8) {
       return res.status(200).json({
         success: true,
         ignored: true,
-        reason: 'Número de telefone não identificado ou evento não transacional',
-        event: body.event || 'unknown'
+        reason: 'Número de telefone não identificado',
+        event: body.event || 'unknown',
+        rawPhone: phoneDigits
       });
     }
 
     // 1.6 Nome do Cliente
     const pushName = evoData?.pushName || '';
+    let extractedNameFromText = '';
+    if (extractedText) {
+      const nMatch = extractedText.match(/Nome(?:\s+Completo)?\s*:\s*([^\n\r,]+)/i);
+      if (nMatch && nMatch[1].trim().length > 2) {
+        extractedNameFromText = nMatch[1].trim();
+      }
+    }
+
     const clientName = (
       body.nome ||
       body.client ||
       body.name ||
-      (!isFromMe ? pushName : '') ||
-      `Lead WhatsApp ${phoneDigits.slice(-4)}`
+      extractedNameFromText ||
+      (!isFromMe && pushName && pushName !== 'Você' ? pushName : '') ||
+      (isLid ? `WhatsApp (${phoneDigits.slice(-4)})` : `Lead WhatsApp ${phoneDigits.slice(-4)}`)
     ).toString().trim();
 
     // 1.7 Resumo e Intenção Comercial (Bidirecional)
@@ -459,33 +991,38 @@ export default async function handler(req, res) {
     // 3. BUSCA DE LEAD EXISTENTE (POR TELEFONE OU ID DETERMINÍSTICO)
     // =======================================================================
     const phoneVariants = normalizePhoneVariants(phoneDigits);
+    const incomingCore = getPhoneCoreKey(phoneDigits);
     let existingLead = null;
 
     try {
+      const last7 = phoneDigits.slice(-7);
       const orFilters = phoneVariants.map(p => `phone.eq.${p}`);
-      const last8 = phoneDigits.slice(-8);
-      if (last8 && last8.length === 8) {
-        orFilters.push(`phone.like.*${last8}`);
+      if (last7 && last7.length === 7) {
+        orFilters.push(`phone.ilike.%${last7}%`);
+        orFilters.push(`phone.ilike.%${last7.slice(0, 3)}-${last7.slice(3)}%`);
       }
       const orFilter = orFilters.join(',');
 
-      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&user_id=eq.${encodeURIComponent(seller.user_id)}&order=created_at.asc&select=*&limit=1`;
+      const searchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&order=created_at.asc&select=*&limit=25`;
       const searchRes = await fetch(searchUrl, { headers: supabaseHeaders });
       if (searchRes.ok) {
         const searchData = await searchRes.json();
         if (Array.isArray(searchData) && searchData.length > 0) {
-          existingLead = searchData[0];
-        }
-      }
+          // 1. Prioriza lead existente que pertence a este vendedor e cujo core do telefone é idêntico
+          existingLead = searchData.find(l => {
+            const sellerMatch = String(l.user_id) === String(seller.user_id) || String(l.vendedor_id) === String(seller.vendedor_id);
+            const coreMatch = incomingCore && getPhoneCoreKey(l.phone) === incomingCore;
+            return sellerMatch && coreMatch;
+          });
 
-      // Se não encontrou vinculado a este vendedor, busca se já existe cadastrado sem vínculo de vendedor (legado)
-      if (!existingLead) {
-        const fallbackSearchUrl = `${supabaseUrl}/rest/v1/leads?or=(${orFilter})&user_id=is.null&order=created_at.asc&select=*&limit=1`;
-        const fbRes = await fetch(fallbackSearchUrl, { headers: supabaseHeaders });
-        if (fbRes.ok) {
-          const fbData = await fbRes.json();
-          if (Array.isArray(fbData) && fbData.length > 0) {
-            existingLead = fbData[0];
+          // 2. Se não encontrou do próprio vendedor, pega qualquer lead cadastrado com o mesmo core de telefone
+          if (!existingLead && incomingCore) {
+            existingLead = searchData.find(l => getPhoneCoreKey(l.phone) === incomingCore);
+          }
+
+          // 3. Fallback: pelo menos termina com os mesmos últimos 7 dígitos
+          if (!existingLead) {
+            existingLead = searchData.find(l => cleanPhone(l.phone).endsWith(last7)) || searchData[0];
           }
         }
       }
@@ -506,13 +1043,18 @@ export default async function handler(req, res) {
     const textToAnalyze = `${extractedText} ${interactionSummary}`.trim();
     const detectedValue = extractMonetaryValue(textToAnalyze);
     const currentLeadStage = existingLead ? (existingLead.stage || existingLead.etapa_kanban || 'novos') : 'novos';
-    const pipelineInference = inferPipelineStage(textToAnalyze, currentLeadStage, detectedValue);
+    const isLeadConcluded = existingLead && (
+      ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(String(existingLead.stage || '').toLowerCase().trim()) ||
+      ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(String(existingLead.etapa_kanban || '').toLowerCase().trim())
+    );
+    const pipelineInference = isLeadConcluded ? null : inferPipelineStage(textToAnalyze, currentLeadStage, detectedValue);
 
     if (!existingLead) {
       // =======================================================================
       // 4. INSERT COM ID DETERMINÍSTICO (PREVINE DUPLICATAS POR RACE CONDITION)
       // =======================================================================
-      const newLeadId = `${seller.leadPrefix}-${phoneDigits}`;
+      const prefix = isLid ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
+      const newLeadId = `${prefix}-${phoneDigits}`;
       logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
 
       const initialStage = pipelineInference ? pipelineInference.stage : 'novos';
@@ -522,6 +1064,16 @@ export default async function handler(req, res) {
       const initialPrio = pipelineInference ? pipelineInference.priority : 'ALTA';
       const initialAction = pipelineInference ? pipelineInference.next_best_action : 'Apresentar catálogo e validar necessidade atual.';
       const initialAdvance = pipelineInference ? pipelineInference.desired_micro_advance : 'Identificar ambientes da casa e estilo desejado.';
+
+      // Verifica se o remetente é um dos vendedores/funcionários cadastrados
+      const isEmployeeSender = Object.values(SELLERS).some(s => {
+        const sp = cleanPhone(s.phone);
+        const ap = cleanPhone(s.alt_phone);
+        return (sp && (sp === phoneDigits || (phoneDigits.length >= 8 && sp.endsWith(phoneDigits.slice(-8))))) ||
+               (ap && (ap === phoneDigits || (phoneDigits.length >= 8 && ap.endsWith(phoneDigits.slice(-8)))));
+      });
+
+      const nextCadenceDate = new Date(Date.now() + 1 * 86400000).toISOString().split('T')[0];
 
       const newLeadPayload = {
         id: newLeadId,
@@ -553,8 +1105,9 @@ export default async function handler(req, res) {
         what_not_to_do: 'Não enviar tabela de preços fria sem contextualizar o produto.',
         advance_probability: pipelineInference ? pipelineInference.advance_probability : 'media',
         priority: initialPrio,
-        commercial_line: 'Linha Premium',
-        notes: logNote,
+        commercial_line: isEmployeeSender ? 'Funcionário' : 'Linha Premium',
+        followup_date: isEmployeeSender ? '1970-01-01' : nextCadenceDate,
+        notes: isEmployeeSender ? `[TIPO: FUNCIONÁRIO] ${logNote}` : logNote,
         last_interaction: nowISO,
         data_ultima_interacao: nowISO,
         created_at: nowISO,
@@ -631,6 +1184,24 @@ export default async function handler(req, res) {
         updated_at: nowISO
       };
 
+      // Como houve conversa hoje no WhatsApp (inbound ou outbound), o contato de hoje foi cumprido!
+      // Se a data de follow-up era hoje ou estava em atraso/nula, avança para daqui a 2 dias (próxima etapa da cadência)
+      const isInternal = existingLead.followup_date === '1970-01-01' ||
+        existingLead.commercial_line === 'Funcionário' ||
+        existingLead.commercial_line === 'Fornecedor' ||
+        String(existingLead.notes || '').includes('[TIPO: FUNCIONÁRIO]') ||
+        String(existingLead.notes || '').includes('[TIPO: FORNECEDOR]');
+
+      if (!isInternal) {
+        const todayYMD = nowISO.split('T')[0];
+        let nextFollowDate = existingLead.followup_date;
+        if (!nextFollowDate || nextFollowDate <= todayYMD) {
+          const nextD = new Date(Date.now() + 1 * 86400000);
+          nextFollowDate = nextD.toISOString().split('T')[0];
+        }
+        updatePayload.followup_date = nextFollowDate;
+      }
+
       // Atualização Inteligente de Valor Monetário Negociado
       if (detectedValue > 0) {
         const existingVal = parseFloat(existingLead.value) || 0;
@@ -639,8 +1210,8 @@ export default async function handler(req, res) {
         }
       }
 
-      // Reconhecimento Automático de Avanço do Pipeline
-      if (pipelineInference) {
+      // Reconhecimento Automático de Avanço do Pipeline (NUNCA altera estágio de lead já concluído)
+      if (pipelineInference && !isLeadConcluded) {
         updatePayload.stage = pipelineInference.stage;
         updatePayload.etapa_kanban = pipelineInference.etapa_kanban;
         updatePayload.temperature = pipelineInference.temperature;
@@ -658,10 +1229,18 @@ export default async function handler(req, res) {
       }
 
       // Se o nome atual do lead for genérico e agora temos pushName do WhatsApp
-      if (
-        clientName &&
-        (!existingLead.name || existingLead.name.startsWith('Lead ') || existingLead.name.startsWith('+55') || existingLead.name.startsWith('Cliente WhatsApp'))
-      ) {
+      const isExistingGeneric = !existingLead.name ||
+        existingLead.name.toLowerCase().startsWith('lead') ||
+        existingLead.name.toLowerCase().startsWith('cliente') ||
+        existingLead.name.toLowerCase().startsWith('+55') ||
+        cleanPhone(existingLead.name).length >= 8;
+
+      const isNewNameReal = clientName &&
+        !clientName.toLowerCase().startsWith('lead') &&
+        !clientName.toLowerCase().startsWith('+55') &&
+        cleanPhone(clientName).length < 8;
+
+      if (isExistingGeneric && isNewNameReal) {
         updatePayload.name = clientName;
       }
 
@@ -718,6 +1297,44 @@ export default async function handler(req, res) {
       }
     } catch (errHist) {
       console.warn('[Webhook] Aviso ao gravar historico_interacoes:', errHist);
+    }
+
+    // =======================================================================
+    // 6.1 RASTREAMENTO AUTOMÁTICO DE ATIVIDADES: INBOUND E REMARKETING
+    // =======================================================================
+    try {
+      if (!isFromMe) {
+        // Mensagem recebida do cliente: contato inbound
+        if (!existingLead || resultAction === 'insert') {
+          await recordInboundContact({
+            userId: seller.vendedor_id || seller.name || 'gabriel',
+            leadId: finalLead ? finalLead.id : null,
+            phone: phoneDigits,
+            name: clientName,
+            channel: 'whatsapp',
+            message: extractedText
+          });
+        }
+      } else {
+        // Mensagem enviada pelo vendedor: verificar se é ação de remarketing (>48h)
+        if (existingLead && existingLead.last_interaction) {
+          const lastIntTime = new Date(existingLead.last_interaction).getTime();
+          const diffHours = (Date.now() - lastIntTime) / (1000 * 3600);
+          if (diffHours >= 48) {
+            await recordRemarketingAction({
+              userId: seller.vendedor_id || seller.name || 'gabriel',
+              leadId: finalLead ? finalLead.id : null,
+              phone: phoneDigits,
+              name: clientName,
+              channel: 'whatsapp',
+              message: extractedText,
+              hoursInactive: Math.round(diffHours)
+            });
+          }
+        }
+      }
+    } catch (errProd) {
+      console.warn('[Productivity Activity Auto-Record Warning]:', errProd);
     }
 
     // =======================================================================
