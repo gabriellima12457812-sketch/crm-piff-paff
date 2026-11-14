@@ -421,6 +421,7 @@
           <option value="sebastiao">💼 Sebastião</option>
           <option value="yasmim">🌸 Yasmim</option>
           <option value="nathaly">💼 Nathaly</option>
+          <option value="thiago">💼 Thiago Carvalho</option>
         </select>
       </div>
 
@@ -3887,7 +3888,8 @@
       diana:   { id: '88888888-8888-8888-8888-888888888888', email: 'diana@piffpaff.com',      name: 'Diana',                prefix: 'CRM-DIA-', role: 'vendedor' },
       sebastiao: { id: '528bdca6-62a3-4dd5-bc45-0e77e9174e67', email: 'sebastiao@piffpaff.com.br', name: 'Sebastião', prefix: 'CRM-SEB-', role: 'vendedor' },
       yasmim:  { id: 'bbbbbbbb-9999-4999-a999-999999999999', email: 'yasmim@piffpaff.com.br', name: 'Yasmim',               prefix: 'CRM-YAS-', role: 'vendedor' },
-      nathaly: { id: '33333333-3333-3333-3333-333333333333', email: 'nathaly@piffpaff.com.br', name: 'Nathaly',              prefix: 'CRM-NAT-', role: 'vendedor' }
+      nathaly: { id: '33333333-3333-3333-3333-333333333333', email: 'nathaly@piffpaff.com.br', name: 'Nathaly',              prefix: 'CRM-NAT-', role: 'vendedor' },
+      thiago:  { id: '44444444-7777-4444-7777-444444444444', email: 'thiago@piffpaff.com.br',  name: 'Thiago Carvalho',       prefix: 'CRM-THI-', role: 'vendedor' }
     };
     try {
       const savedCustomSellers = JSON.parse(localStorage.getItem('piffpaff_custom_sellers') || '{}');
@@ -3933,7 +3935,8 @@
         '77777777-7777-7777-7777-777777777777': 'kasio',
         '88888888-8888-8888-8888-888888888888': 'diana',
         '528bdca6-62a3-4dd5-bc45-0e77e9174e67': 'sebastiao',
-        '99999999-9999-9999-9999-999999999999': 'edson'
+        '99999999-9999-9999-9999-999999999999': 'edson',
+        '44444444-7777-4444-7777-444444444444': 'thiago'
       };
       if (UUID_KEY_MAP[s]) return UUID_KEY_MAP[s];
 
@@ -3945,6 +3948,7 @@
       if (s.includes('kasio') || s.includes('cassio')) return 'kasio';
       if (s.includes('yasmim') || s.includes('yasmin')) return 'yasmim';
       if (s.includes('nathaly') || s.includes('natalhy')) return 'nathaly';
+      if (s.includes('thiago') || s.includes('tiago')) return 'thiago';
       if (s.includes('rodrigo')) return 'rodrigo';
       if (s.includes('diana')) return 'diana';
       if (s.includes('sebastiao')) return 'sebastiao';
@@ -5873,7 +5877,7 @@
     // ==========================================
     // 2.1 SINCRONIZAÇÃO EM NUVEM (API SAAS / SUPABASE COM ISOLAMENTO STRICT)
     // ==========================================
-    const STATIC_SELLER_ENDPOINTS = ['gabriel', 'felipe', 'mayara', 'barbara', 'eduardo', 'rodrigo', 'kasio'];
+    const STATIC_SELLER_ENDPOINTS = ['gabriel', 'felipe', 'mayara', 'barbara', 'eduardo', 'rodrigo', 'kasio', 'thiago'];
     let lastSyncedWaJson = '';
     let lastSyncedInstaJson = '';
     async function syncFromSupabase(silent = false) {
