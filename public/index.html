@@ -1635,6 +1635,10 @@
 
           <!-- Ação Rápida no Topo -->
           <div class="flex items-center gap-2.5 flex-wrap">
+            <button type="button" onclick="resetOrdersToOfficial()" class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 font-bold text-xs shadow-lg transition active:scale-95 cursor-pointer" title="Zerar e sincronizar com os 25 pedidos oficiais">
+              <i class="ph-bold ph-arrows-clockwise text-base"></i>
+              <span>Zerar e Sincronizar Pedidos</span>
+            </button>
             <button type="button" onclick="openNewOrderModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition active:scale-95 cursor-pointer">
               <i class="ph-bold ph-plus-circle text-base"></i>
               <span>+ Novo Pedido</span>
@@ -10845,11 +10849,25 @@
 
     function getOrdersStorageKey() {
       const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
-      return 'PIFFPAFF_ORDERS_DATABASE_V2_' + seller;
+      return 'PIFFPAFF_ORDERS_DATABASE_V3_' + seller;
     }
+
+    function resetOrdersToOfficial() {
+      const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
+      ORDERS_DATABASE = seller === 'gabriel' ? [...DEFAULT_REAL_ORDERS_GABRIEL] : [];
+      saveOrdersStorage();
+      if (typeof showToast === 'function') showToast('Pasta de Pedidos zerada e atualizada com os 25 pedidos oficiais!', 'success');
+      renderOrdersView();
+    }
+    window.resetOrdersToOfficial = resetOrdersToOfficial;
 
     function initOrdersStorage() {
       const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
+      if (seller === 'gabriel') {
+        ORDERS_DATABASE = [...DEFAULT_REAL_ORDERS_GABRIEL];
+        saveOrdersStorage();
+        return;
+      }
       const key = getOrdersStorageKey();
       try {
         const stored = localStorage.getItem(key);
