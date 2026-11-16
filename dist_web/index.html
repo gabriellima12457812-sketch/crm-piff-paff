@@ -533,7 +533,7 @@
                 <i class="ph-bold ph-shopping-bag text-lg text-emerald-400"></i>
                 <span class="group-hover:text-emerald-300 transition">Vendas & Pedidos</span>
               </span>
-              <span id="badge-vendas-total" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">25</span>
+              <span id="badge-vendas-total" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">26</span>
             </button>
 
             <!-- ÁREA EXCLUSIVA DE ADMIN: Gestão de Usuários & Base de Resgate -->
@@ -655,7 +655,7 @@
                 <i class="ph-bold ph-shopping-bag text-xl text-emerald-400"></i>
                 <span>Vendas & Pedidos</span>
               </span>
-              <span id="badge-vendas-total-mobile" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">25</span>
+              <span id="badge-vendas-total-mobile" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">26</span>
             </button>
 
             <!-- ÁREA EXCLUSIVA DE ADMIN (Mobile) -->
@@ -1635,7 +1635,7 @@
 
           <!-- Ação Rápida no Topo -->
           <div class="flex items-center gap-2.5 flex-wrap">
-            <button type="button" onclick="resetOrdersToOfficial()" class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 font-bold text-xs shadow-lg transition active:scale-95 cursor-pointer" title="Zerar e sincronizar com os 25 pedidos oficiais">
+            <button type="button" onclick="resetOrdersToOfficial()" class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 font-bold text-xs shadow-lg transition active:scale-95 cursor-pointer" title="Zerar e sincronizar com os 26 pedidos oficiais">
               <i class="ph-bold ph-arrows-clockwise text-base"></i>
               <span>Zerar e Sincronizar Pedidos</span>
             </button>
@@ -1660,7 +1660,7 @@
                 <i class="ph-bold ph-files text-sm"></i>
               </div>
             </div>
-            <div id="kpi-vendas-pedidos-count" class="text-xl sm:text-2xl font-heading font-extrabold text-white">25 pedidos</div>
+            <div id="kpi-vendas-pedidos-count" class="text-xl sm:text-2xl font-heading font-extrabold text-white">26 pedidos</div>
             <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
               <span class="text-cyan-400 font-bold">100% com PDF oficial</span>
             </div>
@@ -1674,7 +1674,7 @@
                 <i class="ph-bold ph-receipt text-sm"></i>
               </div>
             </div>
-            <div id="kpi-vendas-total" class="text-xl sm:text-2xl font-heading font-extrabold text-cyan-400">R$ 939.893,13</div>
+            <div id="kpi-vendas-total" class="text-xl sm:text-2xl font-heading font-extrabold text-cyan-400">R$ 986.043,13</div>
             <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
               <span class="text-slate-300 font-bold">Mobiliário de Alto Padrão</span>
             </div>
@@ -1688,7 +1688,7 @@
                 <i class="ph-bold ph-chart-line-up text-sm"></i>
               </div>
             </div>
-            <div id="kpi-vendas-ticket" class="text-xl sm:text-2xl font-heading font-extrabold text-emerald-400">R$ 37.595,72</div>
+            <div id="kpi-vendas-ticket" class="text-xl sm:text-2xl font-heading font-extrabold text-emerald-400">R$ 37.924,74</div>
             <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
               <span class="text-emerald-400 font-bold">Média por Contrato</span>
             </div>
@@ -1717,7 +1717,7 @@
             </span>
             <div>
               <span class="text-xs font-bold text-white block">Lista de Pedidos • Gabriel Lima</span>
-              <span class="text-[11px] text-slate-400">25 pedidos oficiais com dados do cliente e acesso ao PDF</span>
+              <span class="text-[11px] text-slate-400">26 pedidos oficiais com dados do cliente e acesso ao PDF</span>
             </div>
           </div>
 
@@ -9279,6 +9279,64 @@
     // ==========================================
     const DEFAULT_REAL_ORDERS_GABRIEL = [
       {
+        id: '5411',
+        orderNumber: '5411',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Maria Souza Rangel',
+          document: '275.784.535-72',
+          phone: '71987845357',
+          phoneFormatted: '(71) 98784-5357',
+          city: 'Salvador',
+          state: 'BA',
+          address: 'Av. Luís Viana Filho, 201 - Torre 2, Salvador/BA - CEP 41680-100',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '14/11/2026',
+        financial: {
+          totalAmount: 46150.00,
+          paidAmount: 46150.00,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: 'Contrato Formal',
+          statusColor: 'emerald',
+          terms: 'Valor Contratual R$ 46.150,00',
+          timeline: []
+        },
+        delivery: {
+          isDelivered: false,
+          statusKey: 'fabrica',
+          statusBadge: 'Pedido Confirmado',
+          statusColor: 'cyan',
+          carrier: 'Caribe Móveis',
+          trackingCode: 'CARIBE-BA-5411',
+          warehouseLocation: 'Fábrica SC',
+          forecast: '23/01/2027',
+          deliveredDate: null,
+          notes: '5 Cadeiras em Alumínio e Corda Náutica, 2 Banquetas, Mesa 1,60x1,00m Alumínio, Chaise em Corda Náutica e Mesa Lateral'
+        },
+        itemsCount: 5,
+        items: [
+          {
+            name: '5x Cadeiras Alumínio e Corda Náutica • 2x Banquetas • Mesa 160x100 Alumínio • Chaise Corda Náutica • Mesa Lateral',
+            code: 'CARIBE-PROD-5411',
+            qty: 5,
+            unitPrice: 46150.00,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: '5 Cadeiras Alumínio e Corda Náutica + 2 Banquetas + Mesa 160x100 em Alumínio + Chaise Corda Náutica e Alumínio + Mesa Lateral',
+            badge: 'Pedido Confirmado',
+            badgeColor: 'cyan'
+          }
+        ],
+        attachmentsCount: 2,
+        attachments: [
+          { name: 'Pedido_5411_CaribeMoveis.pdf', type: 'contract', url: '/pedidos_pdf/pedido_5411.pdf', label: 'Pedido #5411' },
+          { name: 'Contrato_Pedido_5411_CaribeMoveis.pdf', type: 'contract', url: '/pedidos_pdf/pedido_5411.pdf', label: 'Contrato #5411' }
+        ]
+      },
+      {
         id: '5396',
         orderNumber: '5396',
         sellerKey: 'gabriel',
@@ -10766,7 +10824,7 @@
       const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
       ORDERS_DATABASE = seller === 'gabriel' ? [...DEFAULT_REAL_ORDERS_GABRIEL] : [];
       saveOrdersStorage();
-      if (typeof showToast === 'function') showToast('Pasta de Pedidos zerada e atualizada com os 25 pedidos oficiais!', 'success');
+      if (typeof showToast === 'function') showToast('Pasta de Pedidos zerada e atualizada com os 26 pedidos oficiais!', 'success');
       renderOrdersView();
     }
     window.resetOrdersToOfficial = resetOrdersToOfficial;
