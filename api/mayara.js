@@ -645,13 +645,15 @@ export default async function handler(req, res) {
       });
 
       let totalPipelineValue = 0;
-      const stagesSummary = { novos: 0, investigacao: 0, projetos: 0, proposta: 0, fechamento: 0, concluidas: 0 };
+      const stagesSummary = { novos: 0, investigacao: 0, projetos: 0, proposta: 0, fechamento: 0, concluidas: 0, desistiu: 0 };
       const temperaturesSummary = { quente: 0, morno: 0, frio: 0 };
 
       allLeads.forEach(l => {
         const v = Number(l.value) || 0;
-        totalPipelineValue += v;
         const st = (l.stage || 'novos').toLowerCase();
+        if (st !== 'concluidas' && st !== 'desistiu') {
+          totalPipelineValue += v;
+        }
         stagesSummary[st] = (stagesSummary[st] || 0) + 1;
         const tp = (l.temperature || 'morno').toLowerCase();
         temperaturesSummary[tp] = (temperaturesSummary[tp] || 0) + 1;
@@ -836,7 +838,8 @@ export default async function handler(req, res) {
       else if (['conversa', 'projetos', 'projeto'].includes(stageLower)) targetStage = 'projetos';
       else if (['proposta', 'orcamento', 'orçamento'].includes(stageLower)) targetStage = 'proposta';
       else if (['fechamento', 'fechando'].includes(stageLower)) targetStage = 'fechamento';
-      else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'ganho'].includes(stageLower)) targetStage = 'concluidas';
+      else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'ganho', 'ganhos', 'venda', 'vendas'].includes(stageLower)) targetStage = 'concluidas';
+      else if (['desistiu', 'desistencia', 'desistência', 'perdeu', 'perdido', 'perdidos', 'ja_comprou', 'já comprou', 'ja comprou', 'outra loja', 'outras lojas', 'concorrente'].some(x => stageLower.includes(x))) targetStage = 'desistiu';
       else targetStage = 'novos';
     }
 
