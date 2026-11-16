@@ -533,7 +533,7 @@
                 <i class="ph-bold ph-shopping-bag text-lg text-emerald-400"></i>
                 <span class="group-hover:text-emerald-300 transition">Vendas & Pedidos</span>
               </span>
-              <span id="badge-vendas-total" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">5</span>
+              <span id="badge-vendas-total" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">25</span>
             </button>
 
             <!-- ÁREA EXCLUSIVA DE ADMIN: Gestão de Usuários & Base de Resgate -->
@@ -655,7 +655,7 @@
                 <i class="ph-bold ph-shopping-bag text-xl text-emerald-400"></i>
                 <span>Vendas & Pedidos</span>
               </span>
-              <span id="badge-vendas-total-mobile" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">5</span>
+              <span id="badge-vendas-total-mobile" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">25</span>
             </button>
 
             <!-- ÁREA EXCLUSIVA DE ADMIN (Mobile) -->
@@ -1658,7 +1658,7 @@
             </div>
             <div id="kpi-vendas-total" class="text-xl sm:text-2xl font-heading font-extrabold text-white">R$ 232.959,99</div>
             <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-              <span class="text-cyan-400 font-bold">5 pedidos</span> cadastrados
+              <span class="text-cyan-400 font-bold">25 pedidos</span> cadastrados
             </div>
           </div>
 
@@ -9365,67 +9365,298 @@
     // ==========================================
     const DEFAULT_REAL_ORDERS_GABRIEL = [
       {
-        id: '5250',
-        orderNumber: '5250',
+        id: '5396',
+        orderNumber: '5396',
         sellerKey: 'gabriel',
         client: {
-          name: 'Horne Serviços de Intermediação LTDA (Aline Granja Horne)',
-          document: '54.810.306/0001-32',
-          phone: '71996777399',
-          phoneFormatted: '(71) 99677-7399',
-          city: 'Salvador',
-          state: 'BA',
-          address: 'Av. Antônio Carlos Magalhães, 2487 - Brotas, Salvador/BA - CEP 40280-000',
-          architect: 'Aline Horne Interiores (Edson R. Batista)',
+          name: 'Pedro Vianna',
+          document: 'Contrato Formal / Registrado',
+          phone: '21987654321',
+          phoneFormatted: '(21) 98765-4321',
+          city: 'Niterói',
+          state: 'RJ',
+          address: 'Niterói - RJ',
+          architect: 'Consultoria Especialista Gabriel Lima',
           seller: 'Gabriel Lima'
         },
-        date: '07/09/2026',
+        date: '11/11/2026',
         financial: {
-          totalAmount: 47000.62,
-          paidAmount: 7000.00,
-          remainingAmount: 40000.62,
-          paidPercentage: 14.9,
+          totalAmount: 47040,
+          paidAmount: 15000,
+          remainingAmount: 32040,
+          paidPercentage: 31.9,
           isFullyPaid: false,
-          statusBadge: 'Sinal & Entrada Pagos (R$ 7.000,00) • Saldo no Despacho',
+          statusBadge: 'Entrada Paga • Saldo no Despacho',
           statusColor: 'amber',
-          terms: 'Sinal R$ 2.000,00 (01/08 PIX) + Entrada R$ 5.000,00 (09/09 PIX) + Saldo R$ 40.000,62 no despacho (até 6x sem juros)',
+          terms: 'Entrada R$ 15.000,00 + Saldo no despacho antes do embarque',
           timeline: [
-            { stage: 'Sinal Reserva', title: 'Sinal de Reserva da Produção (Itaú Aline Ferraz)', amount: 2000.00, date: '01/08/2026 14:10', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação PIX B80D.74AA... Aline Ferraz para Roberto Carlos' },
-            { stage: 'Entrada Contratual', title: 'Entrada Comercial Contratual (SISPAG Horne Serviços)', amount: 5000.00, date: '09/09/2026 15:58', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação PIX Horne Serviços de Intermediação LTDA para Roberto Carlos' },
-            { stage: 'Saldo Despacho', title: 'Saldo Restante para Embarque / Expedição', amount: 40000.62, date: 'Previsto para 06/11/2026', method: 'PIX / TED / 6x', status: 'pending', statusLabel: 'Aguardando Quitação', notes: 'Cobrar antes da liberação e embarque da carga para Salvador/BA' }
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 15000, date: '11/11/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
           ]
         },
         delivery: {
           isDelivered: false,
           statusKey: 'fabrica',
-          statusBadge: 'Na Produção / Costura (Fábrica SC - 60 dias)',
+          statusBadge: 'Na Produção (Fábrica SC)',
           statusColor: 'purple',
-          carrier: 'Transportadora Parceira Móveis Caribe (Frete Cortesia)',
-          trackingCode: 'CARIBE-BA-5250',
-          warehouseLocation: 'Fábrica SC - Setor de Tapeçaria & Enchimento Náutico',
-          forecast: '06/11/2026 (60 dias corridos)',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-RJ-5396',
+          warehouseLocation: 'Fábrica SC',
+          forecast: 'Novembro/Dezembro 2026',
           deliveredDate: null,
-          notes: '6 Puffs Aquáticos Flutuantes em produção com tecido fendi hidro-repelente aprovado. Frete comercial cortesia para Salvador/BA.'
+          notes: '6 Cadeiras Especiais Rami/Champagne + Mesa Lisa 1,60m tampo sobreposto + Sofá em L 2,50x1,60m Champagne/Skin Ubatuba'
         },
-        itemsCount: 6,
+        itemsCount: 1,
         items: [
           {
-            name: 'Puff Aquático Flutuante Náutico Alto Padrão (6 unidades)',
-            code: 'PUF-AQUA-06',
-            qty: 6,
-            unitPrice: 7833.44,
-            image: '/images/amostra-tecido-puff-horne.jpg',
-            specs: 'Tecido Náutico Especial Fendi com trama texturizada hidro-repelente resistente ao sol e cloro • 60 dias prazo fábrica',
-            badge: 'Na Costura / Tapeçaria (Fábrica SC)',
+            name: '6 Cadeiras Especiais Rami/Champagne + Mesa Lisa 1,60m tampo sobreposto + Sofá em L 2,50x1,60m Champagne/Skin Ubatuba',
+            code: 'CARIBE-PROD-5396',
+            qty: 1,
+            unitPrice: 47040,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • 6 Cadeiras Especiais Rami/Champagne + Mesa Lisa 1,60m tampo sobreposto + Sofá em L 2,50x1,60m Champagne/Skin Ubatuba',
+            badge: 'Na Produção (Fábrica SC)',
             badgeColor: 'purple'
           }
         ],
-        attachmentsCount: 4,
+        attachmentsCount: 1,
         attachments: [
-          { name: 'Contrato_Assinado_5250_Horne.pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Assinado Digitalmente' },
-          { name: 'Comprovante_PIX_Sinal_2000.jpg', type: 'pix', url: '/images/pix-sinal-2000-horne.jpg', label: 'Sinal R$ 2.000,00 (01/08/2026)' },
-          { name: 'Comprovante_PIX_Entrada_5000.jpg', type: 'pix', url: '/images/pix-entrada-5000-horne.jpg', label: 'Entrada R$ 5.000,00 (09/09/2026)' },
-          { name: 'Amostra_Tecido_Fendi_Aprovada.jpg', type: 'image', url: '/images/amostra-tecido-puff-horne.jpg', label: 'Amostra Tecido Fendi Aprovada' }
+          { name: 'Pedido_5396_CaribeMoveis (4).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5396' }
+        ]
+      },
+      {
+        id: '5391',
+        orderNumber: '5391',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Vanessa Silva',
+          document: 'Contrato Formal / Registrado',
+          phone: '35998761234',
+          phoneFormatted: '(35) 99876-1234',
+          city: 'Alfenas',
+          state: 'MG',
+          address: 'Alfenas - MG',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '05/11/2026',
+        financial: {
+          totalAmount: 6900,
+          paidAmount: 1380,
+          remainingAmount: 5520,
+          paidPercentage: 20,
+          isFullyPaid: false,
+          statusBadge: 'Entrada Paga • Saldo no Despacho',
+          statusColor: 'amber',
+          terms: 'Entrada R$ 1.380,00 + Saldo R$ 5.520,00 no despacho',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 1380, date: '05/11/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: false,
+          statusKey: 'cd',
+          statusBadge: 'Pronto no CD para Entrega',
+          statusColor: 'amber',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-MG-5391',
+          warehouseLocation: 'CD Central',
+          forecast: 'Novembro/Dezembro 2026',
+          deliveredDate: null,
+          notes: 'Balanço Especial Náutico a pronta entrega • Espuma Soft Náutica'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Balanço Especial Náutico a pronta entrega • Espuma Soft Náutica',
+            code: 'CARIBE-PROD-5391',
+            qty: 1,
+            unitPrice: 6900,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Balanço Especial Náutico a pronta entrega • Espuma Soft Náutica',
+            badge: 'Pronto no CD para Entrega',
+            badgeColor: 'amber'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5391_CaribeMoveis (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5391' }
+        ]
+      },
+      {
+        id: '5330',
+        orderNumber: '5330',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Luiz Guilherme Silva Vieira',
+          document: 'Contrato Formal / Registrado',
+          phone: '15991867814',
+          phoneFormatted: '(15) 99186-7814',
+          city: 'Tatuí',
+          state: 'SP',
+          address: 'Tatuí - SP',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '22/09/2026',
+        financial: {
+          totalAmount: 10200,
+          paidAmount: 10200,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PARCELADO',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PARCELADO)', amount: 10200, date: '22/09/2026', method: 'PARCELADO', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: false,
+          statusKey: 'transporte',
+          statusBadge: 'Em Transporte / Rota de Entrega',
+          statusColor: 'cyan',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-SP-5330',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Novembro/Dezembro 2026',
+          deliveredDate: null,
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5330',
+            qty: 1,
+            unitPrice: 10200,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Em Transporte / Rota de Entrega',
+            badgeColor: 'cyan'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5330_CaribeMoveis (4).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5330' }
+        ]
+      },
+      {
+        id: '5315',
+        orderNumber: '5315',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Roberto Menezes Maciel',
+          document: 'Contrato Formal / Registrado',
+          phone: '38999902757',
+          phoneFormatted: '(38) 99990-2757',
+          city: 'Curvelo',
+          state: 'MG',
+          address: 'Curvelo - MG',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '10/09/2026',
+        financial: {
+          totalAmount: 16000,
+          paidAmount: 16000,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 16000, date: '10/09/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: false,
+          statusKey: 'transporte',
+          statusBadge: 'Em Transporte / Rota de Entrega',
+          statusColor: 'cyan',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-MG-5315',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Novembro/Dezembro 2026',
+          deliveredDate: null,
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5315',
+            qty: 1,
+            unitPrice: 16000,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Em Transporte / Rota de Entrega',
+            badgeColor: 'cyan'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5315_CaribeMoveis (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5315' }
+        ]
+      },
+      {
+        id: '5309',
+        orderNumber: '5309',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Andreza Valéria Rocha dos Santos stefenoni',
+          document: 'Contrato Formal / Registrado',
+          phone: '27999400808',
+          phoneFormatted: '(27) 99940-0808',
+          city: 'Vila Velha',
+          state: 'ES',
+          address: 'Vila Velha - ES',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '07/09/2026',
+        financial: {
+          totalAmount: 25800,
+          paidAmount: 25800,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 25800, date: '07/09/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: false,
+          statusKey: 'transporte',
+          statusBadge: 'Em Transporte / Rota de Entrega',
+          statusColor: 'cyan',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-ES-5309',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Novembro/Dezembro 2026',
+          deliveredDate: null,
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5309',
+            qty: 1,
+            unitPrice: 25800,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Em Transporte / Rota de Entrega',
+            badgeColor: 'cyan'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5309_CaribeMoveis (1) (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5309' }
         ]
       },
       {
@@ -9434,29 +9665,27 @@
         sellerKey: 'gabriel',
         client: {
           name: 'Márcia Portela de Almeida Passos',
-          document: '184.920.318-72',
+          document: 'Contrato Formal / Registrado',
           phone: '66996089077',
           phoneFormatted: '(66) 99608-9077',
           city: 'Rondonópolis',
           state: 'MT',
-          address: 'Rua Fernando Corrêa da Costa, 1420 - Cond. Haras Village, Casa 18 - Vila Aurora',
-          architect: 'Studio ARQ (Arq. Dayana Tavares / Charão Arquiteto)',
+          address: 'Rondonópolis - MT',
+          architect: 'Consultoria Especialista Gabriel Lima',
           seller: 'Gabriel Lima'
         },
         date: '02/09/2026',
         financial: {
           totalAmount: 25999.99,
-          paidAmount: 8000.00,
+          paidAmount: 8000,
           remainingAmount: 17999.99,
           paidPercentage: 30.8,
           isFullyPaid: false,
-          statusBadge: 'Entrada Paga (30,8%) • Falta Saldo no Despacho',
+          statusBadge: 'Entrada Paga • Saldo no Despacho',
           statusColor: 'amber',
-          terms: '30% Entrada (R$ 8.000,00 pagos via PIX) + Saldo de R$ 17.999,99 na liberação da carga',
+          terms: 'Entrada R$ 8.000,00 PIX + Saldo R$ 17.999,99 na liberação da carga',
           timeline: [
-            { stage: 'Sinal de Reserva', title: 'Sinal de Reserva do Lote Pronta-Entrega', amount: 5000.00, date: '02/09/2026 18:45', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Garantia imediata do lote no CD reservado por Gabriel Lima' },
-            { stage: 'Entrada (30%)', title: 'Entrada - Complemento dos 30% Contratuais', amount: 3000.00, date: '03/09/2026 11:20', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Realizado após assinatura formal do contrato pela cliente Márcia' },
-            { stage: 'Saldo no Despacho', title: 'Saldo Restante para Liberação de Carga', amount: 17999.99, date: 'Previsto para 08/09/2026', method: 'PIX / TED', status: 'pending', statusLabel: 'Aguardando Quitação', notes: 'Exigido antes do embarque na carreta da transportadora' }
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 8000, date: '02/09/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
           ]
         },
         delivery: {
@@ -9464,73 +9693,1150 @@
           statusKey: 'cd',
           statusBadge: 'Carga Pronta no CD (Aguardando Coleta)',
           statusColor: 'amber',
-          carrier: 'Expresso Rondonópolis Cargas & Encomendas',
-          trackingCode: 'EXP-RO-2026-5299',
-          warehouseLocation: 'CD Central - Paletes 03 e 04 (Setor A)',
-          forecast: 'Segunda-feira (08/09/2026)',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-MT-5299',
+          warehouseLocation: 'CD Central',
+          forecast: 'Novembro/Dezembro 2026',
           deliveredDate: null,
-          notes: 'Produto 100% pronto e embalado no CD. Gabriel confirmou coleta na segunda-feira. Cobrar/acompanhar o saldo de R$ 17.999,99 antes de liberar o carregamento.'
+          notes: 'Sofá Ravello 3 Lugares, Par de Poltronas Ravello, Mesa Florença 1,60m + 6 Cadeiras Florença Náuticas'
         },
-        itemsCount: 5,
+        itemsCount: 1,
         items: [
           {
-            name: 'Sofá Ravello 3 Lugares',
-            code: 'SOF-RAV-3L',
+            name: 'Sofá Ravello 3 Lugares, Par de Poltronas Ravello, Mesa Florença 1,60m + 6 Cadeiras Florença Náuticas',
+            code: 'CARIBE-PROD-5299',
             qty: 1,
-            unitPrice: 9400.00,
+            unitPrice: 25999.99,
             image: '/images/sofa-ravello-terracota.jpg',
-            specs: '2,40m x 0,95m • Corda Náutica Terracota • Alumínio Champagne • Tecido Sunproof Cru Repelente',
-            badge: 'Pronto no CD (Palete 03)',
-            badgeColor: 'emerald'
-          },
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Sofá Ravello 3 Lugares, Par de Poltronas Ravello, Mesa Florença 1,60m + 6 Cadeiras Florença Náuticas',
+            badge: 'Carga Pronta no CD (Aguardando Coleta)',
+            badgeColor: 'amber'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5299_CaribeMoveis.pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5299' }
+        ]
+      },
+      {
+        id: '5250',
+        orderNumber: '5250',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Horne Serviços de Intermediaçao LTDA',
+          document: 'Contrato Formal / Registrado',
+          phone: '71996777399',
+          phoneFormatted: '(71) 99677-7399',
+          city: 'Salvador',
+          state: 'BA',
+          address: 'Salvador - BA',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '07/09/2026',
+        financial: {
+          totalAmount: 47000.62,
+          paidAmount: 7000,
+          remainingAmount: 40000.62,
+          paidPercentage: 14.9,
+          isFullyPaid: false,
+          statusBadge: 'Entrada Paga • Saldo no Despacho',
+          statusColor: 'amber',
+          terms: 'Sinal R$ 2.000,00 (01/08 PIX) + Entrada R$ 5.000,00 (09/09 PIX) + Saldo no despacho',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 7000, date: '07/09/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: false,
+          statusKey: 'fabrica',
+          statusBadge: 'Na Produção / Costura (Fábrica SC)',
+          statusColor: 'purple',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-BA-5250',
+          warehouseLocation: 'Fábrica SC',
+          forecast: 'Novembro/Dezembro 2026',
+          deliveredDate: null,
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
           {
-            name: 'Par de Poltronas Ravello',
-            code: 'POL-RAV-02',
-            qty: 2,
-            unitPrice: 3800.00,
-            image: '/images/poltrona-ravello-champagne.jpg',
-            specs: 'Corda Náutica Terracota • Alumínio Champagne • Almofadas Bouclé Náutico',
-            badge: 'Pronto no CD (Palete 03)',
-            badgeColor: 'emerald'
-          },
-          {
-            name: 'Mesa de Jantar Florença Redonda 1,60m',
-            code: 'MES-FLO-160',
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5250',
             qty: 1,
-            unitPrice: 5200.00,
-            image: '/images/mesa-florenca-redonda.jpg',
-            specs: 'Tampo Granilite Off-White resinado • Base Alumínio Cônico Champagne',
-            badge: 'Pronto no CD (Palete 04)',
-            badgeColor: 'emerald'
-          },
+            unitPrice: 47000.62,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Na Produção / Costura (Fábrica SC)',
+            badgeColor: 'purple'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Contrato_Pedido_5250_CaribeMoveis (2) (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5250' }
+        ]
+      },
+      {
+        id: '5246',
+        orderNumber: '5246',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'LUIS FERNADNO TAMBORLIN',
+          document: 'Contrato Formal / Registrado',
+          phone: '19981280458',
+          phoneFormatted: '(19) 98128-0458',
+          city: 'Americana',
+          state: 'SP',
+          address: 'Americana - SP',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '31/07/2026',
+        financial: {
+          totalAmount: 36300,
+          paidAmount: 36300,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via CARTAO_CREDITO',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (CARTAO_CREDITO)', amount: 36300, date: '31/07/2026', method: 'CARTAO_CREDITO', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-SP-5246',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '31/07/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
           {
-            name: 'Jogo de 6 Cadeiras Florença Náuticas',
-            code: 'CAD-FLO-06',
-            qty: 6,
-            unitPrice: 550.00,
-            image: '/images/cadeira-florenca-corda.jpg',
-            specs: 'Estrutura Alumínio Champagne • Trama Corda Chata Terracota',
-            badge: 'Pronto no CD (Palete 04)',
-            badgeColor: 'emerald'
-          },
-          {
-            name: 'Mesa Lateral de Apoio Ravello',
-            code: 'MES-LAT-RAV',
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5246',
             qty: 1,
-            unitPrice: 499.99,
-            image: '/images/mesa-lateral-ravello.jpg',
-            specs: 'Tampo Granilite 0,50m • Base Cilíndrica Champagne',
-            badge: 'Pronto no CD (Palete 03)',
+            unitPrice: 36300,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
             badgeColor: 'emerald'
           }
         ],
-        attachmentsCount: 5,
+        attachmentsCount: 1,
         attachments: [
-          { name: 'Contrato_Assinado_5299_Marcia.pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Assinado' },
-          { name: 'Comprovante_PIX_Sinal_5000.pdf', type: 'pix', url: '#', label: 'Comprovante PIX R$ 5.000,00' },
-          { name: 'Comprovante_PIX_Entrada_3000.pdf', type: 'pix', url: '#', label: 'Comprovante PIX R$ 3.000,00' },
-          { name: 'Minuta_Despacho_5299.pdf', type: 'delivery', url: '#', label: 'Minuta Expresso Rondonópolis' },
-          { name: 'Render_3D_Projeto_Varanda.jpg', type: 'image', url: '/images/sofa-ravello-terracota.jpg', label: 'Projeto Aprovado Arquiteto' }
+          { name: 'Pedido_5246_CaribeMoveis (5).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5246' }
+        ]
+      },
+      {
+        id: '5227',
+        orderNumber: '5227',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'leandro  silva fernandes',
+          document: 'Contrato Formal / Registrado',
+          phone: '43991317290',
+          phoneFormatted: '(43) 99131-7290',
+          city: 'balneario camborio',
+          state: 'SC',
+          address: 'balneario camborio - SC',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '30/07/2026',
+        financial: {
+          totalAmount: 201900,
+          paidAmount: 201900,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 201900, date: '30/07/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-SC-5227',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '30/07/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5227',
+            qty: 1,
+            unitPrice: 201900,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5227_CaribeMoveis (6).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5227' }
+        ]
+      },
+      {
+        id: '5176',
+        orderNumber: '5176',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'carla',
+          document: 'Contrato Formal / Registrado',
+          phone: '21998143892',
+          phoneFormatted: '(21) 99814-3892',
+          city: 'Niterói',
+          state: 'RJ',
+          address: 'Niterói - RJ',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '24/06/2026',
+        financial: {
+          totalAmount: 67500,
+          paidAmount: 67500,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 67500, date: '24/06/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-RJ-5176',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '24/06/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5176',
+            qty: 1,
+            unitPrice: 67500,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5176_CaribeMoveis.pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5176' }
+        ]
+      },
+      {
+        id: '5141',
+        orderNumber: '5141',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Guilherme de Andrade Fonseca Sampaio',
+          document: 'Contrato Formal / Registrado',
+          phone: '11981209281',
+          phoneFormatted: '(11) 98120-9281',
+          city: 'São Sebastião',
+          state: 'SP',
+          address: 'São Sebastião - SP',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '26/05/2026',
+        financial: {
+          totalAmount: 21100,
+          paidAmount: 21100,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 21100, date: '26/05/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-SP-5141',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '26/05/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5141',
+            qty: 1,
+            unitPrice: 21100,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5141_CaribeMoveis (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5141' }
+        ]
+      },
+      {
+        id: '5139',
+        orderNumber: '5139',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Carla Patrícia Machado',
+          document: 'Contrato Formal / Registrado',
+          phone: '21998143892',
+          phoneFormatted: '(21) 99814-3892',
+          city: 'Niterói',
+          state: 'RJ',
+          address: 'Niterói - RJ',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '26/05/2026',
+        financial: {
+          totalAmount: 21000,
+          paidAmount: 21000,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 21000, date: '26/05/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-RJ-5139',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '26/05/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5139',
+            qty: 1,
+            unitPrice: 21000,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5139_CaribeMoveis.pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5139' }
+        ]
+      },
+      {
+        id: '5135',
+        orderNumber: '5135',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'lucia de brito',
+          document: 'Contrato Formal / Registrado',
+          phone: '61981500510',
+          phoneFormatted: '(61) 98150-0510',
+          city: 'Brasília',
+          state: 'DF',
+          address: 'Brasília - DF',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '21/05/2026',
+        financial: {
+          totalAmount: 142500.11,
+          paidAmount: 142500.11,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 142500.11, date: '21/05/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-DF-5135',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '21/05/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5135',
+            qty: 1,
+            unitPrice: 142500.11,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5135_CaribeMoveis (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5135' }
+        ]
+      },
+      {
+        id: '5126',
+        orderNumber: '5126',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Marília Siqueira pires',
+          document: 'Contrato Formal / Registrado',
+          phone: '11981413136',
+          phoneFormatted: '(11) 98141-3136',
+          city: 'Mogi das Cruzes',
+          state: 'SP',
+          address: 'Mogi das Cruzes - SP',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '13/05/2026',
+        financial: {
+          totalAmount: 16000.95,
+          paidAmount: 16000.95,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via -',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (-)', amount: 16000.95, date: '13/05/2026', method: '-', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-SP-5126',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '13/05/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5126',
+            qty: 1,
+            unitPrice: 16000.95,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5126_CaribeMoveis.pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5126' }
+        ]
+      },
+      {
+        id: '5123',
+        orderNumber: '5123',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Andrea Paes Gazire de Araújo Andrade (Dra. Andrea)',
+          document: 'Contrato Formal / Registrado',
+          phone: '22998765432',
+          phoneFormatted: '(22) 99876-5432',
+          city: 'Campos dos Goytacazes',
+          state: 'RJ',
+          address: 'Campos dos Goytacazes - RJ',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '11/05/2026',
+        financial: {
+          totalAmount: 22440.24,
+          paidAmount: 22440.24,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 22440.24, date: '11/05/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-RJ-5123',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '11/05/2026',
+          notes: 'Jogo de sofá importado (1 sofá 2,60x0,80m, 2 poltronas 80x80cm, 2 mesinhas de centro) • Alumínio M5 • Tecido W3145011'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Jogo de sofá importado (1 sofá 2,60x0,80m, 2 poltronas 80x80cm, 2 mesinhas de centro) • Alumínio M5 • Tecido W3145011',
+            code: 'CARIBE-PROD-5123',
+            qty: 1,
+            unitPrice: 22440.24,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Jogo de sofá importado (1 sofá 2,60x0,80m, 2 poltronas 80x80cm, 2 mesinhas de centro) • Alumínio M5 • Tecido W3145011',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5123_dra.pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5123' }
+        ]
+      },
+      {
+        id: '5121',
+        orderNumber: '5121',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Silvio Santini Netto',
+          document: 'Contrato Formal / Registrado',
+          phone: '1938714710',
+          phoneFormatted: '(19) 3871-4710',
+          city: 'Campinas',
+          state: 'SP',
+          address: 'Campinas - SP',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '08/05/2026',
+        financial: {
+          totalAmount: 41008.5,
+          paidAmount: 41008.5,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 41008.5, date: '08/05/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-SP-5121',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '08/05/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5121',
+            qty: 1,
+            unitPrice: 41008.5,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5121_CaribeMoveis oficial.pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5121' }
+        ]
+      },
+      {
+        id: '5117',
+        orderNumber: '5117',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Maria Ernestina de Aguiar Carvalho',
+          document: 'Contrato Formal / Registrado',
+          phone: '31999523311',
+          phoneFormatted: '(31) 99952-3311',
+          city: 'trancoso',
+          state: 'BH',
+          address: 'trancoso - BH',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '06/05/2026',
+        financial: {
+          totalAmount: 29900,
+          paidAmount: 0,
+          remainingAmount: 0,
+          paidPercentage: 0,
+          isFullyPaid: false,
+          statusBadge: 'Cancelado',
+          statusColor: 'rose',
+          terms: 'Cancelado conforme solicitação',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 0, date: '06/05/2026', method: 'PIX', status: 'cancelled', statusLabel: 'Cancelado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: false,
+          statusKey: 'cancelado',
+          statusBadge: 'Pedido Cancelado / Estornado',
+          statusColor: 'rose',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-BH-5117',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Cancelado',
+          deliveredDate: null,
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5117',
+            qty: 1,
+            unitPrice: 29900,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Pedido Cancelado / Estornado',
+            badgeColor: 'rose'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5117_CaribeMoveis (2).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5117' }
+        ]
+      },
+      {
+        id: '5090',
+        orderNumber: '5090',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'claudia',
+          document: 'Contrato Formal / Registrado',
+          phone: '49988014718',
+          phoneFormatted: '(49) 98801-4718',
+          city: 'treze tilias',
+          state: 'SC',
+          address: 'treze tilias - SC',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '23/04/2026',
+        financial: {
+          totalAmount: 20000.03,
+          paidAmount: 20000.03,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 20000.03, date: '23/04/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-SC-5090',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '23/04/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5090',
+            qty: 1,
+            unitPrice: 20000.03,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5090_CaribeMoveis (2).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5090' }
+        ]
+      },
+      {
+        id: '5085',
+        orderNumber: '5085',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'renata gossweiler',
+          document: 'Contrato Formal / Registrado',
+          phone: '67999012121',
+          phoneFormatted: '(67) 99901-2121',
+          city: 'JARAGUARI',
+          state: 'RS',
+          address: 'JARAGUARI - RS',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '24/04/2026',
+        financial: {
+          totalAmount: 34002.5,
+          paidAmount: 34002.5,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 34002.5, date: '24/04/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-RS-5085',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '24/04/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5085',
+            qty: 1,
+            unitPrice: 34002.5,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5085_CaribeMoveis (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5085' }
+        ]
+      },
+      {
+        id: '5059',
+        orderNumber: '5059',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Taciana Therese Barbosa Morais',
+          document: 'Contrato Formal / Registrado',
+          phone: '75999999105',
+          phoneFormatted: '(75) 99999-9105',
+          city: 'Ribeira do Pombal',
+          state: 'BA',
+          address: 'Ribeira do Pombal - BA',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '27/03/2026',
+        financial: {
+          totalAmount: 15000.1,
+          paidAmount: 15000.1,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via -',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (-)', amount: 15000.1, date: '27/03/2026', method: '-', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-BA-5059',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '27/03/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5059',
+            qty: 1,
+            unitPrice: 15000.1,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5059_CaribeMoveis (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5059' }
+        ]
+      },
+      {
+        id: '5048',
+        orderNumber: '5048',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'Carlos augusto pimenta da silva',
+          document: 'Contrato Formal / Registrado',
+          phone: '71987140809',
+          phoneFormatted: '(71) 98714-0809',
+          city: 'Camaçari',
+          state: 'BA',
+          address: 'Camaçari - BA',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '23/03/2026',
+        financial: {
+          totalAmount: 40000.09,
+          paidAmount: 40000.09,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 40000.09, date: '23/03/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-BA-5048',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '23/03/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5048',
+            qty: 1,
+            unitPrice: 40000.09,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5048_CaribeMoveis (2).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5048' }
+        ]
+      },
+      {
+        id: '5046',
+        orderNumber: '5046',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'andressa viecelli',
+          document: 'Contrato Formal / Registrado',
+          phone: '08165951947',
+          phoneFormatted: '(08) 16595-1947',
+          city: 'Palmas',
+          state: 'PR',
+          address: 'Palmas - PR',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '27/03/2026',
+        financial: {
+          totalAmount: 18000,
+          paidAmount: 18000,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via -',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (-)', amount: 18000, date: '27/03/2026', method: '-', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-PR-5046',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '27/03/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5046',
+            qty: 1,
+            unitPrice: 18000,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5046_CaribeMoveis (3).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5046' }
+        ]
+      },
+      {
+        id: '5038',
+        orderNumber: '5038',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'sandra oliveira bilibio',
+          document: 'Contrato Formal / Registrado',
+          phone: '47999099154',
+          phoneFormatted: '(47) 99909-9154',
+          city: 'Blumenau',
+          state: 'SC',
+          address: 'Blumenau - SC',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '13/03/2026',
+        financial: {
+          totalAmount: 4000,
+          paidAmount: 4000,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 4000, date: '13/03/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-SC-5038',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '13/03/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5038',
+            qty: 1,
+            unitPrice: 4000,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5038_CaribeMoveis (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5038' }
+        ]
+      },
+      {
+        id: '5035',
+        orderNumber: '5035',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'sandra regina oliveira',
+          document: 'Contrato Formal / Registrado',
+          phone: '47999099154',
+          phoneFormatted: '(47) 99909-9154',
+          city: 'Balneário Camboriú',
+          state: 'SC',
+          address: 'Balneário Camboriú - SC',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '12/03/2026',
+        financial: {
+          totalAmount: 700,
+          paidAmount: 700,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 700, date: '12/03/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-SC-5035',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '12/03/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5035',
+            qty: 1,
+            unitPrice: 700,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5035_CaribeMoveis.pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5035' }
+        ]
+      },
+      {
+        id: '5024',
+        orderNumber: '5024',
+        sellerKey: 'gabriel',
+        client: {
+          name: 'IRLA LAVOR LUCENA CAMBOIM',
+          document: 'Contrato Formal / Registrado',
+          phone: '83988289812',
+          phoneFormatted: '(83) 98828-9812',
+          city: 'João Pessoa',
+          state: 'PB',
+          address: 'João Pessoa - PB',
+          architect: 'Consultoria Especialista Gabriel Lima',
+          seller: 'Gabriel Lima'
+        },
+        date: '26/02/2026',
+        financial: {
+          totalAmount: 29600,
+          paidAmount: 29600,
+          remainingAmount: 0,
+          paidPercentage: 100,
+          isFullyPaid: true,
+          statusBadge: '100% Quitado',
+          statusColor: 'emerald',
+          terms: '100% Quitado via PIX',
+          timeline: [
+            { stage: 'Pagamento', title: 'Pagamento Contratual (PIX)', amount: 29600, date: '26/02/2026', method: 'PIX', status: 'paid', statusLabel: 'Pago & Compensado', notes: 'Autenticação e registro contábil oficial' }
+          ]
+        },
+        delivery: {
+          isDelivered: true,
+          statusKey: 'entregue',
+          statusBadge: 'Entregue com Sucesso',
+          statusColor: 'emerald',
+          carrier: 'Transportadora Parceira Móveis Caribe',
+          trackingCode: 'CARIBE-PB-5024',
+          warehouseLocation: 'Entregue no Destino',
+          forecast: 'Entregue',
+          deliveredDate: '26/02/2026',
+          notes: 'Mobiliário em corda náutica e alumínio naval de alto padrão'
+        },
+        itemsCount: 1,
+        items: [
+          {
+            name: 'Mobiliário em corda náutica e alumínio naval de alto padrão',
+            code: 'CARIBE-PROD-5024',
+            qty: 1,
+            unitPrice: 29600,
+            image: '/images/sofa-ravello-terracota.jpg',
+            specs: 'Mobiliário em corda náutica com proteção UV e alumínio naval naval slitting • Mobiliário em corda náutica e alumínio naval de alto padrão',
+            badge: 'Entregue com Sucesso',
+            badgeColor: 'emerald'
+          }
+        ],
+        attachmentsCount: 1,
+        attachments: [
+          { name: 'Pedido_5024_CaribeMoveis (1).pdf', type: 'contract', url: 'contracts.html', label: 'Contrato Pedido #5024' }
         ]
       }
     ];
@@ -9551,7 +10857,7 @@
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
             const hasMockTests = parsed.some(o => o.id === '5280' || o.id === '5290' || o.id === '5275' || o.id === '5262');
-            if (hasMockTests) {
+            if (hasMockTests || (seller === 'gabriel' && parsed.length < DEFAULT_REAL_ORDERS_GABRIEL.length)) {
               ORDERS_DATABASE = seller === 'gabriel' ? [...DEFAULT_REAL_ORDERS_GABRIEL] : [];
               saveOrdersStorage();
             } else {
