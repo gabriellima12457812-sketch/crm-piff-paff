@@ -1,8 +1,16 @@
+import { supabaseDirectFetch as fetch } from '../lib/supabase-fetch.js';
 // ==============================================================================
 // VERCEL SERVERLESS FUNCTION: /api/mayara (ES Module)
 // ENDPOINT EXCLUSIVO E BLINDADO DA MAYARA
 // ZERO AUTENTICAÇÃO EXIGIDA NO CHATGPT (AUTENTICAÇÃO AUTOMÁTICA NO SERVIDOR)
 // ==============================================================================
+
+import {
+  loadGovernanceState,
+  filterActiveRecords,
+  performSoftDeleteLead,
+  recordAuditLog
+} from '../lib/governance.js';
 
 const SELLER_USER_ID = 'b2222222-2222-2222-2222-222222222222';
 const SELLER_NAME = 'Mayara';
@@ -627,16 +635,25 @@ export default async function handler(req, res) {
         return res.status(500).json({ success: false, error: 'Erro ao consultar leads no Supabase', details: errText });
       }
 
-      const allLeads = (await leadsRes.json()) || [];
+      const rawAllLeads = (await leadsRes.json()) || [];
+      const { state: govState } = await loadGovernanceState();
+      const allLeads = filterActiveRecords(rawAllLeads, {
+        includeDeleted: false,
+        isSuperAdmin: false,
+        govState,
+        resourceType: 'lead'
+      });
 
       let totalPipelineValue = 0;
-      const stagesSummary = { novos: 0, investigacao: 0, projetos: 0, proposta: 0, fechamento: 0, concluidas: 0 };
+      const stagesSummary = { novos: 0, investigacao: 0, projetos: 0, proposta: 0, fechamento: 0, concluidas: 0, desistiu: 0 };
       const temperaturesSummary = { quente: 0, morno: 0, frio: 0 };
 
       allLeads.forEach(l => {
         const v = Number(l.value) || 0;
-        totalPipelineValue += v;
         const st = (l.stage || 'novos').toLowerCase();
+        if (st !== 'concluidas' && st !== 'desistiu') {
+          totalPipelineValue += v;
+        }
         stagesSummary[st] = (stagesSummary[st] || 0) + 1;
         const tp = (l.temperature || 'morno').toLowerCase();
         temperaturesSummary[tp] = (temperaturesSummary[tp] || 0) + 1;
@@ -821,28 +838,29 @@ export default async function handler(req, res) {
       else if (['conversa', 'projetos', 'projeto'].includes(stageLower)) targetStage = 'projetos';
       else if (['proposta', 'orcamento', 'orçamento'].includes(stageLower)) targetStage = 'proposta';
       else if (['fechamento', 'fechando'].includes(stageLower)) targetStage = 'fechamento';
-      else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'ganho'].includes(stageLower)) targetStage = 'concluidas';
+      else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'ganho', 'ganhos', 'venda', 'vendas'].includes(stageLower)) targetStage = 'concluidas';
+      else if (['desistiu', 'desistencia', 'desistência', 'perdeu', 'perdido', 'perdidos', 'ja_comprou', 'já comprou', 'ja comprou', 'outra loja', 'outras lojas', 'concorrente'].some(x => stageLower.includes(x))) targetStage = 'desistiu';
       else targetStage = 'novos';
     }
 
-    // EXCLUIR
+    // EXCLUIR (SOFT DELETE UNIVERSAL: deleted_at = NOW() + TRILHA DE AUDITORIA)
     if (action === 'delete' || action === 'excluir') {
       if (!existingLead) {
         return res.status(404).json({ success: false, error: `Lead "${name || phone || id}" não foi encontrado na carteira de ${SELLER_NAME}.` });
       }
-      const delRes = await fetch(`${supabaseUrl}/rest/v1/leads?id=eq.${encodeURIComponent(existingLead.id)}&user_id=eq.${encodeURIComponent(SELLER_USER_ID)}`, {
-        method: 'DELETE',
-        headers: supabaseHeaders
+      const softDeleted = await performSoftDeleteLead({
+        supabaseUrl,
+        supabaseHeaders,
+        lead: existingLead,
+        actorUserId: SELLER_USER_ID,
+        actorName: SELLER_NAME,
+        req
       });
-      if (!delRes.ok) {
-        const errText = await delRes.text();
-        return res.status(500).json({ success: false, error: 'Erro ao excluir no Supabase', details: errText });
-      }
       return res.status(200).json({
         success: true,
-        action: 'delete',
-        message: `Lead "${existingLead.name}" excluído com sucesso do funil de ${SELLER_NAME}!`,
-        deleted_lead: existingLead
+        action: 'soft_delete',
+        message: `Lead "${existingLead.name}" arquivado em Soft Delete com sucesso no funil de ${SELLER_NAME}!`,
+        deleted_lead: softDeleted
       });
     }
 
