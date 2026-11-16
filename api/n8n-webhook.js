@@ -326,15 +326,15 @@ const STAGE_RANKS = {
   ganho: 6,
   ganhos: 6,
   venda: 6,
-  vendas: 6
+  vendas: 6,
+  desistiu: 99
 };
 
 function inferPipelineStage(text, currentStage = 'novos', detectedValue = 0) {
   const curLower = String(currentStage || '').toLowerCase().trim();
 
-  // REGRA DE OURO: Lead Concluído é VENDA FINALIZADA!
-  // NUNCA regride lead concluído para fechamento ou qualquer outro estágio via WhatsApp!
-  if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(curLower)) {
+  // REGRA DE OURO: Lead Concluído ou Desistiu/Já comprou NUNCA é regredido ou alterado automaticamente pelo webhook!
+  if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas', 'desistiu'].includes(curLower)) {
     return null;
   }
 
@@ -1043,11 +1043,11 @@ export default async function handler(req, res) {
     const textToAnalyze = `${extractedText} ${interactionSummary}`.trim();
     const detectedValue = extractMonetaryValue(textToAnalyze);
     const currentLeadStage = existingLead ? (existingLead.stage || existingLead.etapa_kanban || 'novos') : 'novos';
-    const isLeadConcluded = existingLead && (
-      ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(String(existingLead.stage || '').toLowerCase().trim()) ||
-      ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(String(existingLead.etapa_kanban || '').toLowerCase().trim())
+    const isLeadProtected = existingLead && (
+      ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas', 'desistiu'].includes(String(existingLead.stage || '').toLowerCase().trim()) ||
+      ['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas', 'desistiu'].includes(String(existingLead.etapa_kanban || '').toLowerCase().trim())
     );
-    const pipelineInference = isLeadConcluded ? null : inferPipelineStage(textToAnalyze, currentLeadStage, detectedValue);
+    const pipelineInference = isLeadProtected ? null : inferPipelineStage(textToAnalyze, currentLeadStage, detectedValue);
 
     if (!existingLead) {
       // =======================================================================
@@ -1210,8 +1210,8 @@ export default async function handler(req, res) {
         }
       }
 
-      // Reconhecimento Automático de Avanço do Pipeline (NUNCA altera estágio de lead já concluído)
-      if (pipelineInference && !isLeadConcluded) {
+      // Reconhecimento Automático de Avanço do Pipeline (NUNCA altera estágio de lead já concluído ou desistiu)
+      if (pipelineInference && !isLeadProtected) {
         updatePayload.stage = pipelineInference.stage;
         updatePayload.etapa_kanban = pipelineInference.etapa_kanban;
         updatePayload.temperature = pipelineInference.temperature;
