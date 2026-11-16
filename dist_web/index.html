@@ -1554,6 +1554,9 @@
             <button class="stage-tab px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition whitespace-nowrap" data-stage="concluidas">
               🎉 Concluídas (<span id="tab-count-concluidas">0</span>)
             </button>
+            <button class="stage-tab px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition whitespace-nowrap" data-stage="desistiu">
+              🛑 Desistiu / Já comprou (<span id="tab-count-desistiu">0</span>)
+            </button>
           </div>
 
           <!-- Barra de Pesquisa e Filtros Secundários -->
@@ -5877,7 +5880,7 @@
     // ==========================================
     // 2.1 SINCRONIZAÇÃO EM NUVEM (API SAAS / SUPABASE COM ISOLAMENTO STRICT)
     // ==========================================
-    const STATIC_SELLER_ENDPOINTS = ['gabriel', 'felipe', 'mayara', 'barbara', 'eduardo', 'rodrigo', 'kasio', 'thiago'];
+    const STATIC_SELLER_ENDPOINTS = ['gabriel', 'felipe', 'mayara', 'barbara', 'eduardo', 'rodrigo', 'kasio', 'thiago', 'yasmim'];
     let lastSyncedWaJson = '';
     let lastSyncedInstaJson = '';
     async function syncFromSupabase(silent = false) {
@@ -6445,12 +6448,24 @@
           if (res.ok) {
             const updatedRows = await res.json();
             if (Array.isArray(updatedRows) && updatedRows.length > 0) {
+              let hasAnySellerChange = false;
+              const curSellerKey = getSellerKey(authUser);
               updatedRows.forEach(row => {
                 if (row.updated_at && row.updated_at > lastRealtimeSyncTimestamp) {
                   lastRealtimeSyncTimestamp = row.updated_at;
                 }
-                handleRealtimeDbChange({ eventType: 'UPDATE', new: row });
+                if (isLeadOfSeller(row, curSellerKey)) {
+                  handleRealtimeDbChange({ eventType: 'UPDATE', new: row }, false);
+                  hasAnySellerChange = true;
+                }
               });
+              if (hasAnySellerChange) {
+                saveStorage();
+                renderKanban();
+                renderClientsTable();
+                renderFollowupCenter();
+                updateMetrics();
+              }
             }
           }
         } catch (e) {}
@@ -6498,7 +6513,7 @@
     }
     window.playNotificationSound = playNotificationSound;
 
-    function handleRealtimeDbChange(payload) {
+    function handleRealtimeDbChange(payload, triggerRender = true) {
       if (!payload || !payload.eventType) return;
       const { eventType, new: newRow, old: oldRow } = payload;
 
@@ -6509,22 +6524,22 @@
       }
 
       if (eventType === 'INSERT') {
-        handleRealtimeInsert(newRow);
+        handleRealtimeInsert(newRow, triggerRender);
       } else if (eventType === 'UPDATE') {
-        handleRealtimeUpdate(newRow);
+        handleRealtimeUpdate(newRow, triggerRender);
       } else if (eventType === 'DELETE') {
         handleRealtimeDelete(oldRow);
       }
     }
 
-    function handleRealtimeInsert(row) {
+    function handleRealtimeInsert(row, triggerRender = true) {
       if (!row || !row.id) return;
       // Evita duplicidade se já carregado localmente (por ID ou Telefone normalizado com/sem 9 e DDI 55)
       const existsWa = leads.some(l => l.id === row.id || isMatchingPhone(l.phone, row.phone));
       const existsInsta = (typeof instagramLeads !== 'undefined') && instagramLeads.some(l => l.id === row.id || isMatchingPhone(l.phone, row.phone));
       if (existsWa || existsInsta) {
         // Se já existe, atualiza os dados em tempo real
-        handleRealtimeUpdate(row);
+        handleRealtimeUpdate(row, triggerRender);
         return;
       }
 
@@ -6544,10 +6559,12 @@
           stage: instaStage
         };
         instagramLeads.unshift(leadItem);
-        saveInstagramStorage();
-        renderInstagramBoard();
-        playNotificationSound();
-        showToast(`⚡ Novo Lead do Instagram recebido: ${leadItem.name || 'Sem nome'}`, 'info');
+        if (triggerRender) {
+          saveInstagramStorage();
+          renderInstagramBoard();
+          playNotificationSound();
+          showToast(`⚡ Novo Lead do Instagram recebido: ${leadItem.name || 'Sem nome'}`, 'info');
+        }
       } else {
         // Normalização de estágio para o Kanban do WhatsApp (suporta stage e etapa_kanban)
         let rawSt = (row.stage || row.etapa_kanban || 'novos').toString().toLowerCase().trim();
@@ -6558,6 +6575,7 @@
         else if (rawSt === 'proposta' || rawSt === 'orcamento') waStage = 'proposta';
         else if (rawSt === 'fechamento') waStage = 'fechamento';
         else if (rawSt === 'concluidas' || rawSt === 'concluida') waStage = 'concluidas';
+        else if (rawSt === 'desistiu' || ['desistencia', 'desistência', 'perdeu', 'perdido', 'perdidos', 'ja_comprou', 'já comprou', 'ja comprou', 'outra loja', 'outras lojas', 'concorrente'].some(x => rawSt.includes(x))) waStage = 'desistiu';
 
         const leadItem = {
           ...row,
@@ -6567,19 +6585,23 @@
           categoria: row.categoria || 1
         };
         leads.unshift(leadItem);
-        saveStorage();
-        renderKanban();
-        renderClientsTable();
-        renderFollowupCenter();
-        playNotificationSound();
-        showToast(`⚡ [WhatsApp API] Novo Lead no Kanban: ${leadItem.name || 'Sem nome'}`, 'success');
+        if (triggerRender) {
+          saveStorage();
+          renderKanban();
+          renderClientsTable();
+          renderFollowupCenter();
+          playNotificationSound();
+          showToast(`⚡ [WhatsApp API] Novo Lead no Kanban: ${leadItem.name || 'Sem nome'}`, 'success');
+        }
       }
 
-      updateMetrics();
-      updateRealtimePillStatus('SUBSCRIBED');
+      if (triggerRender) {
+        updateMetrics();
+        updateRealtimePillStatus('SUBSCRIBED');
+      }
     }
 
-    function handleRealtimeUpdate(row) {
+    function handleRealtimeUpdate(row, triggerRender = true) {
       if (!row || !row.id) return;
 
       let idxWa = leads.findIndex(l => l.id === row.id || isMatchingPhone(l.phone, row.phone));
@@ -6690,12 +6712,14 @@
           renderInstagramBoard();
         }
 
-        saveStorage();
-        renderKanban();
-        renderClientsTable();
-        renderFollowupCenter();
-        playNotificationSound();
-        showToast(`💬 [WhatsApp API] Atualização em tempo real: "${row.name || 'Cliente'}"`, 'info');
+        if (triggerRender) {
+          saveStorage();
+          renderKanban();
+          renderClientsTable();
+          renderFollowupCenter();
+          playNotificationSound();
+          showToast(`💬 [WhatsApp API] Atualização em tempo real: "${row.name || 'Cliente'}"`, 'info');
+        }
       }
 
       if (activeLead && (activeLead.id === row.id || (row.phone && activeLead.phone && (typeof isMatchingPhone === 'function' ? isMatchingPhone(activeLead.phone, row.phone) : String(activeLead.phone).replace(/\D/g, '') === String(row.phone).replace(/\D/g, ''))))) {
@@ -6718,8 +6742,10 @@
         }
       }
 
-      updateMetrics();
-      updateRealtimePillStatus('SUBSCRIBED');
+      if (triggerRender) {
+        updateMetrics();
+        updateRealtimePillStatus('SUBSCRIBED');
+      }
     }
 
     function handleRealtimeDelete(oldRow) {
@@ -6844,6 +6870,9 @@
     async function syncLeadToSupabase(lead) {
       if (!lead || !lead.id) return;
       const sellerKey = (typeof getSellerKey === 'function') ? getSellerKey(authUser) : 'gabriel';
+      const targetSeller = (typeof normalizeSellerKey === 'function')
+        ? (normalizeSellerKey(lead.vendedor_id) || sellerKey || 'yasmim')
+        : (lead.vendedor_id || sellerKey || 'yasmim');
 
       let supabaseStage = lead.stage || 'novos';
       const cleanSt = String(supabaseStage).toLowerCase().trim();
@@ -8550,6 +8579,7 @@
         l && 
         l.stage !== 'concluidas' && 
         l.stage !== 'concluida' &&
+        l.stage !== 'desistiu' &&
         !isFollowupRemoved(l)
       );
 
@@ -8633,7 +8663,7 @@
 
       // REGRA SOLICITADA: "Falou hoje ele sai da lista, passou da meia noite ele volta novamente"
       const isLeadDueForToday = (l) => {
-        if (!l || isFollowupRemoved(l)) return false;
+        if (!l || isFollowupRemoved(l) || l.stage === 'desistiu' || l.stage === 'concluidas' || l.stage === 'concluida') return false;
         if (l.followup_disabled || l.followup_date === '1970-01-01' || l.followup_status === 'Sem Follow-up') return false;
 
         // 1. REGRA: FALOU HOJE -> SAI DA LISTA IMEDIATAMENTE!
@@ -12238,6 +12268,7 @@
         if (tabStage === 'proposta') return st === 'proposta';
         if (tabStage === 'fechamento') return st === 'fechamento';
         if (tabStage === 'concluidas') return st === 'concluidas' || st === 'concluida';
+        if (tabStage === 'desistiu') return st === 'desistiu';
         return st === tabStage;
       };
 
