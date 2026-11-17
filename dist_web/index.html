@@ -8606,26 +8606,27 @@
       
       const today = allFunnelLeads.filter(isLeadDueForToday);
       
-      // Ordenação prioritária em Chamar Hoje (Opção 2):
-      // 1º Atrasados: do mais atrasado para o menos atrasado (mais dias de atraso no topo)
-      // 2º 3 Dias a Fio
-      // 3º Demais agendados para hoje, ordenados por maior valor comercial
+      // Ordenação prioritária em Chamar Hoje:
+      // REGRA SOLICITADA: Contatos agendados para HOJE têm prioridade máxima sobre os atrasados!
+      // 1º Agendados para hoje (priorizando 3 Dias a Fio, seguido de maior valor comercial)
+      // 2º Atrasados (ficam abaixo dos do dia, ordenados por dias de atraso e valor comercial)
       today.sort((a, b) => {
         const aIsOverdue = (a.followup_date && a.followup_date < todayStr);
         const bIsOverdue = (b.followup_date && b.followup_date < todayStr);
 
+        // Se um é do dia e o outro é atrasado: o do DIA VEM PRIMEIRO!
+        if (!aIsOverdue && bIsOverdue) return -1;
+        if (aIsOverdue && !bIsOverdue) return 1;
+
         if (aIsOverdue && bIsOverdue) {
-          // Ambos atrasados: o mais antigo (menor data ISO) vem primeiro no topo da lista
+          // Ambos atrasados: o mais antigo (menor data ISO) vem primeiro entre os atrasados
           if (a.followup_date !== b.followup_date) {
             return a.followup_date.localeCompare(b.followup_date);
           }
           return (Number(b.value) || 0) - (Number(a.value) || 0);
         }
 
-        if (aIsOverdue && !bIsOverdue) return -1;
-        if (!aIsOverdue && bIsOverdue) return 1;
-
-        // Se nenhum é atrasado: prioriza sequência de 3 dias a fio
+        // Ambos são de hoje: prioriza sequência de 3 dias a fio
         const a3d = a.is_consecutive_3days ? 1 : 0;
         const b3d = b.is_consecutive_3days ? 1 : 0;
         if (b3d !== a3d) return b3d - a3d;
