@@ -940,9 +940,17 @@
             </div>
 
             <!-- Busca em tempo real -->
-            <div class="relative min-w-[260px]">
-              <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-              <input id="input-search-architects" type="text" oninput="renderArchitectsTable()" placeholder="Buscar arquiteto, escritório ou cidade..." class="w-full pl-9 pr-4 py-2 rounded-xl bg-[#0E1722] border border-white/10 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition" />
+            <div class="relative min-w-[260px] flex items-center gap-2">
+              <div class="relative flex-1">
+                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input id="input-search-architects" type="text" oninput="renderArchitectsTable()" placeholder="Buscar arquiteto, escritório ou cidade..." class="w-full pl-9 pr-8 py-2 rounded-xl bg-[#0E1722] border border-white/10 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition" />
+                <button type="button" id="btn-clear-arch-search" onclick="clearArchitectsSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs p-1 cursor-pointer" title="Limpar busca">
+                  <i class="ph-bold ph-x"></i>
+                </button>
+              </div>
+              <button type="button" id="btn-clear-arch-filters" onclick="resetArchitectsFilter()" class="hidden px-2.5 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition whitespace-nowrap cursor-pointer active:scale-95" title="Limpar todos os filtros e ver todos">
+                Limpar Filtros
+              </button>
             </div>
           </div>
 
@@ -4706,20 +4714,30 @@
             l.notes = `[TIPO: ARQUITETO] ${l.notes || ''}`.trim();
           }
 
+          // Sincroniza sempre com storage para garantir que nenhum arquiteto seja sobrescrito
+          const archKey = (typeof getArchitectsStorageKey === 'function') ? getArchitectsStorageKey() : 'PIFF_ARCHITECTS_B2B';
+          try {
+            const storedArch = localStorage.getItem(archKey);
+            if (storedArch) {
+              const parsedArch = JSON.parse(storedArch);
+              if (Array.isArray(parsedArch)) architectsList = parsedArch;
+            }
+          } catch (e) {}
+          if (!Array.isArray(architectsList)) architectsList = [];
+
           // Adiciona ou atualiza na carteira de Arquitetos B2B
           const cleanPhone = (l.phone || '').replace(/\D/g, '');
-          if (!Array.isArray(architectsList)) architectsList = [];
           const existingIdx = architectsList.findIndex(a => 
             (a.lead_id && a.lead_id === l.id) || 
             (cleanPhone && cleanPhone.length >= 8 && a.phone && a.phone.replace(/\D/g, '') === cleanPhone) ||
-            (a.name && a.name.toLowerCase() === l.name.toLowerCase())
+            (a.name && l.name && a.name.toLowerCase() === l.name.toLowerCase())
           );
           
           const archObj = {
             id: 'arch-' + (l.id || Date.now()),
             lead_id: l.id,
             name: l.name,
-            office: (l.name.toLowerCase().includes('arq') || l.name.toLowerCase().includes('escritorio')) ? l.name : `${l.name} (Escritório de Arquitetura)`,
+            office: (l.name && (l.name.toLowerCase().includes('arq') || l.name.toLowerCase().includes('escritorio'))) ? l.name : `${l.name} (Escritório de Arquitetura)`,
             phone: l.phone || '',
             city: (l.city && !/arquiteta|contato|área/i.test(l.city)) ? l.city : 'Brasil',
             status: l.stage === 'concluidas' ? 'Parceiro Ativo' : (l.stage === 'proposta' || l.stage === 'projetos' ? 'Em Conversa' : 'A Contatar'),
@@ -4814,17 +4832,21 @@
       if (targetType === 'arquiteto') {
         const modal = document.getElementById('modal-lead-detail');
         if (modal) modal.classList.add('hidden');
+        newlyAddedArchId = targetList[0]?.id || primaryLead?.id || leadId;
+        if (typeof resetArchitectsFilter === 'function') {
+          resetArchitectsFilter();
+        }
         if (typeof switchView === 'function') {
           switchView('architects');
-        }
-        const searchInput = document.getElementById('input-search-architects');
-        if (searchInput) {
-          searchInput.value = leadName;
         }
         if (typeof renderArchitectsTable === 'function') {
           renderArchitectsTable();
         }
         showToast(`"${leadName}" classificado como Arquiteto e transferido para a carteira de Arquitetos!`, 'success');
+        setTimeout(() => {
+          newlyAddedArchId = null;
+          if (typeof renderArchitectsTable === 'function') renderArchitectsTable();
+        }, 6000);
       } else if (targetType !== 'cliente') {
         showToast(`"${leadName}" classificado como ${label}! (Removido do funil, métricas e follow-up)`, 'success');
       } else {
@@ -11582,11 +11604,36 @@
     const DEFAULT_ARCHITECTS = DEFAULT_ARCHITECTS_GABRIEL;
 
     let architectsList = [];
+    let newlyAddedArchId = null;
     let currentArchitectFilter = 'all';
 
     function getArchitectsStorageKey() {
       return 'PIFF_ARCHITECTS_B2B_' + getSellerKey();
     }
+
+    function clearArchitectsSearch() {
+      const input = document.getElementById('input-search-architects');
+      if (input) input.value = '';
+      renderArchitectsTable();
+    }
+    window.clearArchitectsSearch = clearArchitectsSearch;
+
+    function resetArchitectsFilter() {
+      currentArchitectFilter = 'all';
+      const input = document.getElementById('input-search-architects');
+      if (input) input.value = '';
+      document.querySelectorAll('.arch-filter-btn').forEach(b => {
+        if (b.getAttribute('data-status') === 'all') {
+          b.classList.remove('bg-white/5', 'text-slate-300', 'border-white/10');
+          b.classList.add('bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40', 'ring-2', 'ring-emerald-400');
+        } else {
+          b.classList.remove('bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40', 'ring-2', 'ring-emerald-400');
+          b.classList.add('bg-white/5', 'text-slate-300', 'border-white/10');
+        }
+      });
+      renderArchitectsTable();
+    }
+    window.resetArchitectsFilter = resetArchitectsFilter;
 
     function getDefaultArchitectsForCurrentSeller() {
       const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
@@ -11631,19 +11678,14 @@
     }
 
     function syncArchitectsFromCRM() {
-      if (!Array.isArray(leads) || leads.length === 0) return;
+      const allLeads = (typeof getAllCurrentSellerLeads === 'function')
+        ? getAllCurrentSellerLeads()
+        : (Array.isArray(leads) ? leads : []);
+      if (!Array.isArray(allLeads) || allLeads.length === 0) return;
       const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
 
       let added = 0;
-      leads.forEach(l => {
-        // Bloqueio de contaminação cruzada entre vendedores
-        if (seller === 'mayara' || seller === 'barbara') {
-          const myUserId = seller === 'mayara' ? 'b2222222-2222-2222-2222-222222222222' : 'f6666666-6666-6666-6666-666666666666';
-          if (l.user_id && l.user_id !== myUserId) return;
-          if (l.vendedor_id && l.vendedor_id !== seller) return;
-          if (l.id && l.id.includes('-GAB-')) return;
-        }
-
+      allLeads.forEach(l => {
         const isMarkedArch = (typeof getContactType === 'function') ? getContactType(l) === 'arquiteto' : false;
         const text = `${l.name || ''} ${l.notes || ''} ${l.behavioral_profile || ''}`;
         const isB2B = isMarkedArch || (seller === 'gabriel' && (
@@ -11660,11 +11702,11 @@
           );
           if (!exists) {
             if (!Array.isArray(architectsList)) architectsList = [];
-            architectsList.push({
+            architectsList.unshift({
               id: 'arch-' + (l.id || Date.now()),
               lead_id: l.id,
               name: l.name,
-              office: (l.name.toLowerCase().includes('arq') || l.name.toLowerCase().includes('escritorio')) ? l.name : `${l.name} (Escritório de Arquitetura)`,
+              office: (l.name && (l.name.toLowerCase().includes('arq') || l.name.toLowerCase().includes('escritorio'))) ? l.name : `${l.name} (Escritório de Arquitetura)`,
               phone: l.phone || '',
               city: (l.city && !/arquiteta|contato|área/i.test(l.city)) ? l.city : 'Brasil',
               status: l.stage === 'concluidas' ? 'Parceiro Ativo' : (l.stage === 'proposta' || l.stage === 'projetos' ? 'Em Conversa' : 'A Contatar'),
@@ -11712,6 +11754,17 @@
 
       const search = (document.getElementById('input-search-architects')?.value || '').trim().toLowerCase();
 
+      const btnClearSearch = document.getElementById('btn-clear-arch-search');
+      if (btnClearSearch) {
+        if (search) btnClearSearch.classList.remove('hidden');
+        else btnClearSearch.classList.add('hidden');
+      }
+      const btnClearFilters = document.getElementById('btn-clear-arch-filters');
+      if (btnClearFilters) {
+        if (search || currentArchitectFilter !== 'all') btnClearFilters.classList.remove('hidden');
+        else btnClearFilters.classList.add('hidden');
+      }
+
       const filtered = architectsList.filter(arch => {
         const matchStatus = (currentArchitectFilter === 'all') || (arch.status === currentArchitectFilter);
         const matchSearch = !search || 
@@ -11735,7 +11788,12 @@
 
       filtered.forEach(arch => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-white/5 transition';
+        const isNew = newlyAddedArchId && (arch.id === newlyAddedArchId || arch.lead_id === newlyAddedArchId || String(arch.id).includes(String(newlyAddedArchId)));
+        if (isNew) {
+          tr.className = 'bg-purple-500/15 border-l-4 border-purple-500 transition';
+        } else {
+          tr.className = 'hover:bg-white/5 transition';
+        }
 
         let statusBadge = '';
         if (arch.status === 'Parceiro Ativo') {
@@ -11759,7 +11817,7 @@
 
         tr.innerHTML = `
           <td class="py-3.5 px-4">
-            <div class="font-bold text-white">${arch.name}</div>
+            <div class="font-bold text-white flex items-center gap-1.5">${arch.name}${isNew ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-purple-500/30 text-purple-300 border border-purple-500/50">✨ Novo</span>' : ''}</div>
             <div class="text-xs text-slate-400">${arch.office || ''}</div>
           </td>
           <td class="py-3.5 px-4">${waLink}</td>
@@ -14151,6 +14209,9 @@
         } else if (viewName === 'clients') {
           resetClientsFilters();
         } else if (viewName === 'architects') {
+          if (typeof resetArchitectsFilter === 'function') {
+            resetArchitectsFilter();
+          }
           initArchitectsStorage();
           renderArchitectsTable();
         } else if (viewName === 'dashboard') {
