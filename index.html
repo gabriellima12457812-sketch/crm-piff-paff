@@ -97,9 +97,17 @@
       background-color: rgba(0, 210, 211, 0.06);
       border-color: #00D2D3 !important;
     }
+    .lead-card {
+      content-visibility: auto;
+      contain-intrinsic-size: 0 130px;
+    }
     .lead-card.dragging {
       opacity: 0.4;
       transform: scale(0.98);
+    }
+    .instagram-card {
+      content-visibility: auto;
+      contain-intrinsic-size: 0 150px;
     }
     .insta-col.drag-over {
       background-color: rgba(236, 72, 153, 0.08);
@@ -4624,7 +4632,54 @@
      * Contatos marcados como Funcionário ou Fornecedor NÃO entram em métricas comerciais,
      * nem no funil de vendas (Kanban), nem nas listas de follow-up.
      */
-    function getContactType(lead) {
+        // ==========================================
+    // CACHE EM MEMÓRIA ULTRA-RÁPIDO (PERFORMANCE BOOST)
+    // Evita milhares de JSON.parse / localStorage.getItem síncronos
+    // ==========================================
+    let _cachedContactTypes = null;
+    function getCachedContactTypes() {
+      if (_cachedContactTypes === null) {
+        try {
+          _cachedContactTypes = JSON.parse(localStorage.getItem('piffpaff_contact_types') || '{}');
+        } catch (e) {
+          _cachedContactTypes = {};
+        }
+      }
+      return _cachedContactTypes;
+    }
+
+    let _cachedContactedToday = null;
+    function getCachedContactedToday() {
+      if (_cachedContactedToday === null) {
+        try {
+          _cachedContactedToday = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
+        } catch (e) {
+          _cachedContactedToday = {};
+        }
+      }
+      return _cachedContactedToday;
+    }
+
+    let _cachedRemovedFollowups = null;
+    function getCachedRemovedFollowups() {
+      if (_cachedRemovedFollowups === null) {
+        try {
+          _cachedRemovedFollowups = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+        } catch (e) {
+          _cachedRemovedFollowups = [];
+        }
+      }
+      return _cachedRemovedFollowups;
+    }
+
+    function invalidateContactCaches() {
+      _cachedContactTypes = null;
+      _cachedContactedToday = null;
+      _cachedRemovedFollowups = null;
+    }
+    window.invalidateContactCaches = invalidateContactCaches;
+
+function getContactType(lead) {
       if (!lead) return 'cliente';
       if (lead.contact_type === 'arquiteto' || lead.tipo_contato === 'arquiteto') return 'arquiteto';
       if (lead.contact_type === 'funcionario' || lead.contact_type === 'fornecedor') return lead.contact_type;
@@ -4668,7 +4723,7 @@
       if (pipe === 'fornecedor') return 'fornecedor';
 
       try {
-        const reg = JSON.parse(localStorage.getItem('piffpaff_contact_types') || '{}');
+        const reg = getCachedContactTypes();
         const id = String(lead.id || '');
         if (reg[id]) return reg[id];
         let p = String(lead.phone || '').replace(/\D/g, '');
@@ -4795,6 +4850,7 @@
           }
         });
         localStorage.setItem('piffpaff_contact_types', JSON.stringify(reg));
+        invalidateContactCaches();
 
         const remList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
         targetList.forEach(l => {
@@ -4870,7 +4926,7 @@
 
       let removedList = [];
       try {
-        removedList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+        removedList = (typeof getCachedRemovedFollowups === 'function') ? getCachedRemovedFollowups() : JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
       } catch (e) {}
 
       const id = String(l.id || '');
@@ -8447,7 +8503,7 @@
 
       // 2. Registro persistente em localStorage (chave = ID do lead, valor = 'YYYY-MM-DD')
       try {
-        const reg = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
+        const reg = (typeof getCachedContactedToday === 'function') ? getCachedContactedToday() : JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
         const id = String(lead.id || '');
         if (id && reg[id] === todayStr) {
           lead.called_today = true;
@@ -8539,7 +8595,7 @@
 
       // 1. Registra no mapa persistente de contatados hoje
       try {
-        const reg = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
+        const reg = (typeof getCachedContactedToday === 'function') ? getCachedContactedToday() : JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
         targetList.forEach(l => {
           if (l.id) reg[l.id] = todayStr;
           let p = String(l.phone || '').replace(/\D/g, '');
@@ -8550,6 +8606,7 @@
           }
         });
         localStorage.setItem('piffpaff_contacted_today', JSON.stringify(reg));
+        if (typeof invalidateContactCaches === 'function') invalidateContactCaches();
       } catch (e) {}
 
       // 2. Persiste e atualiza UI
@@ -8951,7 +9008,7 @@
 
         // 1. Limpa entradas de dias anteriores no localStorage (piffpaff_contacted_today)
         try {
-          const reg = JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
+          const reg = (typeof getCachedContactedToday === 'function') ? getCachedContactedToday() : JSON.parse(localStorage.getItem('piffpaff_contacted_today') || '{}');
           let changed = false;
           Object.keys(reg).forEach(k => {
             if (reg[k] !== currentDayStr) {
@@ -8960,6 +9017,7 @@
             }
           });
           if (changed) localStorage.setItem('piffpaff_contacted_today', JSON.stringify(reg));
+        if (typeof invalidateContactCaches === 'function') invalidateContactCaches();
         } catch (e) {}
 
         // 2. Reseta status de chamado hoje em todos os leads em memória
@@ -9183,7 +9241,7 @@
 
       // Remove da blacklist se reagendado pelo usuário
       try {
-        let removedList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+        let removedList = (typeof getCachedRemovedFollowups === 'function') ? getCachedRemovedFollowups() : JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
         const cleanPhoneDigits = (p) => String(p || '').replace(/\D/g, '');
         const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : '';
         const targetNormName = (primaryLead?.name || '').toLowerCase().trim();
@@ -9231,7 +9289,7 @@
 
       // Remove da blacklist se reagendado pelo usuário
       try {
-        let removedList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+        let removedList = (typeof getCachedRemovedFollowups === 'function') ? getCachedRemovedFollowups() : JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
         const cleanPhoneDigits = (p) => String(p || '').replace(/\D/g, '');
         const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : '';
         const targetNormName = (primaryLead?.name || '').toLowerCase().trim();
@@ -9292,7 +9350,7 @@
 
       // 2. Registra na blacklist persistente de follow-up
       try {
-        const removedList = JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
+        const removedList = (typeof getCachedRemovedFollowups === 'function') ? getCachedRemovedFollowups() : JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
         const cleanPhoneDigits = (p) => String(p || '').replace(/\D/g, '');
         const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : (targetList[0]?.phone ? cleanPhoneDigits(targetList[0].phone) : '');
         const targetNormName = (primaryLead?.name || targetList[0]?.name || '').toLowerCase().trim();
