@@ -1006,6 +1006,7 @@ export default async function handler(req, res) {
     // Se o estágio foi explicitamente enviado, atualiza; senão MANTÉM o estágio existente (evita reset para 'novos')
     if (targetStage) {
       payload.stage = targetStage;
+    payload.etapa_kanban = targetStage === 'concluidas' ? 'Concluídas' : (targetStage === 'desistiu' ? 'Desistiu / Já comprou' : (targetStage === 'novos' ? 'Novos' : targetStage));
     } else if (existingLead && existingLead.stage) {
       payload.stage = existingLead.stage;
     } else {
