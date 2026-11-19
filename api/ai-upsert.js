@@ -842,6 +842,7 @@ export default async function handler(req, res) {
     else if (['proposta', 'orcamento', 'orçamento'].includes(stageLower)) targetStage = 'proposta';
     else if (['fechamento', 'fechando'].includes(stageLower)) targetStage = 'fechamento';
     else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(stageLower)) targetStage = 'concluidas';
+    else if (['desistiu', 'desistencia', 'desistência', 'perdeu', 'perdido', 'perdidos', 'ja_comprou', 'já comprou', 'ja comprou', 'outra loja', 'outras lojas', 'concorrente'].some(x => stageLower.includes(x))) targetStage = 'desistiu';
 
     // 3. Busca de lead existente ISOLADO pelo vendedor (user_id = sellerUserId)
     let existingLead = null;
