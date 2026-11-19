@@ -6313,6 +6313,71 @@ function getContactType(lead) {
             edsonConsolidatedRawLeads = [...cloudWa];
           }
 
+          // =========================================================================
+          // DESDUPLICAÇÃO BLINDADA UNIVERSAL DE LEADS POR TELEFONE (TODOS OS VENDEDORES)
+          // Impede estritamente cartões duplicados com o mesmo número de telefone no Kanban
+          // =========================================================================
+          if (Array.isArray(cloudWa) && cloudWa.length > 0) {
+            const stageRanks = { concluidas: 100, desistiu: 90, fechamento: 50, proposta: 40, projetos: 30, investigacao: 20, novos: 10 };
+            const dedupMap = new Map();
+            const phoneIndex = new Map();
+
+            cloudWa.forEach(lead => {
+              if (!lead) return;
+              const cleanP = cleanPhone(lead.phone);
+              const last8 = (cleanP && cleanP.length >= 8 && cleanP.length <= 13) ? cleanP.slice(-8) : null;
+              const leadId = String(lead.id || '').toUpperCase();
+
+              let existingId = null;
+              if (dedupMap.has(leadId)) {
+                existingId = leadId;
+              } else if (cleanP && phoneIndex.has(cleanP)) {
+                existingId = phoneIndex.get(cleanP);
+              } else if (last8 && phoneIndex.has(last8)) {
+                existingId = phoneIndex.get(last8);
+              }
+
+              if (!existingId) {
+                dedupMap.set(leadId, lead);
+                if (cleanP) phoneIndex.set(cleanP, leadId);
+                if (last8) phoneIndex.set(last8, leadId);
+              } else {
+                const canonical = dedupMap.get(existingId);
+                const rankCanon = stageRanks[canonical.stage] || 10;
+                const rankCurrent = stageRanks[lead.stage] || 10;
+                if (rankCurrent > rankCanon) {
+                  canonical.stage = lead.stage;
+                  canonical.etapa_kanban = lead.etapa_kanban || lead.stage;
+                  canonical.manual_stage = Boolean(canonical.manual_stage || lead.manual_stage);
+                }
+                const valCanon = Number(canonical.value) || 0;
+                const valCurrent = Number(lead.value) || 0;
+                if (valCurrent > valCanon) {
+                  canonical.value = valCurrent;
+                  canonical.manual_value = Boolean(canonical.manual_value || lead.manual_value);
+                }
+                const isCanonGeneric = !canonical.name || canonical.name.startsWith('Lead WhatsApp') || canonical.name.startsWith('WhatsApp');
+                const isCurrentGeneric = !lead.name || lead.name.startsWith('Lead WhatsApp') || lead.name.startsWith('WhatsApp');
+                if (isCanonGeneric && !isCurrentGeneric) {
+                  canonical.name = lead.name;
+                }
+                if (lead.notes && (!canonical.notes || !canonical.notes.includes(lead.notes.slice(0, 40)))) {
+                  canonical.notes = canonical.notes ? `${canonical.notes}\n\n${lead.notes}` : lead.notes;
+                }
+                if (canonical.id && canonical.id.includes('-LID-') && lead.id && lead.id.includes('-WA-')) {
+                  dedupMap.delete(existingId);
+                  canonical.id = lead.id;
+                  dedupMap.set(String(lead.id).toUpperCase(), canonical);
+                  if (cleanP) phoneIndex.set(cleanP, String(lead.id).toUpperCase());
+                  if (last8) phoneIndex.set(last8, String(lead.id).toUpperCase());
+                }
+              }
+            });
+
+            cloudWa.length = 0;
+            cloudWa.push(...Array.from(dedupMap.values()));
+          }
+
           const todaySyncStr = formatYMD(new Date());
           let contactedTodayReg = {};
           try {
