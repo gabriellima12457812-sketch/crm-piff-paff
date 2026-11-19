@@ -282,11 +282,67 @@ export default async function handler(req, res) {
         resourceType: 'lead'
       });
 
+      // Blindagem Anti-Duplicação por Telefone da Yasmim
+      const stageRanks = { concluidas: 100, desistiu: 90, fechamento: 50, proposta: 40, projetos: 30, investigacao: 20, novos: 10 };
+      const dedupMap = new Map();
+      const phoneIndex = new Map();
+
+      mergedLeads.forEach(lead => {
+        if (!lead) return;
+        const cp = cleanPhone(lead.phone);
+        const last8 = (cp && cp.length >= 8 && cp.length <= 13) ? cp.slice(-8) : null;
+        const leadId = String(lead.id || '').toUpperCase();
+
+        let existingId = null;
+        if (dedupMap.has(leadId)) {
+          existingId = leadId;
+        } else if (cp && phoneIndex.has(cp)) {
+          existingId = phoneIndex.get(cp);
+        } else if (last8 && phoneIndex.has(last8)) {
+          existingId = phoneIndex.get(last8);
+        }
+
+        if (!existingId) {
+          dedupMap.set(leadId, lead);
+          if (cp) phoneIndex.set(cp, leadId);
+          if (last8) phoneIndex.set(last8, leadId);
+        } else {
+          const canon = dedupMap.get(existingId);
+          const rankC = stageRanks[canon.stage] || 10;
+          const rankL = stageRanks[lead.stage] || 10;
+          if (rankL > rankC) {
+            canon.stage = lead.stage;
+            canon.etapa_kanban = lead.etapa_kanban || lead.stage;
+          }
+          const valC = Number(canon.value) || 0;
+          const valL = Number(lead.value) || 0;
+          if (valL > valC) {
+            canon.value = valL;
+          }
+          const isCGen = !canon.name || canon.name.startsWith('Lead WhatsApp') || canon.name.startsWith('WhatsApp');
+          const isLGen = !lead.name || lead.name.startsWith('Lead WhatsApp') || lead.name.startsWith('WhatsApp');
+          if (isCGen && !isLGen) {
+            canon.name = lead.name;
+          }
+          if (lead.notes && (!canon.notes || !canon.notes.includes(lead.notes.slice(0, 30)))) {
+            canon.notes = canon.notes ? `${canon.notes}\n\n${lead.notes}` : lead.notes;
+          }
+          if (canon.id && canon.id.includes('-LID-') && lead.id && lead.id.includes('-WA-')) {
+            dedupMap.delete(existingId);
+            canon.id = lead.id;
+            dedupMap.set(String(lead.id).toUpperCase(), canon);
+            if (cp) phoneIndex.set(cp, String(lead.id).toUpperCase());
+            if (last8) phoneIndex.set(last8, String(lead.id).toUpperCase());
+          }
+        }
+      });
+      const uniqueMergedLeads = Array.from(dedupMap.values());
+
       let totalPipelineValue = 0;
       const stagesSummary = { novos: 0, investigacao: 0, projetos: 0, proposta: 0, fechamento: 0, concluidas: 0, desistiu: 0 };
       const temperaturesSummary = { quente: 0, morno: 0, frio: 0 };
 
-      mergedLeads.forEach(l => {
+      uniqueMergedLeads.forEach(l => {
         const v = Number(l.value) || 0;
         const st = (l.stage || 'novos').toLowerCase();
         if (st !== 'concluidas' && st !== 'desistiu') {
@@ -307,7 +363,7 @@ export default async function handler(req, res) {
       if (genericTerms.includes(searchFilter)) searchFilter = '';
       if (genericTerms.includes(stageFilter)) stageFilter = '';
 
-      let filteredLeads = mergedLeads;
+      let filteredLeads = uniqueMergedLeads;
       if (stageFilter) {
         filteredLeads = filteredLeads.filter(l => (l.stage || '').toLowerCase().includes(stageFilter));
       }
@@ -323,7 +379,7 @@ export default async function handler(req, res) {
       }
 
       const isFiltered = Boolean(stageFilter || searchFilter || tempFilter);
-      const leadsToDisplay = isFiltered ? filteredLeads : mergedLeads;
+      const leadsToDisplay = isFiltered ? filteredLeads : uniqueMergedLeads;
       const isCountOnly = action === 'count' || action === 'contar' || action === 'total' || query.count === 'true';
 
       const compactLead = (l) => ({
