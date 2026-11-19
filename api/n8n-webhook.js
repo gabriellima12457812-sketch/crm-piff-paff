@@ -740,7 +740,8 @@ export default async function handler(req, res) {
       } catch (exErr) {}
 
       for (const [phone, item] of contactMap.entries()) {
-        const prefix = item.isLid ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
+        const isReal = phone.length >= 10 && phone.length <= 13;
+        const prefix = (item.isLid && !isReal) ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
         const leadId = `${prefix}-${phone}`;
         const cleanName = item.name && item.name.trim().length > 1
           ? item.name.trim()
@@ -1048,7 +1049,8 @@ export default async function handler(req, res) {
       // =======================================================================
       // 4. INSERT COM ID DETERMINÍSTICO (PREVINE DUPLICATAS POR RACE CONDITION)
       // =======================================================================
-      const prefix = isLid ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
+      const isRealPhone = phoneDigits.length >= 10 && phoneDigits.length <= 13;
+      const prefix = (isLid && !isRealPhone) ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
       const newLeadId = `${prefix}-${phoneDigits}`;
       logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
 
