@@ -1585,6 +1585,7 @@
               <option value="cliente" selected>💼 Apenas Clientes</option>
               <option value="all">Todos os Contatos</option>
               <option value="funcionario">👤 Funcionários</option>
+              <option value="arquiteto">📐 Arquitetos</option>
               <option value="fornecedor">🏢 Fornecedores</option>
             </select>
           </div>
@@ -2413,11 +2414,14 @@
               <span id="detail-city"><i class="ph-bold ph-map-pin"></i> </span>
               <span id="detail-line"><i class="ph-bold ph-tag"></i> </span>
             </div>
-            <!-- Classificação do Contato (Cliente, Funcionário, Fornecedor) -->
-            <div class="flex items-center gap-1.5 mt-1.5 text-xs">
+            <!-- Classificação do Contato (Cliente, Arquiteto, Funcionário, Fornecedor) -->
+            <div class="flex items-center gap-1.5 mt-1.5 text-xs flex-wrap">
               <span class="text-slate-400 text-[11px] font-semibold">Tipo:</span>
               <button type="button" id="btn-detail-type-cliente" onclick="setContactType(activeLead?.id, 'cliente'); updateDetailModalTypeButtons('cliente');" class="px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                 💼 Cliente
+              </button>
+              <button type="button" id="btn-detail-type-arquiteto" onclick="setContactType(activeLead?.id, 'arquiteto'); updateDetailModalTypeButtons('arquiteto');" class="px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer bg-white/5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 border border-white/5" title="Classificar como Arquiteto e levar direto para a carteira de Arquitetos">
+                📐 Arquiteto
               </button>
               <button type="button" id="btn-detail-type-funcionario" onclick="setContactType(activeLead?.id, 'funcionario'); updateDetailModalTypeButtons('funcionario');" class="px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 border border-white/5">
                 👤 Funcionário
@@ -4614,10 +4618,12 @@
      */
     function getContactType(lead) {
       if (!lead) return 'cliente';
+      if (lead.contact_type === 'arquiteto' || lead.tipo_contato === 'arquiteto') return 'arquiteto';
       if (lead.contact_type === 'funcionario' || lead.contact_type === 'fornecedor') return lead.contact_type;
       if (lead.tipo_contato === 'funcionario' || lead.tipo_contato === 'fornecedor') return lead.tipo_contato;
 
       const line = String(lead.commercial_line || '').toLowerCase().trim();
+      if (line === 'arquiteto' || line === 'arquitetura') return 'arquiteto';
       if (line === 'funcionário' || line === 'funcionario') return 'funcionario';
       if (line === 'fornecedor') return 'fornecedor';
 
@@ -4644,10 +4650,12 @@
       }
 
       const notes = String(lead.notes || '').toLowerCase();
+      if (notes.includes('[tipo: arquiteto]') || notes.includes('[tipo: arquitetura]')) return 'arquiteto';
       if (notes.includes('[tipo: funcionário]') || notes.includes('[tipo: funcionario]')) return 'funcionario';
       if (notes.includes('[tipo: fornecedor]')) return 'fornecedor';
 
       const pipe = String(lead.pipeline || '').toLowerCase();
+      if (pipe === 'arquiteto') return 'arquiteto';
       if (pipe === 'funcionario') return 'funcionario';
       if (pipe === 'fornecedor') return 'fornecedor';
 
@@ -4669,7 +4677,7 @@
 
     async function setContactType(leadId, newType) {
       if (!leadId) return;
-      const validTypes = ['cliente', 'funcionario', 'fornecedor'];
+      const validTypes = ['cliente', 'arquiteto', 'funcionario', 'fornecedor'];
       const targetType = validTypes.includes(newType) ? newType : 'cliente';
 
       const { primaryLead, matches } = (typeof findMatchingLeadGroup === 'function')
@@ -4691,7 +4699,41 @@
         l.contact_type = targetType;
         l.tipo_contato = targetType;
 
-        if (targetType === 'funcionario') {
+        if (targetType === 'arquiteto') {
+          l.commercial_line = 'Arquiteto';
+          l.behavioral_profile = 'Arquiteto / Especificador Parceiro (B2B)';
+          if (!l.notes || !l.notes.includes('[TIPO: ARQUITETO]')) {
+            l.notes = `[TIPO: ARQUITETO] ${l.notes || ''}`.trim();
+          }
+
+          // Adiciona ou atualiza na carteira de Arquitetos B2B
+          const cleanPhone = (l.phone || '').replace(/\D/g, '');
+          if (!Array.isArray(architectsList)) architectsList = [];
+          const existingIdx = architectsList.findIndex(a => 
+            (a.lead_id && a.lead_id === l.id) || 
+            (cleanPhone && cleanPhone.length >= 8 && a.phone && a.phone.replace(/\D/g, '') === cleanPhone) ||
+            (a.name && a.name.toLowerCase() === l.name.toLowerCase())
+          );
+          
+          const archObj = {
+            id: 'arch-' + (l.id || Date.now()),
+            lead_id: l.id,
+            name: l.name,
+            office: (l.name.toLowerCase().includes('arq') || l.name.toLowerCase().includes('escritorio')) ? l.name : `${l.name} (Escritório de Arquitetura)`,
+            phone: l.phone || '',
+            city: (l.city && !/arquiteta|contato|área/i.test(l.city)) ? l.city : 'Brasil',
+            status: l.stage === 'concluidas' ? 'Parceiro Ativo' : (l.stage === 'proposta' || l.stage === 'projetos' ? 'Em Conversa' : 'A Contatar'),
+            lastInteraction: l.notes ? l.notes.slice(0, 120) : 'Transferido para Arquitetos'
+          };
+
+          if (existingIdx >= 0) {
+            architectsList[existingIdx] = { ...architectsList[existingIdx], ...archObj };
+          } else {
+            architectsList.unshift(archObj);
+          }
+          saveArchitectsStorage();
+          if (typeof renderArchitectsTable === 'function') renderArchitectsTable();
+        } else if (targetType === 'funcionario') {
           l.commercial_line = 'Funcionário';
           l.followup_disabled = true;
           l.followup_date = '1970-01-01';
@@ -4717,7 +4759,7 @@
             l.followup_status = 'Chamar Hoje';
           }
           if (l.notes) {
-            l.notes = l.notes.replace(/\[TIPO:\s*(FUNCION[AÁ]RIO|FORNECEDOR)\]\s*/gi, '').trim();
+            l.notes = l.notes.replace(/\[TIPO:\s*(ARQUITETO|FUNCION[AÁ]RIO|FORNECEDOR)\]\s*/gi, '').trim();
           }
         }
       });
@@ -4764,11 +4806,26 @@
       const typeLabels = {
         funcionario: '👤 Funcionário',
         fornecedor: '🏢 Fornecedor',
+        arquiteto: '📐 Arquiteto',
         cliente: '💼 Cliente Comercial'
       };
       const label = typeLabels[targetType] || targetType;
 
-      if (targetType !== 'cliente') {
+      if (targetType === 'arquiteto') {
+        const modal = document.getElementById('modal-lead-detail');
+        if (modal) modal.classList.add('hidden');
+        if (typeof switchView === 'function') {
+          switchView('architects');
+        }
+        const searchInput = document.getElementById('input-search-architects');
+        if (searchInput) {
+          searchInput.value = leadName;
+        }
+        if (typeof renderArchitectsTable === 'function') {
+          renderArchitectsTable();
+        }
+        showToast(`"${leadName}" classificado como Arquiteto e transferido para a carteira de Arquitetos!`, 'success');
+      } else if (targetType !== 'cliente') {
         showToast(`"${leadName}" classificado como ${label}! (Removido do funil, métricas e follow-up)`, 'success');
       } else {
         showToast(`"${leadName}" reativado como ${label}! (Retornou ao funil de vendas)`, 'info');
@@ -7533,6 +7590,9 @@
               <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'fornecedor')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5 hover:border-amber-500/30 active:scale-95" title="Marcar como Fornecedor (não entra em métricas, follow-up nem pipeline)">
                 🏢 Fornecedor
               </button>
+              <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'arquiteto')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 border border-white/5 hover:border-purple-500/30 active:scale-95" title="Marcar como Arquiteto (leva direto para carteira de Arquitetos)">
+                📐 Arquiteto
+              </button>
             </div>
           </div>
           ${tempBadge}
@@ -7934,6 +7994,7 @@
     function updateDetailModalTypeButtons(currentType) {
       const type = currentType || 'cliente';
       const btnCli = document.getElementById('btn-detail-type-cliente');
+      const btnArq = document.getElementById('btn-detail-type-arquiteto');
       const btnFunc = document.getElementById('btn-detail-type-funcionario');
       const btnForn = document.getElementById('btn-detail-type-fornecedor');
 
@@ -7942,6 +8003,13 @@
           btnCli.className = 'px-2 py-0.5 rounded text-[11px] font-bold transition cursor-pointer bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-sm';
         } else {
           btnCli.className = 'px-2 py-0.5 rounded text-[11px] font-medium transition cursor-pointer bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-200 border border-white/5';
+        }
+      }
+      if (btnArq) {
+        if (type === 'arquiteto') {
+          btnArq.className = 'px-2 py-0.5 rounded text-[11px] font-bold transition cursor-pointer bg-purple-500/30 text-purple-300 border border-purple-500/50 shadow-sm';
+        } else {
+          btnArq.className = 'px-2 py-0.5 rounded text-[11px] font-medium transition cursor-pointer bg-white/5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 border border-white/5';
         }
       }
       if (btnFunc) {
@@ -8771,6 +8839,9 @@
                 </button>
                 <button onclick="setContactType('${safeId}', 'fornecedor')" class="px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5 hover:border-amber-500/30 transition cursor-pointer active:scale-95" title="Marcar como Fornecedor (tira de follow-up e métricas)">
                   🏢 Fornecedor
+                </button>
+                <button onclick="setContactType('${safeId}', 'arquiteto')" class="px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 border border-white/5 hover:border-purple-500/30 transition cursor-pointer active:scale-95" title="Marcar como Arquiteto (leva direto para carteira de Arquitetos)">
+                  📐 Arquiteto
                 </button>
               </div>
             </div>
@@ -11527,36 +11598,22 @@
       const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
       const key = getArchitectsStorageKey();
 
-      // Regra Absoluta: Qualquer vendedor diferente de Gabriel SEMPRE possui 0 arquitetos
-      if (seller !== 'gabriel') {
-        try {
-          localStorage.removeItem('PIFF_ARCHITECTS_B2B');
-          localStorage.removeItem('PIFF_ARCHITECTS_B2B_' + seller);
-          localStorage.setItem(key, '[]');
-        } catch (e) {}
-        architectsList = [];
-        saveArchitectsStorage();
-        renderArchitectsTable();
-        return;
-      }
-
-      // Somente o Gabriel carrega a carteira oficial de arquitetos
       try {
         const stored = localStorage.getItem(key);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             architectsList = parsed;
           } else {
-            architectsList = [...DEFAULT_ARCHITECTS_GABRIEL];
+            architectsList = getDefaultArchitectsForCurrentSeller();
             saveArchitectsStorage();
           }
         } else {
-          architectsList = [...DEFAULT_ARCHITECTS_GABRIEL];
+          architectsList = getDefaultArchitectsForCurrentSeller();
           saveArchitectsStorage();
         }
       } catch (e) {
-        architectsList = [...DEFAULT_ARCHITECTS_GABRIEL];
+        architectsList = getDefaultArchitectsForCurrentSeller();
       }
 
       syncArchitectsFromCRM();
@@ -11566,13 +11623,8 @@
 
     function saveArchitectsStorage() {
       try {
-        const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
         const key = getArchitectsStorageKey();
-        if (seller !== 'gabriel') {
-          localStorage.setItem(key, '[]');
-        } else {
-          localStorage.setItem(key, JSON.stringify(architectsList || []));
-        }
+        localStorage.setItem(key, JSON.stringify(architectsList || []));
       } catch (e) {
         console.warn('Erro ao salvar arquitetos:', e);
       }
@@ -11580,12 +11632,11 @@
 
     function syncArchitectsFromCRM() {
       if (!Array.isArray(leads) || leads.length === 0) return;
-      const seller = getSellerKey();
-      if (seller !== 'gabriel') return; // Apenas Gabriel possui arquitetos pré-cadastrados ou auto-injetados // Mayara começa do zero absoluto, sem injeção automática de arquitetos antigos
+      const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
 
       let added = 0;
       leads.forEach(l => {
-        // Bloqueio rigoroso de contaminação cruzada:
+        // Bloqueio de contaminação cruzada entre vendedores
         if (seller === 'mayara' || seller === 'barbara') {
           const myUserId = seller === 'mayara' ? 'b2222222-2222-2222-2222-222222222222' : 'f6666666-6666-6666-6666-666666666666';
           if (l.user_id && l.user_id !== myUserId) return;
@@ -11593,25 +11644,33 @@
           if (l.id && l.id.includes('-GAB-')) return;
         }
 
+        const isMarkedArch = (typeof getContactType === 'function') ? getContactType(l) === 'arquiteto' : false;
         const text = `${l.name || ''} ${l.notes || ''} ${l.behavioral_profile || ''}`;
-        const isB2B = (l.behavioral_profile && l.behavioral_profile.includes('Arquiteto')) ||
-                      /arquiteto|arquiteta|especificador|design|decor/i.test(text);
-        if (isB2B && l.phone) {
-          const cleanP = l.phone.replace(/\D/g, '');
-          if (cleanP.length >= 8) {
-            const exists = architectsList.some(a => (a.phone && a.phone.replace(/\D/g, '') === cleanP) || a.name === l.name);
-            if (!exists) {
-              architectsList.push({
-                id: 'arch-' + l.id,
-                name: l.name,
-                office: l.name.includes('Arq') ? l.name : `${l.name} (Escritório)`,
-                phone: l.phone,
-                city: (l.city && !/arquiteta|contato|área/i.test(l.city)) ? l.city : 'Brasil',
-                status: l.stage === 'concluidas' ? 'Parceiro Ativo' : (l.stage === 'proposta' || l.stage === 'projetos' ? 'Em Conversa' : 'A Contatar'),
-                lastInteraction: l.next_best_action || l.notes || 'Sincronizado do CRM'
-              });
-              added++;
-            }
+        const isB2B = isMarkedArch || (seller === 'gabriel' && (
+          (l.behavioral_profile && l.behavioral_profile.includes('Arquiteto')) ||
+          /arquiteto|arquiteta|especificador|design|decor/i.test(text)
+        ));
+
+        if (isB2B && (l.phone || l.name)) {
+          const cleanP = (l.phone || '').replace(/\D/g, '');
+          const exists = (architectsList || []).some(a => 
+            (a.lead_id && a.lead_id === l.id) ||
+            (cleanP.length >= 8 && a.phone && a.phone.replace(/\D/g, '') === cleanP) ||
+            (a.name && l.name && a.name.toLowerCase() === l.name.toLowerCase())
+          );
+          if (!exists) {
+            if (!Array.isArray(architectsList)) architectsList = [];
+            architectsList.push({
+              id: 'arch-' + (l.id || Date.now()),
+              lead_id: l.id,
+              name: l.name,
+              office: (l.name.toLowerCase().includes('arq') || l.name.toLowerCase().includes('escritorio')) ? l.name : `${l.name} (Escritório de Arquitetura)`,
+              phone: l.phone || '',
+              city: (l.city && !/arquiteta|contato|área/i.test(l.city)) ? l.city : 'Brasil',
+              status: l.stage === 'concluidas' ? 'Parceiro Ativo' : (l.stage === 'proposta' || l.stage === 'projetos' ? 'Em Conversa' : 'A Contatar'),
+              lastInteraction: l.notes ? l.notes.slice(0, 120) : 'Transferido para Arquitetos'
+            });
+            added++;
           }
         }
       });
@@ -11636,10 +11695,6 @@
       tbody.innerHTML = '';
 
       const seller = (typeof getSellerKey === 'function') ? getSellerKey() : 'gabriel';
-      // Bloqueio rigoroso em tempo de render: quem não for Gabriel NUNCA visualiza arquitetos do Gabriel
-      if (seller !== 'gabriel') {
-        architectsList = [];
-      }
 
       const total = architectsList.length;
       const countContatar = architectsList.filter(a => a.status === 'A Contatar').length;
@@ -12253,6 +12308,9 @@
               </button>
               <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'fornecedor')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5 hover:border-amber-500/30 active:scale-95" title="Marcar como Fornecedor (não entra em métricas, follow-up nem pipeline)">
                 🏢 Fornecedor
+              </button>
+              <button type="button" onclick="event.stopPropagation(); setContactType('${lead.id}', 'arquiteto')" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer bg-white/5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 border border-white/5 hover:border-purple-500/30 active:scale-95" title="Marcar como Arquiteto (leva direto para carteira de Arquitetos)">
+                📐 Arquiteto
               </button>
             </div>
           </div>
@@ -13420,7 +13478,14 @@
 
         const rowType = (typeof getContactType === 'function') ? getContactType(lead) : 'cliente';
         let contactTypeBadge = '';
-        if (rowType === 'funcionario') {
+        if (rowType === 'arquiteto') {
+          contactTypeBadge = `
+            <div class="flex items-center gap-1 mt-1 text-[10px]">
+              <span class="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold inline-flex items-center gap-0.5">📐 Arquiteto</span>
+              <button onclick="setContactType('${lead.id}', 'cliente')" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-[10px] transition cursor-pointer" title="Reverter para Cliente">↺ Cliente</button>
+            </div>
+          `;
+        } else if (rowType === 'funcionario') {
           contactTypeBadge = `
             <div class="flex items-center gap-1 mt-1 text-[10px]">
               <span class="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-bold inline-flex items-center gap-0.5">👤 Funcionário</span>
@@ -13448,6 +13513,9 @@
               </button>
               <button onclick="setContactType('${lead.id}', 'fornecedor')" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-white/5 transition text-[10px] cursor-pointer" title="Marcar como Fornecedor (não entra em métricas nem funil)">
                 🏢 Fornecedor
+              </button>
+              <button onclick="setContactType('${lead.id}', 'arquiteto')" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 border border-white/5 transition text-[10px] cursor-pointer" title="Marcar como Arquiteto (leva direto para carteira de Arquitetos)">
+                📐 Arquiteto
               </button>
             </div>
           `;
