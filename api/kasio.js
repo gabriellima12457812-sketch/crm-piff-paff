@@ -753,7 +753,7 @@ export default async function handler(req, res) {
         (body.search && body.search.toLowerCase().includes('instagram'));
 
       let totalPipelineValue = 0;
-      const stagesSummary = { novos: 0, investigacao: 0, projetos: 0, proposta: 0, fechamento: 0, concluidas: 0 };
+      const stagesSummary = { novos: 0, investigacao: 0, projetos: 0, proposta: 0, fechamento: 0, concluidas: 0, desistiu: 0 };
       const stagesInstagramSummary = { novo: 0, abordagem: 0, conversa: 0 };
       const temperaturesSummary = { quente: 0, morno: 0, frio: 0 };
 
@@ -988,7 +988,8 @@ export default async function handler(req, res) {
       else if (['conversa', 'projetos', 'projeto'].includes(stageLower)) targetStage = 'projetos';
       else if (['proposta', 'orcamento', 'orçamento'].includes(stageLower)) targetStage = 'proposta';
       else if (['fechamento', 'fechando'].includes(stageLower)) targetStage = 'fechamento';
-      else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'ganho'].includes(stageLower)) targetStage = 'concluidas';
+      else if (['concluidas', 'concluida', 'concluídas', 'concluído', 'concluido', 'ganho', 'ganhos', 'venda', 'vendas'].includes(stageLower)) targetStage = 'concluidas';
+      else if (['desistiu', 'desistencia', 'desistência', 'perdeu', 'perdido', 'perdidos', 'ja_comprou', 'já comprou', 'ja comprou', 'outra loja', 'outras lojas', 'concorrente'].some(x => stageLower.includes(x))) targetStage = 'desistiu';
       else targetStage = 'novos';
     }
 
@@ -1024,6 +1025,7 @@ export default async function handler(req, res) {
     // Se o estágio foi explicitamente enviado, atualiza; senão MANTÉM o estágio existente (evita reset para 'novos')
     if (targetStage) {
       payload.stage = targetStage;
+    payload.etapa_kanban = targetStage === 'concluidas' ? 'Concluídas' : (targetStage === 'desistiu' ? 'Desistiu / Já comprou' : (targetStage === 'novos' ? 'Novos' : targetStage));
     } else if (existingLead && existingLead.stage) {
       payload.stage = existingLead.stage;
     } else {
