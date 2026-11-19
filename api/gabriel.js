@@ -746,7 +746,7 @@ export default async function handler(req, res) {
     if (isReactivateQuarantine) {
       const targetId = body.id || query.id || body.leadId || query.leadId;
       const targetStage = (body.stage || body.destinationStage || query.stage || 'novos').toLowerCase().trim();
-      const validDestStages = ['novos', 'investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas'];
+      const validDestStages = ['novos', 'investigacao', 'projetos', 'proposta', 'fechamento', 'concluidas', 'desistiu'];
       const finalStage = validDestStages.includes(targetStage) ? targetStage : 'novos';
 
       const now = new Date();
