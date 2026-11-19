@@ -4607,6 +4607,74 @@
     }
     window.unmarkLeadConcluded = unmarkLeadConcluded;
 
+    function getDesistiuLeadIds() {
+      try {
+        const stored = localStorage.getItem('piffpaff_desistiu_leads');
+        const arr = stored ? JSON.parse(stored) : [];
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    window.getDesistiuLeadIds = getDesistiuLeadIds;
+
+    function markLeadDesistiu(leadId, leadPhone = null) {
+      if (!leadId && !leadPhone) return;
+      try {
+        const list = getDesistiuLeadIds();
+        const set = new Set(list.map(x => String(x).toUpperCase()));
+        if (leadId) set.add(String(leadId).toUpperCase());
+        if (leadPhone) {
+          const cp = (typeof cleanPhone === 'function') ? cleanPhone(leadPhone) : String(leadPhone).replace(/\D/g, '');
+          if (cp) {
+            set.add(cp);
+            if (cp.length >= 8) set.add(cp.slice(-8));
+            if (cp.startsWith('55') && cp.length >= 10) set.add(cp.slice(2));
+          }
+        }
+        localStorage.setItem('piffpaff_desistiu_leads', JSON.stringify(Array.from(set)));
+      } catch (e) {}
+    }
+    window.markLeadDesistiu = markLeadDesistiu;
+
+    function unmarkLeadDesistiu(leadId, leadPhone = null) {
+      try {
+        const list = getDesistiuLeadIds();
+        const removeSet = new Set();
+        if (leadId) removeSet.add(String(leadId).toUpperCase());
+        if (leadPhone) {
+          const cp = (typeof cleanPhone === 'function') ? cleanPhone(leadPhone) : String(leadPhone).replace(/\D/g, '');
+          if (cp) {
+            removeSet.add(cp);
+            if (cp.length >= 8) removeSet.add(cp.slice(-8));
+            if (cp.startsWith('55') && cp.length >= 10) removeSet.add(cp.slice(2));
+          }
+        }
+        const filtered = list.filter(item => !removeSet.has(String(item).toUpperCase()));
+        localStorage.setItem('piffpaff_desistiu_leads', JSON.stringify(filtered));
+      } catch (e) {}
+    }
+    window.unmarkLeadDesistiu = unmarkLeadDesistiu;
+
+    function isLeadMarkedDesistiu(l, desistiuSet = null) {
+      if (!l) return false;
+      const set = desistiuSet || new Set(getDesistiuLeadIds().map(x => String(x).toUpperCase()));
+      const idUpper = String(l.id || '').toUpperCase();
+      if (idUpper && set.has(idUpper)) return true;
+      const cp = (typeof cleanPhone === 'function') ? cleanPhone(l.phone) : String(l.phone || '').replace(/\D/g, '');
+      if (cp) {
+        if (set.has(cp)) return true;
+        if (cp.length >= 8 && set.has(cp.slice(-8))) return true;
+        if (cp.startsWith('55') && cp.length >= 10 && set.has(cp.slice(2))) return true;
+      }
+      const manual = (typeof getLeadManualStage === 'function') ? getLeadManualStage(l.id, l.phone) : null;
+      if (manual) return manual === 'desistiu';
+      const s = String(l.stage || '').toLowerCase().trim();
+      const e = String(l.etapa_kanban || '').toLowerCase().trim();
+      return s === 'desistiu' || e.includes('desistiu') || e.includes('já comprou') || e.includes('ja comprou');
+    }
+    window.isLeadMarkedDesistiu = isLeadMarkedDesistiu;
+
     function isLeadMarkedConcluded(l) {
       if (!l) return false;
       const manual = getLeadManualStage(l.id, l.phone);
@@ -6039,6 +6107,7 @@ function getContactType(lead) {
           const cloudWa = [];
 
           const concludedSet = new Set(getConcludedLeadIds().map(x => String(x).toUpperCase()));
+          const desistiuSet = new Set(getDesistiuLeadIds().map(x => String(x).toUpperCase()));
 
           const normalizeKanbanStage = (rawSt) => {
             const s = String(rawSt || 'novos').toLowerCase().trim();
@@ -6074,7 +6143,12 @@ function getContactType(lead) {
             } else {
               // REGRA: Se o estágio foi alterado manualmente pelo vendedor, mantém estritamente o estágio manual
               const manualSt = getLeadManualStage(l.id, l.phone);
-              const normStage = manualSt || normalizeKanbanStage(l.stage);
+              let normStage = manualSt || normalizeKanbanStage(l.stage);
+              if (isLeadMarkedConcluded(l, concludedSet)) {
+                normStage = 'concluidas';
+              } else if (isLeadMarkedDesistiu(l, desistiuSet)) {
+                normStage = 'desistiu';
+              }
               cloudWa.push({
                 ...l,
                 stage: normStage,
@@ -6141,6 +6215,9 @@ function getContactType(lead) {
                 if (isLeadMarkedConcluded(item, concludedSet)) {
                   item.stage = 'concluidas';
                   markLeadConcluded(item.id, item.phone);
+                } else if (isLeadMarkedDesistiu(item, desistiuSet)) {
+                  item.stage = 'desistiu';
+                  markLeadDesistiu(item.id, item.phone);
                 }
 
                 if (item.followup_date === '1970-01-01' || isFollowupRemoved(item)) {
@@ -7752,33 +7829,55 @@ function getContactType(lead) {
           const targetStage = col.getAttribute('data-stage');
 
           if (leadId && targetStage) {
-            const lead = leads.find(l => l.id === leadId);
-            if (lead && lead.stage !== targetStage) {
-              const prevStage = lead.stage;
-              lead.stage = targetStage;
-              lead.manual_stage = true;
-              lead.manual_stage_at = new Date().toISOString();
-              setLeadManualStage(lead.id, targetStage, lead.phone);
-              lead.last_interaction = new Date().toISOString();
-              if (targetStage === 'concluidas') {
-                if (!lead.purchase_date) {
-                  lead.purchase_date = new Date().toISOString().split('T')[0];
+            const { primaryLead, matches } = (typeof findMatchingLeadGroup === 'function')
+              ? findMatchingLeadGroup(leadId)
+              : { primaryLead: leads.find(l => l.id === leadId), matches: [] };
+            const targets = (matches && matches.length > 0) ? matches : (primaryLead ? [primaryLead] : []);
+
+            if (targets.length > 0) {
+              const prevStage = targets[0].stage;
+              const leadName = targets[0].name || 'Lead';
+              targets.forEach(lead => {
+                lead.stage = targetStage;
+                lead.manual_stage = true;
+                lead.manual_stage_at = new Date().toISOString();
+                setLeadManualStage(lead.id, targetStage, lead.phone);
+                lead.last_interaction = new Date().toISOString();
+                if (targetStage === 'concluidas') {
+                  if (!lead.purchase_date) {
+                    lead.purchase_date = new Date().toISOString().split('T')[0];
+                  }
+                  markLeadConcluded(lead.id, lead.phone);
+                  unmarkLeadDesistiu(lead.id, lead.phone);
+                } else if (targetStage === 'desistiu') {
+                  markLeadDesistiu(lead.id, lead.phone);
+                  unmarkLeadConcluded(lead.id, lead.phone);
+                } else {
+                  unmarkLeadConcluded(lead.id, lead.phone);
+                  unmarkLeadDesistiu(lead.id, lead.phone);
                 }
-                markLeadConcluded(lead.id, lead.phone);
-              } else {
-                unmarkLeadConcluded(lead.id, lead.phone);
-              }
+                syncLeadToSupabase(lead);
+              });
+
               saveStorage();
               renderKanban();
-              syncLeadToSupabase(lead);
               if (typeof recordClientAuditEvent === 'function') {
-                recordClientAuditEvent('LEAD_STATUS_CHANGE', 'leads', lead.id, {
-                  lead_name: lead.name,
+                recordClientAuditEvent('LEAD_STATUS_CHANGE', 'leads', targets[0].id, {
+                  lead_name: leadName,
                   previous_stage: prevStage,
                   new_stage: targetStage
                 });
               }
-              showToast(`Lead movido para "${targetStage.toUpperCase()}"`, 'success');
+              const stageLabels = {
+                'novos': 'Novos',
+                'investigacao': 'Investigação',
+                'projetos': 'Projetos',
+                'proposta': 'Proposta',
+                'fechamento': 'Fechamento',
+                'concluidas': 'Concluídas',
+                'desistiu': 'Desistiu / Já comprou'
+              };
+              showToast(`Lead movido para "${stageLabels[targetStage] || targetStage.toUpperCase()}"`, 'success');
             }
           }
         });
@@ -14862,8 +14961,13 @@ function getContactType(lead) {
                 activeLead.purchase_date = editDate || formatYMD(new Date());
               }
               markLeadConcluded(activeLead.id, activeLead.phone);
+              unmarkLeadDesistiu(activeLead.id, activeLead.phone);
+            } else if (editStage === 'desistiu') {
+              markLeadDesistiu(activeLead.id, activeLead.phone);
+              unmarkLeadConcluded(activeLead.id, activeLead.phone);
             } else {
               unmarkLeadConcluded(activeLead.id, activeLead.phone);
+              unmarkLeadDesistiu(activeLead.id, activeLead.phone);
             }
           }
           if (editTemp) activeLead.temperature = editTemp;
