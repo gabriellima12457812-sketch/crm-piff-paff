@@ -4836,6 +4836,13 @@ function getContactType(lead) {
           if (!l.notes || !l.notes.includes('[TIPO: ARQUITETO]')) {
             l.notes = `[TIPO: ARQUITETO] ${l.notes || ''}`.trim();
           }
+          // Arquitetos NUNCA perdem o follow-up: mantêm acompanhamento ativo no Follow-up Center!
+          l.followup_disabled = false;
+          if (!l.followup_date || l.followup_date === '1970-01-01') {
+            const todayStr = formatYMD(new Date());
+            l.followup_date = todayStr;
+            l.followup_status = 'Chamar Hoje';
+          }
 
           // Sincroniza sempre com storage para garantir que nenhum arquiteto seja sobrescrito
           const archKey = (typeof getArchitectsStorageKey === 'function') ? getArchitectsStorageKey() : 'PIFF_ARCHITECTS_B2B';
@@ -4849,11 +4856,11 @@ function getContactType(lead) {
           if (!Array.isArray(architectsList)) architectsList = [];
 
           // Adiciona ou atualiza na carteira de Arquitetos B2B
+          // ATENÇÃO: Identifica APENAS por ID do lead ou telefone único, nunca por nome genérico!
           const cleanPhone = (l.phone || '').replace(/\D/g, '');
           const existingIdx = architectsList.findIndex(a => 
             (a.lead_id && a.lead_id === l.id) || 
-            (cleanPhone && cleanPhone.length >= 8 && a.phone && a.phone.replace(/\D/g, '') === cleanPhone) ||
-            (a.name && l.name && a.name.toLowerCase() === l.name.toLowerCase())
+            (cleanPhone && cleanPhone.length >= 8 && a.phone && a.phone.replace(/\D/g, '') === cleanPhone)
           );
           
           const archObj = {
@@ -4924,7 +4931,9 @@ function getContactType(lead) {
         targetList.forEach(l => {
           const id = l.id;
           let p = String(l.phone || '').replace(/\D/g, '');
-          if (targetType !== 'cliente') {
+          // APENAS Funcionário e Fornecedor entram na lista de follow-up removido!
+          // Arquitetos e Clientes NUNCA são removidos do follow-up!
+          if (targetType === 'funcionario' || targetType === 'fornecedor') {
             if (id && !remList.includes(id)) remList.push(id);
             if (p && p.length >= 8 && !remList.includes(p)) remList.push(p);
           } else {
@@ -4966,7 +4975,7 @@ function getContactType(lead) {
         if (typeof renderArchitectsTable === 'function') {
           renderArchitectsTable();
         }
-        showToast(`"${leadName}" classificado como Arquiteto e transferido para a carteira de Arquitetos!`, 'success');
+        showToast(`"${leadName}" classificado como Arquiteto e transferido para a carteira de Arquitetos! (Follow-up mantido)`, 'success');
         setTimeout(() => {
           newlyAddedArchId = null;
           if (typeof renderArchitectsTable === 'function') renderArchitectsTable();
@@ -4987,7 +4996,9 @@ function getContactType(lead) {
 
     function isFollowupRemoved(l) {
       if (!l) return true;
-      if (typeof getContactType === 'function' && getContactType(l) !== 'cliente') return true;
+      const type = (typeof getContactType === 'function') ? getContactType(l) : 'cliente';
+      // Apenas Funcionário e Fornecedor são excluídos do follow-up! Arquitetos MANTÊM follow-up ativo!
+      if (type === 'funcionario' || type === 'fornecedor') return true;
       if (l.followup_disabled === true) return true;
       if (l.followup_status === 'Sem Follow-up') return true;
       if (l.followup_date === '1970-01-01') return true;
@@ -5784,7 +5795,7 @@ function getContactType(lead) {
       panel.classList.remove('hidden');
 
       // Filtra estritamente apenas contatos comerciais (exclui Funcionários e Fornecedores das métricas do Dono)
-      const activeLeadsList = (Array.isArray(leads) ? leads : []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
+      const activeLeadsList = (Array.isArray(leads) ? leads : []).filter(l => (typeof getContactType === 'function' ? (getContactType(l) !== 'funcionario' && getContactType(l) !== 'fornecedor') : true));
       const openLeads = activeLeadsList.filter(l => l.stage !== 'concluidas' && l.stage !== 'concluida');
       
       // 1. Pipeline Total em Negociação
@@ -7117,10 +7128,10 @@ function getContactType(lead) {
         temperature: lead.temperature || 'morno',
         priority: lead.priority || 'MEDIA',
         commercial_moment: lead.commercial_moment || 'pesquisa',
-        commercial_line: (typeof getContactType === 'function' && getContactType(lead) === 'funcionario') ? 'Funcionário' : ((typeof getContactType === 'function' && getContactType(lead) === 'fornecedor') ? 'Fornecedor' : (lead.commercial_line || 'Linha Premium')),
+        commercial_line: (typeof getContactType === 'function' && getContactType(lead) === 'funcionario') ? 'Funcionário' : ((typeof getContactType === 'function' && getContactType(lead) === 'fornecedor') ? 'Fornecedor' : ((typeof getContactType === 'function' && getContactType(lead) === 'arquiteto') ? 'Arquiteto' : (lead.commercial_line || 'Linha Premium'))),
         next_best_action: lead.next_best_action || 'Contatar cliente para diagnóstico.',
         notes: lead.notes || '',
-        followup_date: ((typeof getContactType === 'function' && getContactType(lead) !== 'cliente') || lead.followup_disabled || lead.followup_status === 'Sem Follow-up' || lead.followup_date === '1970-01-01' || (typeof isFollowupRemoved === 'function' && isFollowupRemoved(lead))) ? '1970-01-01' : (lead.followup_date || null),
+        followup_date: ((typeof getContactType === 'function' && (getContactType(lead) === 'funcionario' || getContactType(lead) === 'fornecedor')) || lead.followup_disabled || lead.followup_status === 'Sem Follow-up' || lead.followup_date === '1970-01-01' || (typeof isFollowupRemoved === 'function' && isFollowupRemoved(lead))) ? '1970-01-01' : (lead.followup_date || null),
         channel: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.channel || (lead.instagram && !lead.phone ? 'instagram' : 'whatsapp')),
         pipeline: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.pipeline || 'whatsapp'),
         vendedor_id: targetSeller,
@@ -7680,7 +7691,7 @@ function getContactType(lead) {
         if (!container) return;
 
         // Exclui contatos marcados como Funcionário ou Fornecedor das colunas de vendas ativas do Kanban
-        const stageLeads = (leads || []).filter(l => l.stage === stage && (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
+        const stageLeads = (leads || []).filter(l => l.stage === stage && (typeof getContactType === 'function' ? (getContactType(l) !== 'funcionario' && getContactType(l) !== 'fornecedor') : true));
 
         // Atualiza cabeçalho da coluna SEMPRE (mantém contadores em sincronia)
         const col = container.closest('.kanban-col');
@@ -9049,6 +9060,7 @@ function getContactType(lead) {
                   <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${leadBadgeClass}">${leadBadgeText}</span>
                 `}
                 <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isInsta ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}">${isInsta ? '📸 Instagram Direct' : '💬 WhatsApp'}</span>
+                ${(typeof getContactType === 'function' && getContactType(lead) === 'arquiteto') ? '<span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">📐 Arquiteto</span>' : ''}
                 ${lead.followup_status ? `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30" title="${lead.followup_status}">${lead.followup_status}</span>` : ''}
                 <span class="text-xs font-heading font-bold text-[#FECA57]">${formatBRL(lead.value)}</span>
               </div>
@@ -11919,8 +11931,7 @@ function getContactType(lead) {
           const cleanP = (l.phone || '').replace(/\D/g, '');
           const exists = (architectsList || []).some(a => 
             (a.lead_id && a.lead_id === l.id) ||
-            (cleanP.length >= 8 && a.phone && a.phone.replace(/\D/g, '') === cleanP) ||
-            (a.name && l.name && a.name.toLowerCase() === l.name.toLowerCase())
+            (cleanP.length >= 8 && a.phone && a.phone.replace(/\D/g, '') === cleanP)
           );
           if (!exists) {
             if (!Array.isArray(architectsList)) architectsList = [];
@@ -13447,7 +13458,7 @@ function getContactType(lead) {
     let temperatureChartInstance = null;
 
     function renderDashboardCharts() {
-      const commercialLeads = (leads || []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
+      const commercialLeads = (leads || []).filter(l => (typeof getContactType === 'function' ? (getContactType(l) !== 'funcionario' && getContactType(l) !== 'fornecedor') : true));
       const openLeads = commercialLeads.filter(l => l.stage !== 'concluidas' && l.stage !== 'concluida');
       const totalPipeline = openLeads.reduce((acc, cur) => acc + (Number(cur.value) || 0), 0);
 
@@ -13913,7 +13924,7 @@ function getContactType(lead) {
 
     function updateMetrics() {
       // Clientes comerciais ativos: exclui estritamente funcionários e fornecedores das métricas de vendas
-      const activeCommercialLeads = (leads || []).filter(l => (typeof getContactType === 'function' ? getContactType(l) === 'cliente' : true));
+      const activeCommercialLeads = (leads || []).filter(l => (typeof getContactType === 'function' ? (getContactType(l) !== 'funcionario' && getContactType(l) !== 'fornecedor') : true));
       
       // Negociações em Aberto (Pipeline de Vendas Ativo - exclui Concluídas e Desistiu/Já comprou):
       const openPipelineLeads = activeCommercialLeads.filter(l => l.stage !== 'concluidas' && l.stage !== 'concluida' && l.stage !== 'desistiu');
