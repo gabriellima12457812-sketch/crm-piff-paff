@@ -203,95 +203,90 @@ function isDuplicateNote(existingNotes, newText) {
 // PARSER INTELIGENTE DE VALORES MONETÁRIOS (WhatsApp Piff Paff)
 // Suporta: R$ 15.000, R$ 15.000,00, 18 mil, 25k, 10x de 1.500, etc.
 // ==============================================================================
+// Extrator Semântico de Valores Monetários & Propostas Comerciais Inteligentes (Alta Precisão)
 function extractMonetaryValue(text) {
   if (!text || typeof text !== 'string') return 0;
-  const clean = text.replace(/\s+/g, ' ');
+  let clean = text.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
 
   const parseAmount = (numStr, suffix) => {
     if (!numStr) return 0;
-    const cleaned = numStr.replace(/\./g, '').replace(',', '.');
-    let val = parseFloat(cleaned);
+    let s = numStr.trim();
+    if ((s.match(/\./g) || []).length > 1) {
+      const parts = s.split('.');
+      const lastPart = parts[parts.length - 1];
+      if (lastPart.length === 2) {
+        const intPart = parts.slice(0, -1).join('');
+        s = intPart + '.' + lastPart;
+      } else {
+        s = parts.join('');
+      }
+    } else if (s.includes(',') && s.includes('.')) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else if (s.includes(',')) {
+      s = s.replace(',', '.');
+    } else if (s.includes('.') && s.split('.')[1].length === 3) {
+      s = s.replace(/\./g, '');
+    }
+
+    let val = parseFloat(s);
     if (isNaN(val)) return 0;
     if (suffix && /mil|k/i.test(suffix)) val = val * 1000;
     return val;
   };
 
-  // 1. Padrão TOTAL / CONJUNTO / ORÇAMENTO FECHADO explícito (tem prioridade máxima quando citado)
-  // Ex: "Conjunto: R$ 44.300,00", "Total do pedido: R$ 29.900", "Total com desconto: 29900", "o orçamento total é 29900"
-  const totalExplicitMatch = clean.match(/(?:conjunto|total(?:\s*do\s*pedido|\s*com\s*desconto|\s*geral)?|or[çc]amento(?:\s*total|\s*fechado)?|valor\s*total)\s*(?::|[eé]|de|em|ficou|fica)?\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
-  if (totalExplicitMatch) {
-    const val = parseAmount(totalExplicitMatch[1], totalExplicitMatch[2]);
-    if (val >= 500 && val <= 2000000) return Math.round(val * 100) / 100;
+  const isValidValue = (v) => (!isNaN(v) && v >= 500 && v <= 2000000);
+
+  // 1. Padrão "DE X POR Y" ou Ofertas com Desconto / Lançamento (A OFERTA FINAL TEM PREVALÊNCIA MÁXIMA!)
+  const offerDePor = clean.match(/(?:de|era|tabela|conjunto|valor\s*original|lançamento).*?(?:por|sai\s*(?:por|a)?|faço\s*por|fecho\s*por|fica\s*(?:por|em)?|consigo\s*(?:fazer\s*)?por|deixo\s*por|adquirindo\s*(?:agora|hoje)?\s*(?:em\s*lançamento)?)\s*(?:R\$\s*)?(\d+(?:[.,]\d{2,3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
+  if (offerDePor) {
+    const finalVal = parseAmount(offerDePor[1], offerDePor[2]);
+    if (isValidValue(finalVal)) return Math.round(finalVal * 100) / 100;
   }
 
-  // 2. Padrão "DE X POR Y" (Preço Promocional / Desconto Comercial direto)
-  // Ex: "De 34.000 por 29.900", "De R$ 3.600 por R$ 2.500", "era 34 mil por 29.900"
-  const dePorMatch = clean.match(/(?:de|era|tabela(?:\s*de)?)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?\s*(?:reais)?.*?(?:por|sai\s*por|fa[çc]o\s*por|fecho\s*por|fica\s*por|consigo\s*(?:fazer\s*)?por|deixo\s*por)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
-  if (dePorMatch) {
-    const finalVal = parseAmount(dePorMatch[3], dePorMatch[4]);
-    if (finalVal >= 500 && finalVal <= 2000000) return Math.round(finalVal * 100) / 100;
-  }
-
-  // 3. Padrão DESCONTO / NEGOCIAÇÃO COMERCIAL (Valor de tabela/móvel com desconto -> O que conta é a oferta final)
-  // Ex: "o movel e 34 mil mais fiz desconto e ficou por 29900"
-  // Ex: "34 mil com desconto fica 29900"
-  // Ex: "34 mil, com desconto sai por 29.900"
-  // Ex: "o sofá custa 34 mil. Mas te dou desconto e fica 29900"
-  const discountMatch = clean.match(/(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?.*?(?:desconto|oferta).*?(?:por|sai\s*por|fa[çc]o\s*por|fecho\s*por|fica\s*por|fica\s*em|ficou\s*por|ficou|consigo\s*(?:fazer\s*)?por|deixo\s*por|fica|[eé])\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
+  // 2. Padrão Desconto explícito
+  const discountMatch = clean.match(/(?:desconto|oferta).*?(?:por|sai\s*(?:por|a)?|faço\s*por|fecho\s*por|fica\s*(?:por|em)?|ficou\s*(?:por|em)?|consigo\s*por|deixo\s*por|[eé])\s*(?:R\$\s*)?(\d+(?:[.,]\d{2,3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
   if (discountMatch) {
-    const finalVal = parseAmount(discountMatch[3], discountMatch[4]);
-    if (finalVal >= 500 && finalVal <= 2000000) return Math.round(finalVal * 100) / 100;
+    const finalVal = parseAmount(discountMatch[1], discountMatch[2]);
+    if (isValidValue(finalVal)) return Math.round(finalVal * 100) / 100;
   }
 
-  // 4. Padrão Desconto Parcelado: "era 34 mil mas no desconto faço em 10x de 2990" ou "De 3600 por 10x de 250"
-  const discountParcelMatch = clean.match(/(?:de|era|desconto|tabela).*?(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
-  if (discountParcelMatch) {
-    const parc = parseInt(discountParcelMatch[1], 10);
-    const vParc = parseAmount(discountParcelMatch[2]);
-    if (parc > 1 && vParc > 0) {
-      const tot = parc * vParc;
-      if (tot >= 500 && tot <= 2000000) return Math.round(tot * 100) / 100;
-    }
-  }
-
-  // 5. Padrão Parcelado Comum: "10x de 1.500", "12x de R$ 1.250", "10x 2990"
-  const parcelMatch = clean.match(/(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
+  // 3. Padrão Parcelado: "10x de 1.500", "12x 1.250", "em 10x de R$ 2.990"
+  const parcelMatch = clean.match(/(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?(\d+(?:[.,]\d{2,3})*(?:,\d{2})?|\d+)/i);
   if (parcelMatch) {
     const qtdParcelas = parseInt(parcelMatch[1], 10);
     const valorParcela = parseAmount(parcelMatch[2]);
-    if (!isNaN(valorParcela) && qtdParcelas > 1 && qtdParcelas <= 24) {
+    if (qtdParcelas > 1 && qtdParcelas <= 24 && isValidValue(valorParcela)) {
       const total = qtdParcelas * valorParcela;
-      if (total >= 500 && total <= 2000000) return Math.round(total * 100) / 100;
+      if (isValidValue(total)) return Math.round(total * 100) / 100;
     }
   }
 
-  // 6. Padrão Contextual de fechamento / oferta final:
-  // "fecho por 29900", "consigo fazer por 29.900", "fica por 29.900", "faço por 29900"
-  const closingOfferMatch = clean.match(/(?:fecho\s*por|fa[çc]o\s*por|fica\s*por|ficou\s*por|consigo\s*(?:fazer\s*)?por|deixo\s*por|sai\s*por)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
-  if (closingOfferMatch) {
-    const val = parseAmount(closingOfferMatch[1], closingOfferMatch[2]);
-    if (val >= 500 && val <= 2000000) return Math.round(val * 100) / 100;
+  // 4. Padrão TOTAL / CONJUNTO / ORÇAMENTO FECHADO explícito
+  const totalExplicitMatch = clean.match(/(?:conjunto(?:\s*completo)?|total(?:\s*do\s*pedido|\s*com\s*desconto|\s*geral)?|orçamento(?:\s*total|\s*fechado)?|valor\s*total)\s*(?::|[eé]|de|em|ficou|fica)?\s*(?:R\$\s*)?(\d+(?:[.,]\d{2,3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
+  if (totalExplicitMatch) {
+    const val = parseAmount(totalExplicitMatch[1], totalExplicitMatch[2]);
+    if (isValidValue(val)) return Math.round(val * 100) / 100;
   }
 
-  // 7. Padrão Contextual geral: "orçamento de 25000", "valor de 15000", "preço 29900"
-  const contextMatch = clean.match(/(?:valor|or[çc]amento|pre[çc]o)\s*(?:de|em|fica|ficou|[eé])?\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)\s*(mil|k)?/i);
-  if (contextMatch) {
-    const val = parseAmount(contextMatch[1], contextMatch[2]);
-    if (val >= 500 && val <= 2000000) return Math.round(val * 100) / 100;
+  // 5. Padrão Expressões Comerciais Diretas ("consigo fechar por 24.500", "fica em 18.500", "ficou 14.800", "sai por 15.500", "mesa por 12.000")
+  const commercialMatch = clean.match(/(?:fecho\s*por|faço\s*por|fica\s*(?:em|por)|ficou\s*(?:em|por)?|consigo\s*(?:fazer\s*)?por|deixo\s*por|sai\s*(?:por|a)?|por|orçamento\s*(?:de|em)?|valor\s*(?:de|em|[eé])?|preço\s*(?:de|em|[eé])?)\s*(?:R\$\s*)?(\d+(?:\.\d{3})*(?:,\d{2})?|\d{4,6})\s*(mil|k)?/i);
+  if (commercialMatch) {
+    const val = parseAmount(commercialMatch[1], commercialMatch[2]);
+    if (isValidValue(val)) return Math.round(val * 100) / 100;
   }
 
-  // 8. Padrão Abreviado com 'mil' ou 'k': ex "15 mil", "29,9 mil", "25k"
+  // 6. Padrão Abreviado com 'mil' ou 'k': "15 mil", "29,9 mil", "25k"
   const milMatch = clean.match(/(\d+(?:[.,]\d+)?)\s*(?:mil|k)\b/i);
   if (milMatch) {
     const total = parseAmount(milMatch[1], 'mil');
-    if (total >= 500 && total <= 2000000) return Math.round(total * 100) / 100;
+    if (isValidValue(total)) return Math.round(total * 100) / 100;
   }
 
-  // 9. Padrão Direto em R$: ex "R$ 15.000,00", "R$ 29.900"
-  const rsMatch = clean.match(/R\$\s*(\d+(?:\.\d{3})*(?:,\d{2})?|\d+)/i);
+  // 7. Padrão Direto em R$: "R$ 15.000,00", "R$15.000.00", "R$ 3.990,00"
+  const rsMatch = clean.match(/R\$\s*(\d+(?:[.,]\d{2,3})*(?:,\d{2})?|\d+)/i);
   if (rsMatch) {
     const total = parseAmount(rsMatch[1]);
-    if (total >= 500 && total <= 2000000) return Math.round(total * 100) / 100;
+    if (isValidValue(total)) return Math.round(total * 100) / 100;
   }
 
   return 0;
@@ -745,7 +740,8 @@ export default async function handler(req, res) {
       } catch (exErr) {}
 
       for (const [phone, item] of contactMap.entries()) {
-        const prefix = item.isLid ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
+        const isReal = phone.length >= 10 && phone.length <= 13;
+        const prefix = (item.isLid && !isReal) ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
         const leadId = `${prefix}-${phone}`;
         const cleanName = item.name && item.name.trim().length > 1
           ? item.name.trim()
@@ -1053,7 +1049,8 @@ export default async function handler(req, res) {
       // =======================================================================
       // 4. INSERT COM ID DETERMINÍSTICO (PREVINE DUPLICATAS POR RACE CONDITION)
       // =======================================================================
-      const prefix = isLid ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
+      const isRealPhone = phoneDigits.length >= 10 && phoneDigits.length <= 13;
+      const prefix = (isLid && !isRealPhone) ? seller.leadPrefix.replace('-WA', '-LID') : seller.leadPrefix;
       const newLeadId = `${prefix}-${phoneDigits}`;
       logNote = `[${nowBR} - ${messageDirectionLabel}]: ${interactionSummary}`;
 
