@@ -1161,14 +1161,18 @@ export default async function handler(req, res) {
 
     let consolidatedNotes = existingLead ? existingLead.notes || '' : '';
     if (notes && String(notes).trim()) {
-      const timestamp = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-      const channelPrefix = isInstagram ? '[Canal: Instagram] ' : '';
       const cleanNoteText = String(notes).trim();
-      const finalNoteText = (isInstagram && !cleanNoteText.toLowerCase().includes('instagram'))
-        ? `${channelPrefix}${cleanNoteText}`
-        : cleanNoteText;
-      const newEntry = `[${timestamp} - IA ChatGPT (${SELLER_NAME})]: ${finalNoteText}`;
-      consolidatedNotes = consolidatedNotes ? `${consolidatedNotes}\n\n${newEntry}` : newEntry;
+      if (body.action === 'upsert' || !existingLead) {
+        consolidatedNotes = cleanNoteText;
+      } else if (!consolidatedNotes.includes(cleanNoteText)) {
+        const timestamp = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const channelPrefix = isInstagram ? '[Canal: Instagram] ' : '';
+        const finalNoteText = (isInstagram && !cleanNoteText.toLowerCase().includes('instagram'))
+          ? `${channelPrefix}${cleanNoteText}`
+          : cleanNoteText;
+        const newEntry = `[${timestamp} - IA ChatGPT (${SELLER_NAME})]: ${finalNoteText}`;
+        consolidatedNotes = consolidatedNotes ? `${consolidatedNotes}\n\n${newEntry}` : newEntry;
+      }
     } else if (isInstagram && !consolidatedNotes.toLowerCase().includes('instagram')) {
       const timestamp = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
       const newEntry = `[${timestamp} - IA ChatGPT (${SELLER_NAME})]: [Canal: Instagram] Lead captado via Instagram Direct / Anúncio.`;
@@ -1265,7 +1269,9 @@ export default async function handler(req, res) {
       targetFollowupDate = existingLead.followup_date || null;
     }
     payload.followup_date = targetFollowupDate;
-    // NOTA: NÃO enviar followup_status para o Supabase (coluna não existe na tabela leads)
+    if (body.followup_status) payload.followup_status = body.followup_status;
+    else if (cadence?.followup_status) payload.followup_status = cadence.followup_status;
+    if (body.followup_disabled !== undefined) payload.followup_disabled = Boolean(body.followup_disabled);
 
     let resultData = null;
     if (existingLead) {
