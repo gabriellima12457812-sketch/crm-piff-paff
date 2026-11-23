@@ -6470,13 +6470,19 @@ function getContactType(lead) {
               } else {
                 l.called_today = false;
 
-                // PRESERVAÇÃO CRÍTICA: Se o lead local já foi agendado para o futuro pelo vendedor, NUNCA regride para hoje!
+                // PRESERVAÇÃO CRÍTICA: Se o lead local ou da nuvem já foi agendado para o futuro pelo vendedor, NUNCA regride para hoje!
                 if (localLead && localLead.followup_date && localLead.followup_date > todaySyncStr) {
                   l.followup_date = localLead.followup_date;
+                  l.followup_status = 'Agendado';
+                } else if (l.followup_date && l.followup_date > todaySyncStr) {
+                  // O lead veio da nuvem agendado para o futuro: PRESERVAÇÃO TOTAL!
                   l.followup_status = 'Agendado';
                 } else if (localLead && localLead.followup_date && localLead.followup_date < todaySyncStr && localLead.followup_date !== '1970-01-01') {
                   // Preserva data de atraso original definida localmente (não sobrescreve para hoje)
                   l.followup_date = localLead.followup_date;
+                  l.followup_status = 'Atrasado';
+                } else if (l.followup_date && l.followup_date < todaySyncStr && l.followup_date !== '1970-01-01') {
+                  // Preserva data de atraso que veio da nuvem
                   l.followup_status = 'Atrasado';
                 } else {
                   // Se o lead interagiu ontem ou nos últimos 3 dias e ainda não foi contatado hoje: regra 3 dias a fio
@@ -6490,15 +6496,8 @@ function getContactType(lead) {
                     }
                   }
 
-                  // PRESERVA DATA PASSADA REAL: Lead atrasado mantém sua data original de follow-up!
-                  if (l.followup_date && l.followup_date < todaySyncStr && l.followup_date !== '1970-01-01') {
-                    l.followup_status = 'Atrasado';
-                  } else if (l.followup_date === todaySyncStr || isYesterdayOrRecent || !l.followup_date) {
-                    l.followup_date = todaySyncStr;
-                    l.followup_status = isYesterdayOrRecent ? '3 Dias a Fio' : 'Chamar Hoje';
-                  } else if (l.followup_date && l.followup_date > todaySyncStr) {
-                    l.followup_status = 'Agendado';
-                  }
+                  l.followup_date = todaySyncStr;
+                  l.followup_status = isYesterdayOrRecent ? '3 Dias a Fio' : 'Chamar Hoje';
                 }
               }
             });
@@ -7136,6 +7135,8 @@ function getContactType(lead) {
         next_best_action: lead.next_best_action || 'Contatar cliente para diagnóstico.',
         notes: lead.notes || '',
         followup_date: ((typeof getContactType === 'function' && (getContactType(lead) === 'funcionario' || getContactType(lead) === 'fornecedor')) || lead.followup_disabled || lead.followup_status === 'Sem Follow-up' || lead.followup_date === '1970-01-01' || (typeof isFollowupRemoved === 'function' && isFollowupRemoved(lead))) ? '1970-01-01' : (lead.followup_date || null),
+        followup_status: (lead.followup_disabled || lead.followup_status === 'Sem Follow-up' || lead.followup_date === '1970-01-01' || (typeof isFollowupRemoved === 'function' && isFollowupRemoved(lead))) ? 'Sem Follow-up' : (lead.followup_status || 'Agendado'),
+        followup_disabled: Boolean(lead.followup_disabled || (typeof isFollowupRemoved === 'function' && isFollowupRemoved(lead))),
         channel: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.channel || (lead.instagram && !lead.phone ? 'instagram' : 'whatsapp')),
         pipeline: (typeof isInstagramLead === 'function' && isInstagramLead(lead)) ? 'instagram' : (lead.pipeline || 'whatsapp'),
         vendedor_id: targetSeller,
@@ -8934,19 +8935,16 @@ function getContactType(lead) {
           return false;
         }
 
-        // 2. REGRA: PASSOU DA MEIA-NOITE -> VOLTA NOVAMENTE PARA A LISTA!
-        // Se a data de follow-up é hoje ou anterior (vencido/virou o dia)
-        if (l.followup_date && l.followup_date <= todayStr) return true;
-
-        // Se a última conversa ocorreu em dias anteriores (passou da meia-noite e ainda não falou hoje)
-        const rawDate = l.last_interaction || l.data_ultima_interacao || l.updated_at || l.created_at;
-        if (rawDate) {
-          const interYMD = typeof formatYMD === 'function' ? formatYMD(rawDate) : String(rawDate).slice(0, 10);
-          if (interYMD && interYMD < todayStr) return true;
+        // 2. REGRA CRÍTICA: Se o follow-up foi agendado para o futuro (amanhã ou depois), ELE NUNCA É PARA HOJE!
+        if (l.followup_date && l.followup_date > todayStr) {
+          return false;
         }
 
-        // Se estiver na sequência ativa dos 3 dias a fio
-        if (l.is_consecutive_3days) return true;
+        // 3. REGRA: Se a data de follow-up é hoje ou anterior (vencido/virou o dia)
+        if (l.followup_date && l.followup_date <= todayStr) return true;
+
+        // 4. Sem data de follow-up definida: entra em Chamar Hoje por padrão
+        if (!l.followup_date) return true;
 
         return false;
       };
@@ -9406,16 +9404,29 @@ function getContactType(lead) {
     window.findMatchingLeadGroup = findMatchingLeadGroup;
 
     async function postponeLead(leadId, days) {
-      const { primaryLead, matches } = findMatchingLeadGroup(leadId);
-      if (!primaryLead && matches.length === 0) return;
+      const { primaryLead, matches } = (typeof findMatchingLeadGroup === 'function')
+        ? findMatchingLeadGroup(leadId)
+        : { primaryLead: (leads || []).find(l => l && String(l.id) === String(leadId)), matches: [] };
+
+      const targetList = (matches && matches.length > 0)
+        ? matches
+        : (primaryLead ? [primaryLead] : []);
+
+      if (targetList.length === 0) {
+        const fallback = (leads || []).concat(typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads) ? instagramLeads : []).filter(l => l && String(l.id) === String(leadId));
+        targetList.push(...fallback);
+      }
+      if (targetList.length === 0) return;
+
       const newDate = addDays(days);
       const todayStr = formatYMD(new Date());
       const newStatus = (newDate === todayStr) ? 'Chamar Hoje' : (newDate < todayStr ? 'Atrasado' : 'Agendado');
 
-      matches.forEach(l => {
+      targetList.forEach(l => {
         l.followup_disabled = false;
         l.followup_date = newDate;
         l.followup_status = newStatus;
+        l.called_today = false;
         l.last_interaction = new Date().toISOString();
       });
 
@@ -9423,12 +9434,12 @@ function getContactType(lead) {
       try {
         let removedList = (typeof getCachedRemovedFollowups === 'function') ? getCachedRemovedFollowups() : JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
         const cleanPhoneDigits = (p) => String(p || '').replace(/\D/g, '');
-        const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : '';
-        const targetNormName = (primaryLead?.name || '').toLowerCase().trim();
+        const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : (targetList[0]?.phone ? cleanPhoneDigits(targetList[0].phone) : '');
+        const targetNormName = (primaryLead?.name || targetList[0]?.name || '').toLowerCase().trim();
         const rootId = String(primaryLead?.id || leadId).replace(/-c\d+-\d+|-exact\d+-\d+/, '');
 
         removedList = removedList.filter(item => {
-          if (matches.some(m => m.id === item)) return false;
+          if (targetList.some(m => m.id === item)) return false;
           if (item === rootId) return false;
           if (targetCleanPhone && item === targetCleanPhone) return false;
           if (targetNormName && item === targetNormName) return false;
@@ -9447,7 +9458,7 @@ function getContactType(lead) {
 
       showToast(`Follow-up adiado para ${formatDateBR(newDate)}. Sincronizando...`, 'info');
       try {
-        const syncPromises = matches.map(m => syncLeadToSupabase(m));
+        const syncPromises = targetList.map(m => syncLeadToSupabase(m));
         await Promise.allSettled(syncPromises);
       } catch (e) {}
     }
@@ -9455,15 +9466,28 @@ function getContactType(lead) {
 
     async function postponeLeadCustom(leadId, customDate) {
       if (!customDate) return;
-      const { primaryLead, matches } = findMatchingLeadGroup(leadId);
-      if (!primaryLead && matches.length === 0) return;
+      const { primaryLead, matches } = (typeof findMatchingLeadGroup === 'function')
+        ? findMatchingLeadGroup(leadId)
+        : { primaryLead: (leads || []).find(l => l && String(l.id) === String(leadId)), matches: [] };
+
+      const targetList = (matches && matches.length > 0)
+        ? matches
+        : (primaryLead ? [primaryLead] : []);
+
+      if (targetList.length === 0) {
+        const fallback = (leads || []).concat(typeof instagramLeads !== 'undefined' && Array.isArray(instagramLeads) ? instagramLeads : []).filter(l => l && String(l.id) === String(leadId));
+        targetList.push(...fallback);
+      }
+      if (targetList.length === 0) return;
+
       const todayStr = formatYMD(new Date());
       const newStatus = (customDate === todayStr) ? 'Chamar Hoje' : (customDate < todayStr ? 'Atrasado' : 'Agendado');
 
-      matches.forEach(l => {
+      targetList.forEach(l => {
         l.followup_disabled = false;
         l.followup_date = customDate;
         l.followup_status = newStatus;
+        l.called_today = false;
         l.last_interaction = new Date().toISOString();
       });
 
@@ -9471,12 +9495,12 @@ function getContactType(lead) {
       try {
         let removedList = (typeof getCachedRemovedFollowups === 'function') ? getCachedRemovedFollowups() : JSON.parse(localStorage.getItem('piffpaff_removed_followups') || '[]');
         const cleanPhoneDigits = (p) => String(p || '').replace(/\D/g, '');
-        const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : '';
-        const targetNormName = (primaryLead?.name || '').toLowerCase().trim();
+        const targetCleanPhone = primaryLead?.phone ? cleanPhoneDigits(primaryLead.phone) : (targetList[0]?.phone ? cleanPhoneDigits(targetList[0].phone) : '');
+        const targetNormName = (primaryLead?.name || targetList[0]?.name || '').toLowerCase().trim();
         const rootId = String(primaryLead?.id || leadId).replace(/-c\d+-\d+|-exact\d+-\d+/, '');
 
         removedList = removedList.filter(item => {
-          if (matches.some(m => m.id === item)) return false;
+          if (targetList.some(m => m.id === item)) return false;
           if (item === rootId) return false;
           if (targetCleanPhone && item === targetCleanPhone) return false;
           if (targetNormName && item === targetNormName) return false;
@@ -9496,7 +9520,7 @@ function getContactType(lead) {
       const formatted = formatDateBR(customDate);
       showToast(`Follow-up agendado para ${formatted}!`, 'success');
       try {
-        const syncPromises = matches.map(m => syncLeadToSupabase(m));
+        const syncPromises = targetList.map(m => syncLeadToSupabase(m));
         await Promise.allSettled(syncPromises);
       } catch (e) {}
     }
@@ -15006,22 +15030,44 @@ function getContactType(lead) {
           const editNextAction = document.getElementById('edit-lead-next-action')?.value.trim();
           const editDate = document.getElementById('edit-lead-followup-date')?.value;
 
-          if (editName) activeLead.name = editName;
-          if (editPhoneRaw !== undefined) activeLead.phone = editPhoneRaw;
-          if (editCity) activeLead.city = editCity;
-          if (!isNaN(editValue)) {
-            activeLead.value = editValue;
-            activeLead.manual_value = true;
-            activeLead.value_manually_set_at = new Date().toISOString();
-            setLeadManualValue(activeLead.id, editValue, activeLead.phone);
+          const group = (typeof findMatchingLeadGroup === 'function') ? findMatchingLeadGroup(activeLead.id) : { matches: [activeLead] };
+          const allMatchingLeads = (group.matches && group.matches.length > 0) ? group.matches : [activeLead];
 
-            // Sincroniza em memória imediatamente para todas as coleções ativas
-            (leads || []).forEach(l => {
-              if (l.id === activeLead.id || (activeLead.phone && (typeof isMatchingPhone === 'function' && isMatchingPhone(l.phone, activeLead.phone)))) {
-                l.value = editValue;
-                l.manual_value = true;
+          allMatchingLeads.forEach(m => {
+            if (editName) m.name = editName;
+            if (editPhoneRaw !== undefined) m.phone = editPhoneRaw;
+            if (editCity) m.city = editCity;
+            if (!isNaN(editValue)) {
+              m.value = editValue;
+              m.manual_value = true;
+              m.value_manually_set_at = new Date().toISOString();
+            }
+            if (editStage) {
+              m.stage = editStage;
+              m.manual_stage = true;
+              m.manual_stage_at = new Date().toISOString();
+              if (editStage === 'concluidas' && !m.purchase_date) {
+                m.purchase_date = editDate || formatYMD(new Date());
               }
-            });
+            }
+            if (editTemp) m.temperature = editTemp;
+            if (editPrio) m.priority = editPrio;
+            if (editNextAction !== undefined) m.next_best_action = editNextAction;
+            if (editDate !== undefined) {
+              m.followup_date = editDate || null;
+              if (editDate) {
+                const todayStr = formatYMD(new Date());
+                m.followup_status = editDate === todayStr ? 'Chamar Hoje' : (editDate > todayStr ? 'Agendado' : 'Atrasado');
+              } else {
+                m.followup_status = 'Sem Follow-up';
+              }
+              m.called_today = false;
+            }
+            m.last_interaction = new Date().toISOString();
+          });
+
+          if (!isNaN(editValue)) {
+            setLeadManualValue(activeLead.id, editValue, activeLead.phone);
             if (Array.isArray(edsonConsolidatedRawLeads)) {
               edsonConsolidatedRawLeads.forEach(l => {
                 if (l.id === activeLead.id || (activeLead.phone && (typeof isMatchingPhone === 'function' && isMatchingPhone(l.phone, activeLead.phone)))) {
@@ -15032,14 +15078,8 @@ function getContactType(lead) {
             }
           }
           if (editStage) {
-            activeLead.stage = editStage;
-            activeLead.manual_stage = true;
-            activeLead.manual_stage_at = new Date().toISOString();
             setLeadManualStage(activeLead.id, editStage, activeLead.phone);
             if (editStage === 'concluidas') {
-              if (!activeLead.purchase_date) {
-                activeLead.purchase_date = editDate || formatYMD(new Date());
-              }
               markLeadConcluded(activeLead.id, activeLead.phone);
               unmarkLeadDesistiu(activeLead.id, activeLead.phone);
             } else if (editStage === 'desistiu') {
@@ -15050,23 +15090,8 @@ function getContactType(lead) {
               unmarkLeadDesistiu(activeLead.id, activeLead.phone);
             }
           }
-          if (editTemp) activeLead.temperature = editTemp;
-          if (editPrio) activeLead.priority = editPrio;
-          if (editNextAction) activeLead.next_best_action = editNextAction;
-          if (editDate !== undefined) {
-            activeLead.followup_date = editDate || null;
-            if (editDate) {
-              const todayStr = formatYMD(new Date());
-              activeLead.followup_status = editDate === todayStr ? 'Chamar Hoje' : (editDate > todayStr ? 'Agendado' : 'Atrasado');
-            } else {
-              activeLead.followup_status = 'Sem Follow-up';
-            }
-          }
-
-          activeLead.last_interaction = new Date().toISOString();
 
           saveStorage();
-          syncLeadToSupabase(activeLead); // CRÍTICO: Envia a alteração manual para o Supabase imediatamente!
           if (typeof isInstagramLead === 'function' && isInstagramLead(activeLead)) {
             if (typeof saveInstagramStorage === 'function') saveInstagramStorage();
             if (typeof renderInstagramBoard === 'function') renderInstagramBoard();
@@ -15078,12 +15103,15 @@ function getContactType(lead) {
           document.getElementById('modal-lead-detail').classList.add('hidden');
           showToast(`Contato "${activeLead.name}" atualizado com sucesso!`, 'success');
 
-          // Sincroniza em background sem travar o modal
-          syncLeadToSupabase(activeLead).then(() => {
-            console.log('[Sync] Lead atualizado na nuvem com sucesso');
-          }).catch(err => {
-            console.warn('[Sync] Falha no background sync:', err);
-          });
+          // Sincroniza todas as variantes e duplicatas em background no Supabase
+          try {
+            const syncPromises = allMatchingLeads.map(m => syncLeadToSupabase(m));
+            Promise.allSettled(syncPromises).then(() => {
+              console.log('[Sync] Leads atualizados na nuvem com sucesso');
+            }).catch(err => {
+              console.warn('[Sync] Falha no background sync:', err);
+            });
+          } catch (e) {}
         } catch (err) {
           console.error('Erro ao atualizar contato:', err);
           showToast('Erro ao atualizar dados.', 'error');
