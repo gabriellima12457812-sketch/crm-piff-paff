@@ -1091,6 +1091,9 @@ export default async function handler(req, res) {
       targetFollowupDate = existingLead.followup_date || null;
     }
     payload.followup_date = targetFollowupDate;
+    if (body.followup_status) payload.followup_status = body.followup_status;
+    else if (cadence?.followup_status) payload.followup_status = cadence.followup_status;
+    if (body.followup_disabled !== undefined) payload.followup_disabled = Boolean(body.followup_disabled);
 
     let resultData = null;
     const existsInDb = existingLead && dbLeads.some(l => l.id === existingLead.id);
