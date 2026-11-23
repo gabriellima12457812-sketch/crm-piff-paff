@@ -521,7 +521,9 @@ export default async function handler(req, res) {
     let consolidatedNotes = existingLead ? existingLead.notes || '' : '';
     if (notes && String(notes).trim()) {
       const cleanNoteText = String(notes).trim();
-      if (!consolidatedNotes.includes(cleanNoteText)) {
+      if (body.action === 'upsert' || !existingLead) {
+        consolidatedNotes = cleanNoteText;
+      } else if (!consolidatedNotes.includes(cleanNoteText)) {
         const timestamp = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
         const newEntry = `[${timestamp} - IA (${SELLER_NAME})]: ${cleanNoteText}`;
         consolidatedNotes = consolidatedNotes ? `${consolidatedNotes}\n\n${newEntry}` : newEntry;
@@ -608,11 +610,12 @@ export default async function handler(req, res) {
 
     if (payload.stage !== 'concluidas' && payload.stage !== 'desistiu' && commercial_line !== 'Funcionário' && commercial_line !== 'Fornecedor') {
       payload.followup_date = cadence.followup_date;
-      payload.followup_status = cadence.followup_status;
+      payload.followup_status = body.followup_status || cadence.followup_status;
     } else {
       payload.followup_date = '1970-01-01';
       payload.followup_status = 'Sem Follow-up';
     }
+    if (body.followup_disabled !== undefined) payload.followup_disabled = Boolean(body.followup_disabled);
 
     payload.channel = 'whatsapp';
     payload.pipeline = 'whatsapp';
